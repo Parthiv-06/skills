@@ -1,10 +1,5 @@
-"""Check a demo JSON file against the page contract and fill the HTML template.
-
-Usage: python3 build_demo.py demo.json out.html
-
-Exits non-zero and lists every problem if a required field is missing or malformed.
-The schema is the "Page contract" table in ../SKILL.md.
-"""
+"""Check a demo JSON file against the page contract in ../SKILL.md and fill the HTML template.
+Exits non-zero listing every missing or malformed field, so no half-filled page gets built."""
 import html
 import json
 import os
@@ -59,7 +54,7 @@ def check(d):
 
 def main():
     if len(sys.argv) != 3:
-        sys.exit(__doc__)
+        sys.exit("Usage: python3 build_demo.py demo.json out.html")
     with open(sys.argv[1]) as f:
         d = json.load(f)
     errs = check(d)

@@ -1,6 +1,6 @@
 """Pull live, dated facts about PyPI packages so recommendations rest on evidence, not memory.
-
-Usage:
+Every flag is a prompt to look closer, not a verdict; run with --help for sources and flags."""
+USAGE = """Usage:
   python3 pkg_facts.py NAME [NAME ...] [--project DIR] [--json]
 
 Sources (no API keys needed; set GITHUB_TOKEN to raise GitHub's rate limit):
@@ -14,9 +14,8 @@ Sources (no API keys needed; set GITHUB_TOKEN to raise GitHub's rate limit):
 or pinned in a lock/requirements file under DIR.
 
 Flags printed per package: ARCHIVED, STALE (no release in 18 months), VULNS, COPYLEFT,
-SOURCE-AVAILABLE (not open source), NO-PY312 (requires-python excludes 3.12), FEW-RELEASES.
-Every flag is a prompt to look closer, not a verdict.
-"""
+SOURCE-AVAILABLE (not open source), NO-PY312 (requires-python excludes 3.12), FEW-RELEASES,
+DEPRECATED, LICENSE-MISMATCH (sources disagree; read the repo's LICENSE file)."""
 import datetime as dt
 import glob
 import json
@@ -59,7 +58,8 @@ def days_ago(iso):
 
 
 def license_family(text):
-    """'MIT License', 'MIT' -> 'mit'; 'BSD License', 'BSD-3-Clause' -> 'bsd'. Order matters: AGPL before GPL."""
+    """'MIT License' and 'MIT' -> 'mit'; 'BSD License' and 'BSD-3-Clause' -> 'bsd'.
+    Order matters: AGPL and LGPL are tested before GPL."""
     t = text.lower().replace("affero general public", "agpl").replace("lesser general public", "lgpl").replace("general public", "gpl")
     for fam in ("agpl", "lgpl", "gpl", "apache", "mit", "bsd", "mpl", "mozilla", "isc", "psf", "python", "unlicense",
                 "zlib", "cc0", "eupl", "busl", "sspl", "elastic", "polyform"):
@@ -212,7 +212,7 @@ def fmt(n):
 def main():
     args = sys.argv[1:]
     if not args or args[0] in ("-h", "--help"):
-        sys.exit(__doc__)
+        sys.exit(USAGE)
     as_json = "--json" in args
     project = None
     if "--project" in args:

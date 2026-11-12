@@ -10,6 +10,8 @@ Agent skills for [Claude Code](https://claude.com/claude-code).
 | [demoing-features](src/general/demoing-features/SKILL.md) | Explaining why a feature or button exists and what people use it for, or preparing to demo a feature or product. Produces a styled web page with every use case, several ways to explain it, a demo script, and a hand-drawn sketch of the user's journey. |
 | [compressing-agent-prompts](src/agents/compressing-agent-prompts/SKILL.md) | Reviewing an agent's system prompt (subagent, SKILL.md, CLAUDE.md, tool description): scores how much of it is needed, flags duplicates, filler, conflicts, and vague rules, and compresses it without changing what the agent does, checked by a static gate and a behavioral test. |
 | [auditing-agent-token-usage](src/agents/auditing-agent-token-usage/SKILL.md) | Finding out why an LLM agent uses far more tokens than its task needs. Predicts the cost from the code, measures real usage through a logging proxy, explains every gap as an issue with file:line evidence and a fix, and shows it all on an Apple-style report page. |
+| [researching-existing-solutions](src/engineering/researching-existing-solutions/SKILL.md) | Before writing Python code or adding a dependency: finds existing open-source packages, pulls live health, license, and vulnerability data, tests the top pick in a throwaway environment, and recommends one. |
+| [writing-two-line-comments](src/engineering/writing-two-line-comments/SKILL.md) | Any time code is written or edited, in any language: every comment is at most 2 lines (what it is for, then what to watch), every file gets a header, and a checker plus an optional hook enforce it. |
 
 ## Install
 
@@ -22,6 +24,8 @@ ln -s "$(pwd)/skills/src/general/designing-software-architecture" ~/.claude/skil
 ln -s "$(pwd)/skills/src/general/demoing-features" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/agents/compressing-agent-prompts" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/agents/auditing-agent-token-usage" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/engineering/researching-existing-solutions" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/engineering/writing-two-line-comments" ~/.claude/skills/
 ```
 
 Claude Code picks up the skills in new sessions and uses them automatically. Try:
@@ -30,6 +34,8 @@ Claude Code picks up the skills in new sessions and uses them automatically. Try
 - "Why is there an attachment button in Claude?" or "I want to demo our sharing feature to the sales team"
 - "How good is the prompt in `.claude/agents/reviewer.md`? Compress it without changing what it does"
 - "Our support agent costs way too much per ticket. Find out where the tokens go"
+- "I need to generate PDF invoices in Python. Research what open-source packages I can use"
+- Any coding task: the comment rule applies on its own
 
 ## Usage
 
@@ -100,6 +106,34 @@ Gives three numbers per task: **Ideal** (what the task needs), **Predicted** (wh
 
 Running the agent costs money, so the skill shows the cost first and waits for a yes, stubs tools with side effects, and always sets a budget cap. Tests: `python3 -m unittest discover -s src/agents/auditing-agent-token-usage/tests`.
 
+### researching-existing-solutions
+
+Python only. Checks the project's own code and lockfile first, searches wide, then pulls live facts for every candidate in one call:
+
+```bash
+python3 src/engineering/researching-existing-solutions/scripts/pkg_facts.py tenacity backoff stamina --project path/to/repo
+```
+
+It prints a dated table (latest release, releases per year, downloads, stars, last push, OpenSSF Scorecard, license, dependencies, known vulnerabilities, already in the project) and flags ARCHIVED, STALE, VULNS, COPYLEFT, SOURCE-AVAILABLE, and more. Licenses are cross-checked across deps.dev, PyPI, and GitHub, so an AGPL package can't hide behind a "non-standard" label. The top pick is then tested in a throwaway virtualenv, never in the project. The answer is a short chat report with the verdict first.
+
+### writing-two-line-comments
+
+Every comment is at most 2 lines, each under 100 characters: line 1 says what it is for, line 2 says what to watch. Every code file gets a 2-line header; functions get a comment only when a teammate would have to read the body to call them safely. Editing a file brings all its comments within the rule.
+
+The checker enforces it for Python (docstrings included), JS/TS, Go, Java, C/C++, Rust, Swift, Kotlin, shell, Ruby, SQL, and more:
+
+```bash
+python3 src/engineering/writing-two-line-comments/scripts/check_comments.py file.py other.ts   # specific files
+python3 src/engineering/writing-two-line-comments/scripts/check_comments.py --changed .        # everything changed in git
+```
+
+It reports BLOCK, LONG, NO-HEADER, CODE (commented-out code), HISTORY (change-log wording), and BANNER. License headers and tool directives (`# noqa`, `// eslint-disable`) don't count. To check after every edit automatically, add this hook to `~/.claude/settings.json`; violations are sent straight back to Claude:
+
+```json
+"hooks": { "PostToolUse": [{ "matcher": "Write|Edit|MultiEdit", "hooks": [{ "type": "command",
+  "command": "python3 /path/to/skills/src/engineering/writing-two-line-comments/scripts/check_comments.py --hook" }] }] }
+```
+
 ## Examples
 
 - [test/example-url-shortener](test/example-url-shortener/) shows the architecture and demo skills on a URL shortener: the [design write-up](test/example-url-shortener/README.md), the [diagram](test/example-url-shortener/architecture.excalidraw) and its [spec](test/example-url-shortener/spec.json), and the [demo pack](test/example-url-shortener/demo.html) for a sales and marketing audience, built from [demo.json](test/example-url-shortener/demo.json).
@@ -128,6 +162,13 @@ src/agents/
     scripts/                   # count_tokens, usage_proxy, analyze_trace, build_report
     assets/report-template.html
     tests/                     # 21 tests + a fake API for running agents offline
+src/engineering/
+  researching-existing-solutions/
+    SKILL.md
+    scripts/pkg_facts.py
+  writing-two-line-comments/
+    SKILL.md
+    scripts/check_comments.py
 test/
   example-url-shortener/       # architecture + demo skills
   example-attachment-button/   # demo skill on a public product feature

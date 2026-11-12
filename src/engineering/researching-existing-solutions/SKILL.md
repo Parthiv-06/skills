@@ -9,7 +9,7 @@ description: Use when about to write Python code that a library might already pr
 
 Before writing code or adding a dependency, find out what already exists, prove the best option works, and recommend one. Evidence beats memory: every claim about a package is live, dated, and linked.
 
-**Core principle:** A recommendation is only as good as its weakest check. Unverified health, an unchecked license, or an untried API each sink it.
+**Core principle:** Rank for the user's real deployment, and say plainly which checks each pick passed and which could not run here.
 
 ## Depth
 
@@ -25,7 +25,7 @@ Before writing code or adding a dependency, find out what already exists, prove 
 3. **Search wide (deep only).** Web search for `python <need> library`, `<best-known package> alternatives`, the awesome-python list, GitHub topics, and deps.dev. Include services you can run beside the app (a Docker sidecar) when the need is heavy. Collect 6-15 names.
 4. **Pull facts in one call:** `python3 scripts/pkg_facts.py name1 name2 ... --project <repo>`. Drop anything flagged ARCHIVED, STALE, VULNS, DEPRECATED, or NO-PY312 unless nothing else fits. Treat COPYLEFT and SOURCE-AVAILABLE by the project's license: AGPL, SSPL, BUSL are out for closed-source SaaS; GPL is out for distributed closed-source; LGPL is fine as an unmodified dependency. Resolve LICENSE-MISMATCH by reading the repo's LICENSE file.
 5. **Read for fit.** For the 2-4 survivors, read the docs and search open issues for each must-have keyword. Note known pitfalls (thread safety, async support, unsafe defaults).
-6. **Spike the top 1-2.** Build a throwaway venv outside the project (`python3 -m venv "$TMPDIR/spike-<pkg>"`), install the exact version, and run a script that exercises every must-have, including one failure case. Never install into the project's environment. Budget about 10 minutes; if a spike is impossible (system libraries, API keys), say why in the report.
+6. **Spike the top 1-2.** Build a throwaway venv outside the project (`python3 -m venv "$TMPDIR/spike-<pkg>"`), install the exact version, and run a script that exercises every must-have, including one failure case. Never install into the project's environment. Two install attempts per candidate, about 10 minutes total. If this machine can't run a candidate (missing system libraries, no Docker, API keys), stop: mark it "not spiked", keep ranking it on evidence, and put the spike script plus the commands to run it in the target environment in the report. The machine you happen to be on never decides the winner; the target deployment does.
 7. **Decide.** Adopt (exact fit), Extend (thin wrapper), Compose (2-3 small packages), or Build (nothing fits, or under ~50 lines with no edge cases, so a dependency costs more than it saves).
 
 ## Report
@@ -51,3 +51,5 @@ Reply in chat (no artifact unless asked), under ~600 words, in this order:
 | Adding a new package when an installed one fits | Step 2; say why the installed one lost if it did |
 | Trusting a package's defaults | Spike the defaults; flag unsafe ones in Risks |
 | Reporting "nothing found" when a search channel failed | List it under Not checked |
+| Recommending whatever installed on this laptop | Rank for the target deployment; an unspiked best fit stays the pick, marked "not spiked" |
+| Fighting the local environment (installing system libraries, retrying downloads) | Two attempts, then hand over the spike script |
