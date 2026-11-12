@@ -1,0 +1,275 @@
+{
+ "feature": "The Attach Button",
+ "product": "Claude (claude.ai chat)",
+ "audience": "Your team, assumed mostly non-technical",
+ "demoLength": "6 minutes",
+ "oneLiner": "Hand Claude your actual report, spreadsheet, screenshot, or photo, so it answers about your work instead of guessing.",
+ "problem": {
+  "before": [
+   "You copy and paste pages of text into the chat box, and formatting, tables, and charts get lost.",
+   "You type out a description of an error screen or a chart and hope it makes sense.",
+   "Claude can only give generic advice because it has never seen your document.",
+   "Reading a 60-page report or comparing two contract versions takes an afternoon."
+  ],
+  "after": [
+   "Drag the file in, or click + and pick it, then ask your question in plain words.",
+   "Paste a screenshot or snap a photo and Claude sees exactly what you see.",
+   "Answers point back to your own pages, numbers, and wording.",
+   "Up to 20 files in one chat, so you can compare, combine, and cross-check."
+  ]
+ },
+ "flow": {
+  "nodes": [
+   {
+    "id": "you",
+    "label": "You, with a file\nyou already have",
+    "x": 0,
+    "y": 40,
+    "w": 180,
+    "h": 90,
+    "shape": "ellipse"
+   },
+   {
+    "id": "add",
+    "label": "Click +, or drag,\nor paste it in",
+    "x": 230,
+    "y": 50,
+    "w": 180,
+    "h": 70
+   },
+   {
+    "id": "ask",
+    "label": "Ask in plain\nwords",
+    "x": 460,
+    "y": 50,
+    "w": 180,
+    "h": 70
+   },
+   {
+    "id": "get",
+    "label": "An answer about\nYOUR file",
+    "x": 690,
+    "y": 50,
+    "w": 180,
+    "h": 70
+   }
+  ],
+  "edges": [
+   {
+    "from": "you",
+    "to": "add"
+   },
+   {
+    "from": "add",
+    "to": "ask"
+   },
+   {
+    "from": "ask",
+    "to": "get"
+   },
+   {
+    "from": "get",
+    "to": "ask",
+    "dashed": true
+   }
+  ]
+ },
+ "flowCaption": "Hand it over, ask, get an answer grounded in your file, then keep asking follow-ups in the same chat.",
+ "useCases": [
+  {
+   "group": "Managers and busy readers",
+   "title": "Get the gist of a long report in two minutes",
+   "situation": "A 60-page quarterly report lands an hour before the leadership meeting.",
+   "action": "Drop the PDF in and ask for a five-bullet summary, the biggest risk, and which page it is on.",
+   "result": "A short, accurate brief you can check against the page numbers, plus follow-up answers on demand.",
+   "without": "Skimming headings and hoping you didn't miss the one paragraph that matters."
+  },
+  {
+   "group": "Finance and operations",
+   "title": "Ask a spreadsheet questions in plain English",
+   "situation": "A budget export with hundreds of rows, and you need to know what's over plan.",
+   "action": "Attach the CSV or Excel file and ask which lines are over budget, by how much, and why that might be.",
+   "result": "A ranked list of the problem lines with totals, without writing a single formula.",
+   "without": "Building pivot tables or waiting on the one colleague who knows the spreadsheet."
+  },
+  {
+   "group": "Anyone who gets stuck",
+   "title": "Show Claude the screen you're stuck on",
+   "situation": "A confusing error message or settings page you don't understand.",
+   "action": "Take a screenshot and paste it straight into the chat, then ask what it means and what to click.",
+   "result": "A plain-language explanation and step-by-step fix based on exactly what's on your screen.",
+   "without": "Trying to type out the error word for word, or describing a screen Claude can't see."
+  },
+  {
+   "group": "Managers and busy readers",
+   "title": "See what changed between two versions",
+   "situation": "A vendor sends back 'a few small edits' to a contract or policy.",
+   "action": "Attach the old and new versions together and ask what changed and which changes matter.",
+   "result": "A side-by-side list of changes, with the ones that shift cost, risk, or deadlines flagged first.",
+   "without": "Reading both versions line by line, or trusting the other side's summary."
+  },
+  {
+   "group": "People away from their desk",
+   "title": "Turn a whiteboard photo into action items",
+   "situation": "The meeting ends with a whiteboard full of arrows, names, and half-sentences.",
+   "action": "Snap a photo, attach it, and ask for clean notes with owners and next steps.",
+   "result": "Typed-up notes and a to-do list you can paste into the team chat within a minute.",
+   "without": "Someone rewrites the board from memory, days later, and half of it is lost."
+  },
+  {
+   "group": "Marketing and sales",
+   "title": "Pull the story out of a chart-heavy deck",
+   "situation": "A research report or competitor deck saved as a PDF, full of charts and graphs.",
+   "action": "Attach the PDF and ask what the charts actually show and which three points to use with customers.",
+   "result": "Talking points that reflect the charts too, not just the text (for PDFs up to 100 pages).",
+   "without": "Squinting at graphs and guessing what the trend means."
+  },
+  {
+   "group": "Teams that work in Google Drive",
+   "title": "Ask about a live Google Doc or Sheet",
+   "situation": "The plan everyone keeps editing lives in Google Drive, not on your laptop.",
+   "action": "Click +, choose Add from Google Drive, pick the doc, and ask your question.",
+   "result": "Answers based on the doc as it is right now. Later edits in Drive reach Claude on your next message.",
+   "without": "Downloading a copy that's out of date the moment someone edits the original."
+  },
+  {
+   "group": "Engineers",
+   "title": "Ask how a piece of your code works",
+   "situation": "A new teammate needs to understand a project they've never seen.",
+   "action": "Click +, choose Add from GitHub, pick the repository, and ask how a feature works.",
+   "result": "An explanation grounded in the real files, which they can keep questioning.",
+   "without": "Booking an hour with the one person who wrote it."
+  },
+  {
+   "group": "Product and design",
+   "title": "Get feedback on a screen or mockup",
+   "situation": "A new sign-up screen design is ready for a quick sanity check.",
+   "action": "Attach a screenshot and ask what's confusing, what's missing, and how to word the buttons.",
+   "result": "Specific notes on that screen, plus suggested wording you can try right away.",
+   "without": "Waiting for the next review meeting for first impressions."
+  },
+  {
+   "group": "Students and learners",
+   "title": "Turn a chapter into a practice quiz",
+   "situation": "A textbook chapter or training manual to learn before an exam or certification.",
+   "action": "Attach the chapter (PDF or e-book) and ask for ten questions, then check your answers with Claude.",
+   "result": "A quiz drawn only from your material, with explanations when you get one wrong.",
+   "without": "Re-reading the chapter and hoping it sticks."
+  }
+ ],
+ "explanations": [
+  {
+   "style": "Everyday analogy",
+   "text": "It's the difference between describing a document to a colleague over the phone and just handing it to them. The + button is how you hand it over."
+  },
+  {
+   "style": "Business value",
+   "text": "Most of our work lives in files: reports, spreadsheets, contracts, decks. Attaching them means Claude works on our real material, so hours of reading, comparing, and summarizing become minutes, and answers can be checked against the source."
+  },
+  {
+   "style": "For managers and busy readers",
+   "text": "Think of it as a reader who goes through the whole 60-page report before your meeting and briefs you in five bullets, with page numbers so you can verify anything that matters."
+  },
+  {
+   "style": "For the skeptic in the room",
+   "text": "Claude isn't guessing from the internet here. It's answering from the file you gave it. Ask it which page something is on and check. That's the point."
+  }
+ ],
+ "script": {
+  "hook": "Raise your hand if you've ever pasted a wall of text into a chat box and lost all the tables. This little + button fixes that.",
+  "setup": [
+   "Sign in to claude.ai and open a fresh chat. Zoom the browser to about 125% so the room can read it.",
+   "Have these files on your desktop, all non-confidential: a 20 to 40 page PDF report with a few charts, a budget CSV or Excel file, a screenshot of a confusing error, and two versions of a short contract.",
+   "Take a photo of a messy whiteboard on your phone and get it onto your laptop (or attach it from the Claude phone app).",
+   "If you'll attach an Excel file, check that code execution and file creation is turned on in Settings first.",
+   "Optional: connect Google Drive or GitHub in Customize > Connectors beforehand, so the Add from Drive or Add from GitHub option shows up in the + menu.",
+   "Do one full dry run the day before, and keep the finished chat open in a second tab as a backup."
+  ],
+  "steps": [
+   {
+    "time": "0:00",
+    "do": "Point to the + at the lower left of the message box and open it.",
+    "say": "This is how you hand Claude your actual work: files, photos, screenshots, even docs from Google Drive."
+   },
+   {
+    "time": "0:40",
+    "do": "Drag the PDF report into the chat. Ask: 'Summarize this in five bullets for a busy exec. What's the biggest risk, and which page is it on?'",
+    "say": "No copy-pasting. I just dropped the whole report in, charts and all."
+   },
+   {
+    "time": "1:50",
+    "do": "Open the PDF to the page Claude named and show the room it matches.",
+    "say": "Don't take its word for it. It tells us where to look, and we can check."
+   },
+   {
+    "time": "2:30",
+    "do": "Copy the error screenshot and paste it with Cmd+V or Ctrl+V. Ask: 'What does this mean, and what do I click to fix it?'",
+    "say": "If you can see it, Claude can see it. No more typing out error messages."
+   },
+   {
+    "time": "3:20",
+    "do": "Attach the whiteboard photo. Ask: 'Turn this into clean meeting notes with owners and next steps.'",
+    "say": "This is the whiteboard from our last meeting. Watch what happens.",
+    "wow": true
+   },
+   {
+    "time": "4:30",
+    "do": "Attach both contract versions together. Ask: 'What changed between these, and which changes affect cost or deadlines?'",
+    "say": "Two files at once. It compares them for us and flags what matters."
+   },
+   {
+    "time": "5:30",
+    "do": "Scroll back through the chat to show all four answers.",
+    "say": "Anything you'd forward, screenshot, or print for a colleague, you can hand to Claude with this button. Try it with one file from your inbox today."
+   }
+  ]
+ },
+ "questions": [
+  {
+   "q": "What kinds of files can I attach?",
+   "a": "Documents like PDF, Word (DOCX), plain text, CSV, Excel (XLSX), HTML, RTF, OpenDocument, EPUB, and JSON, plus images in JPEG, PNG, GIF, and WebP. Excel needs the code execution and file creation setting turned on. Audio and video aren't on the list."
+  },
+  {
+   "q": "How big can files be, and how many can I add?",
+   "a": "Up to 20 files per chat and up to 500MB each. PDFs can be up to 1,000 pages and images up to 8000x8000 pixels. Everything still has to fit in what Claude can hold in one conversation, so a pile of very long files can hit a length limit before the size limit."
+  },
+  {
+   "q": "Does it really read the charts, or just the words?",
+   "a": "For PDFs of 100 pages or fewer, Claude looks at the charts, images, and graphics as well as the text. For longer PDFs, and for Word and other non-PDF documents, it reads the text only and ignores pictures. If the visuals matter, save as PDF and keep it under 100 pages, or attach a screenshot of the chart."
+  },
+  {
+   "q": "Will it remember my file in my next chat?",
+   "a": "No. An attachment belongs to the chat you added it to. To reuse the same files across many chats, put them in a Project's files, where every chat in that project can use them."
+  },
+  {
+   "q": "If I attach a Google Doc and someone edits it, does Claude see the update?",
+   "a": "Yes. A file added from Google Drive is re-read from Drive each time you send a message. Docs come through as text without their images, Sheets as plain tables with every tab, and Slides as plain text. Very large Google files (over about 10MB) arrive as just a name and details."
+  },
+  {
+   "q": "Is our data safe, and is it used to train the model?",
+   "a": "It depends on your plan and settings. On Team and Enterprise plans, business terms apply. On individual plans there's a privacy setting that controls whether chats help improve the model. Check your plan's privacy settings before the demo, and only use non-confidential files on screen."
+  },
+  {
+   "q": "Can it get things wrong?",
+   "a": "Yes, like any assistant. That's why the demo asks which page an answer is on. For numbers and anything legal, treat Claude's answer as a fast first pass and check it against the source."
+  },
+  {
+   "q": "Does this work on my phone?",
+   "a": "Yes, the Claude phone apps let you attach photos and files from the chat box. The exact menu wording varies by device, so try it on your own phone before you rely on it in front of a room."
+  }
+ ],
+ "notFor": [
+  "It isn't a file storage or sharing drive. Attachments live in that one chat, not in a shared folder.",
+  "It doesn't change your original file. Claude reads it and answers, and your copy stays untouched.",
+  "Pictures inside Word and other non-PDF documents are ignored, and PDFs over 100 pages are read as text only.",
+  "No audio or video files.",
+  "GitHub attachments include file names and contents only, not commit history, pull requests, or issues.",
+  "In Projects, Google Drive and GitHub files can be added to private projects only, not shared ones. Both need connecting first in Customize > Connectors, and on Team and Enterprise plans an admin has to enable them.",
+  "Check before the demo: which plan your team is on, the usage limits that come with it, and the privacy settings. These change, so don't quote them from memory."
+ ],
+ "sources": [
+  "https://support.claude.com/en/articles/8241126-upload-files-to-claude",
+  "https://claude.com/docs/connectors/google/drive",
+  "https://claude.com/docs/connectors/github"
+ ]
+}

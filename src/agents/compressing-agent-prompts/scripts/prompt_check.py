@@ -29,7 +29,7 @@ PROTECTED = [
     re.compile(r"https?://\S+"),
     re.compile(r"(?:\.{0,2}/)?[\w-]+(?:/[\w.-]+)+|\b[\w-]+\.(?:md|json|py|ts|js|yaml|yml|txt|html|csv)\b"),
     re.compile(r"(?<![\w.])\d+(?:[.,]\d+)?\s?(?:%|ms|s|chars?|tokens?|words?|lines?|days?|hours?|minutes?)?(?![\w.])"),
-    re.compile(r"\b[a-z]+(?:_[a-z0-9]+)+\b|\b[a-z]+(?:[A-Z][a-z0-9]+)+\b|\b[A-Z]{2,}(?:_[A-Z0-9]+)*\b"),
+    re.compile(r"\b[a-z]+(?:_[a-z0-9]+)+\b|\b[a-z]+(?:[A-Z][a-z0-9]+)+\b|\b[A-Z]{3,}(?:_[A-Z0-9]+)*\b|\b[A-Z0-9]+(?:_[A-Z0-9]+)+\b"),
 ]
 FENCE = re.compile(r"```.*?```", re.S)
 
@@ -82,7 +82,7 @@ def redundancy(text):
                 break
         seen[n] = s
     if not hits:
-        print("  none")
+        print("  none by text match (same meaning in different words is found in the inventory step)")
 
     low = text.lower()
     counts = [(f, len(re.findall(r"\b" + re.escape(f) + r"\b", low))) for f in FILLER]
@@ -98,9 +98,8 @@ def compare(orig, comp):
     comp_norm = " ".join(comp.split())
     missing = []
     for kind, tok in sorted(protected_tokens(orig)):
-        target = tok if kind == "token" else tok
         haystack = comp if kind == "token" else comp_norm
-        if target not in haystack:
+        if tok not in haystack:
             missing.append((kind, tok))
     print("\nProtected-token gate:", "PASS" if not missing else f"FAIL ({len(missing)} missing)")
     for kind, tok in missing:

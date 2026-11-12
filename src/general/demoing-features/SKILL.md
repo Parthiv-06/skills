@@ -17,19 +17,19 @@ A demo sells what people can do, not how it is built. The output is a styled web
 2. **Learn what it really does**, from the best source available:
    - In the current codebase: read the code to find what a user can do (inputs, options, outcomes). None of it appears on the page.
    - A public product (Claude, Figma, Slack...): use web search to confirm current behavior, limits, and plan availability. Put the URLs in `sources`. When sources disagree, use the newest official page and add the conflict to `notFor` as "check before the demo".
-   - Only a design or spec exists: say so in the hero `oneLiner` or first Q&A, and demo the journey with the sketch.
+   - Only a design or spec exists: say so in the first Q&A, the first `notFor` item, and the first setup step, and demo the journey with the sketch.
    - None of these: ask.
 3. **List every distinct use**, usually 6-12. Merge near-duplicates. Rank by how common, then how impressive.
 4. **Fill the template** (below) and publish.
 
 ## Page contract
 
-Copy `assets/demo-template.html` and replace `{{TITLE}}` (the feature name, 2-4 words) and `{{DEMO_JSON}}` with one JSON object. Write `<\/` for any `</` inside strings. Fields:
+Write one JSON file, then build the page with `python3 scripts/build_demo.py demo.json demos/<feature-slug>.html` (paths relative to this skill's folder for the script). It checks every field below, lists what is missing, and fills `assets/demo-template.html`: a white, Apple-style page with a bento grid of use cases, framing tabs, and a Present mode (arrow keys plus a clock that shows the current script step). Do not hand-edit the template per demo. `feature` doubles as the page title, so keep it 2-4 words. Fields:
 
 | Field | Contents |
 |---|---|
 | `feature`, `product`, `audience`, `demoLength` | Short strings |
-| `oneLiner` | What it is for, in words a non-technical person would say |
+| `oneLiner` | One sentence, 20 words max: what it is for, in words a non-technical person would say. Caveats go in `questions` or `notFor` |
 | `problem` | `{before: [...], after: [...]}`: life without and with it |
 | `flow` | `{nodes, edges}`: nodes `{id, label, x, y, w?, h?, shape?}` (shape `rectangle` \| `ellipse` \| `diamond`, `\n` for line breaks), edges `{from, to, label?, dashed?}`. Same spec as the designing-software-architecture skill's diagrams. 3-6 nodes, left to right, ~220px apart: person → what they do → what they get. Labels are user words; no servers, databases, or APIs |
 | `flowCaption` | One sentence under the sketch |

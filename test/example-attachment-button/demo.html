@@ -1,0 +1,743 @@
+<title>The Attach Button</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<style>
+/* Layout: Apple product-page rhythm on a white page only. 980px reading grid, #f5f5f7 tiles, generous white space between bands. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --alt: #ffffff; --tile-a: #f5f5f7; --tile-b: #f5f5f7;
+  --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800;
+  --invert-bg: #ffffff; --invert-fg: #1d1d1f; --invert-fg2: #86868b;
+  --stage: #ffffff; --stage-fg: #1d1d1f; --stage-fg2: #6e6e73; --stage-tile: #f5f5f7;
+  --glass: rgba(255, 255, 255, .72); --hud: rgba(29, 29, 31, .86);
+  --sketch-paper: #ffffff; --sketch-ink: #1d1d1f; --sketch-fill: #ffffff;
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --hand: Kalam, "Bradley Hand", "Comic Sans MS", cursive;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em;
+  -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(72px, 11vw, 140px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.band.alt { background: var(--alt); }
+.band.stage { background: var(--stage); color: var(--stage-fg); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(28px, 4vw, 48px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; letter-spacing: .004em; color: var(--flame); }
+.h2 { font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.stage .h2 .quiet { color: var(--stage-fg2); }
+.sub { font-size: clamp(19px, 2.1vw, 24px); line-height: 1.33; font-weight: 500; letter-spacing: -.02em; color: var(--fg2); max-width: 40ch; }
+.head { display: grid; gap: 14px; }
+.head.center { text-align: center; justify-items: center; }
+
+/* Local nav */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--glass); }
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 21px; font-weight: 600; letter-spacing: .011em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 22px; font-size: 12px; letter-spacing: -.01em; }
+.nav-links a { color: var(--fg); opacity: .8; }
+.nav-links a:hover { opacity: 1; text-decoration: none; }
+.pill { border: 0; cursor: pointer; border-radius: 980px; background: var(--accent); color: #fff; font-size: 12px; padding: 5px 12px; white-space: nowrap; }
+.pill:hover { background: #0077ed; }
+.pill.lg { font-size: 17px; padding: 12px 24px; }
+.more { font-size: 17px; color: var(--link); background: none; border: 0; cursor: pointer; padding: 12px 4px; }
+.more::after { content: " \203A"; }
+@media (max-width: 760px) { .nav-links { display: none; } .nav-in .pill { margin-left: auto; } }
+
+/* Hero */
+.hero { text-align: center; padding-block: clamp(64px, 10vw, 128px) clamp(56px, 8vw, 96px); }
+.hero .inner { justify-items: center; gap: 22px; }
+.hero h1 { font-size: clamp(52px, 10vw, 104px); line-height: 1.02; font-weight: 700; letter-spacing: -.045em; max-width: 12ch; }
+.hero .lede { font-size: clamp(21px, 2.6vw, 30px); line-height: 1.24; font-weight: 600; letter-spacing: -.025em; max-width: 30ch; }
+.ctas { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: center; align-items: center; margin-top: 6px; }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px clamp(28px, 6vw, 72px); margin-top: clamp(24px, 4vw, 44px);
+  padding-top: clamp(24px, 4vw, 40px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: clamp(36px, 5vw, 56px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat span { font-size: 14px; color: var(--fg2); letter-spacing: -.01em; }
+.meta { font-size: 14px; color: var(--fg3); }
+
+/* Before / after */
+.ba { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+.ba-tile { border-radius: var(--r-lg); padding: clamp(28px, 4vw, 48px); display: grid; gap: 22px; align-content: start; min-width: 0; }
+.ba-tile.before { background: var(--tile-a); }
+.ba-tile.after { background: var(--invert-bg); color: var(--invert-fg); border: 2px solid transparent;
+  background: linear-gradient(#fff, #fff) padding-box, var(--grad) border-box; }
+.ba-tile h3 { font-size: 14px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--fg3); }
+.ba-tile.after h3 { color: var(--invert-fg2); }
+.ba-tile ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 18px; }
+.ba-tile li { font-size: clamp(19px, 2vw, 23px); line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
+.ba-tile.before li { color: var(--fg2); }
+
+/* Sketch */
+.board { background: var(--sketch-paper); border-radius: var(--r-lg); overflow-x: auto; padding: clamp(12px, 2vw, 24px);
+  border: 1px solid #e8e8ed; box-shadow: 0 1px 2px rgba(0, 0, 0, .03), 0 18px 50px rgba(0, 0, 0, .06); }
+.board svg { display: block; width: 100%; min-width: 600px; height: auto; }
+.caption { text-align: center; font-size: 17px; color: var(--fg2); max-width: 52ch; margin: 0 auto; }
+
+/* Use cases: bento */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile-a); justify-self: center; max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 16px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.bento { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); grid-auto-flow: dense; gap: 20px; }
+.uc { background: var(--tile-a); border-radius: var(--r-lg); padding: clamp(26px, 3vw, 36px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.uc .who { font-size: 14px; font-weight: 600; color: var(--flame); letter-spacing: -.01em; display: flex; gap: 10px; align-items: baseline; }
+.uc .rank { font-variant-numeric: tabular-nums; color: var(--fg3); font-weight: 500; }
+.uc h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.14; font-weight: 700; letter-spacing: -.028em; }
+.uc .situation { color: var(--fg2); }
+.uc .do { font-size: 15px; color: var(--fg); }
+.uc .do b { font-weight: 600; }
+.uc .result { font-size: 19px; font-weight: 600; letter-spacing: -.02em; line-height: 1.3; }
+.uc .result::before { content: "→ "; color: var(--accent); }
+.uc .without { font-size: 14px; color: var(--fg3); padding-top: 14px; border-top: 1px solid var(--line); margin-top: auto; }
+@media (min-width: 700px) {
+  .uc.feature { grid-column: span 2; padding: clamp(36px, 4.4vw, 56px); gap: 18px; }
+  .uc.feature h3 { font-size: clamp(30px, 3.6vw, 44px); letter-spacing: -.035em; }
+  .uc.feature .result { font-size: clamp(21px, 2.2vw, 26px); }
+}
+
+/* Stage: ways to explain */
+.tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; padding: 4px; border-radius: 980px; background: var(--stage-tile); justify-self: center; max-width: 100%; }
+.tabs button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 8px 18px; font-size: 14px; color: var(--stage-fg2); }
+.tabs button[aria-selected="true"] { background: var(--stage-fg); color: var(--stage); font-weight: 500; }
+.quote { text-align: center; display: grid; gap: 28px; justify-items: center; min-height: 12em; align-content: center; }
+.quote p { font-size: clamp(26px, 3.6vw, 42px); line-height: 1.16; font-weight: 600; letter-spacing: -.03em; max-width: 26ch; }
+.quote .copy { border: 1px solid var(--line); background: none; color: var(--stage-fg2); border-radius: 980px; padding: 6px 16px; font-size: 14px; cursor: pointer; }
+.quote .copy:hover { color: var(--stage-fg); border-color: var(--stage-fg2); }
+
+/* Script */
+.script { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: clamp(20px, 3vw, 40px); align-items: start; }
+@media (max-width: 820px) { .script { grid-template-columns: minmax(0, 1fr); } }
+.side { display: grid; gap: 20px; position: sticky; top: calc(72px + env(safe-area-inset-top, 0px)); }
+@media (max-width: 820px) { .side { position: static; } }
+.hook { background: var(--tile-b); border-radius: var(--r-lg); padding: 28px; font-size: 21px; line-height: 1.3; font-weight: 600; letter-spacing: -.02em; }
+.hook small { display: block; font-size: 14px; font-weight: 600; color: var(--flame); margin-bottom: 10px; letter-spacing: -.01em; }
+.prep { background: var(--tile-b); border-radius: var(--r-lg); padding: 28px; display: grid; gap: 14px; }
+.prep h3 { font-size: 21px; font-weight: 700; letter-spacing: -.02em; }
+.prep label { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: start; font-size: 15px; color: var(--fg2); cursor: pointer; }
+.prep input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); }
+.prep input:checked + span { color: var(--fg3); text-decoration: line-through; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.step { background: var(--tile-b); border-radius: var(--r-md); padding: 22px 26px; display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 18px; }
+.step .t { font-size: 21px; font-weight: 600; letter-spacing: -.02em; font-variant-numeric: tabular-nums; color: var(--fg3); }
+.step .d { font-size: 19px; font-weight: 600; letter-spacing: -.02em; line-height: 1.3; }
+.step .s { margin-top: 8px; color: var(--fg2); font-size: 16px; }
+.step .s::before { content: "Say  "; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg3); margin-right: 4px; }
+.step.wow { border: 2px solid transparent; background: linear-gradient(var(--tile-b), var(--tile-b)) padding-box, var(--grad) border-box; }
+.step.wow .t { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.wow-tag { display: inline-block; margin-left: 10px; font-size: 12px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; vertical-align: 3px; }
+.step.now { box-shadow: 0 0 0 3px var(--accent); }
+@media (max-width: 480px) { .step { grid-template-columns: 1fr; gap: 6px; } }
+
+/* Q&A */
+.faq { border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; align-items: center;
+  padding: 24px 0; font-size: clamp(19px, 2vw, 24px); font-weight: 600; letter-spacing: -.02em; line-height: 1.25; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-size: 28px; font-weight: 300; color: var(--fg3); transition: transform .3s ease; flex: none; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq details p { padding: 0 0 26px; color: var(--fg2); max-width: 66ch; font-size: 17px; }
+
+/* Limits */
+.limits { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 20px; }
+.limits li { background: var(--tile-b); border-radius: var(--r-md); padding: 24px 26px; display: grid; grid-template-columns: 24px 1fr; gap: 14px; color: var(--fg2); font-size: 16px; }
+.limits svg { width: 22px; height: 22px; margin-top: 1px; stroke: var(--fg3); }
+
+.foot { padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); background: var(--alt); }
+.foot .inner { border-top: 1px solid var(--line); padding-top: 18px; font-size: 12px; color: var(--fg3); gap: 8px; }
+.foot ol { margin: 0; padding-left: 1.2em; display: grid; gap: 4px; }
+.foot code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; overflow-wrap: anywhere; }
+.foot a { overflow-wrap: anywhere; }
+
+/* Present mode */
+.hud { position: fixed; z-index: 40; left: 50%; transform: translateX(-50%);
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px)); width: min(680px, calc(100% - 32px));
+  background: var(--hud); color: #f5f5f7; -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px);
+  border-radius: 22px; padding: 12px 12px 12px 22px; display: flex; align-items: center; gap: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, .3); }
+.hud-clock { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; letter-spacing: -.02em; flex: none; }
+.hud-clock small { font-size: 13px; color: #a1a1a6; font-weight: 500; margin-left: 4px; }
+.hud-now { min-width: 0; flex: 1; font-size: 14px; line-height: 1.3; }
+.hud-now span { display: block; color: #a1a1a6; font-size: 12px; }
+.hud-now b { display: block; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hud-btns { display: flex; gap: 6px; flex: none; }
+.hud-btns button { border: 0; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; background: rgba(255, 255, 255, .14); color: #f5f5f7; font-size: 16px; }
+.hud-btns button:hover { background: rgba(255, 255, 255, .24); }
+.hud-btns .x { width: auto; padding: 0 14px; border-radius: 980px; font-size: 13px; }
+body.presenting .band { min-height: calc(100vh - 52px); display: grid; align-content: center; }
+@media (max-width: 520px) { .hud-now { display: none; } }
+
+/* Motion: scroll-driven reveal; everything is fully visible at rest and without support. */
+@keyframes rise { from { opacity: .2; transform: translateY(32px) scale(.985); } }
+@keyframes land { from { opacity: .35; transform: translateY(14px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .hero .inner > * { animation: land .9s cubic-bezier(.2, .7, .2, 1) both; }
+  .hero .inner > *:nth-child(2) { animation-delay: .06s; } .hero .inner > *:nth-child(3) { animation-delay: .12s; }
+  .hero .inner > *:nth-child(4) { animation-delay: .18s; } .hero .inner > *:nth-child(5) { animation-delay: .24s; }
+  @supports (animation-timeline: view()) {
+    .reveal { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; }
+  }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .faq summary::after { transition: none; } }
+</style>
+
+<div id="app"></div>
+
+<!-- Filled by the skill (scripts/build_demo.py). Schema: see SKILL.md. -->
+<script id="demo-data" type="application/json">
+{
+ "feature": "The Attach Button",
+ "product": "Claude (claude.ai chat)",
+ "audience": "Your team, assumed mostly non-technical",
+ "demoLength": "6 minutes",
+ "oneLiner": "Hand Claude your actual report, spreadsheet, screenshot, or photo, so it answers about your work instead of guessing.",
+ "problem": {
+  "before": [
+   "You copy and paste pages of text into the chat box, and formatting, tables, and charts get lost.",
+   "You type out a description of an error screen or a chart and hope it makes sense.",
+   "Claude can only give generic advice because it has never seen your document.",
+   "Reading a 60-page report or comparing two contract versions takes an afternoon."
+  ],
+  "after": [
+   "Drag the file in, or click + and pick it, then ask your question in plain words.",
+   "Paste a screenshot or snap a photo and Claude sees exactly what you see.",
+   "Answers point back to your own pages, numbers, and wording.",
+   "Up to 20 files in one chat, so you can compare, combine, and cross-check."
+  ]
+ },
+ "flow": {
+  "nodes": [
+   {
+    "id": "you",
+    "label": "You, with a file\nyou already have",
+    "x": 0,
+    "y": 40,
+    "w": 180,
+    "h": 90,
+    "shape": "ellipse"
+   },
+   {
+    "id": "add",
+    "label": "Click +, or drag,\nor paste it in",
+    "x": 230,
+    "y": 50,
+    "w": 180,
+    "h": 70
+   },
+   {
+    "id": "ask",
+    "label": "Ask in plain\nwords",
+    "x": 460,
+    "y": 50,
+    "w": 180,
+    "h": 70
+   },
+   {
+    "id": "get",
+    "label": "An answer about\nYOUR file",
+    "x": 690,
+    "y": 50,
+    "w": 180,
+    "h": 70
+   }
+  ],
+  "edges": [
+   {
+    "from": "you",
+    "to": "add"
+   },
+   {
+    "from": "add",
+    "to": "ask"
+   },
+   {
+    "from": "ask",
+    "to": "get"
+   },
+   {
+    "from": "get",
+    "to": "ask",
+    "dashed": true
+   }
+  ]
+ },
+ "flowCaption": "Hand it over, ask, get an answer grounded in your file, then keep asking follow-ups in the same chat.",
+ "useCases": [
+  {
+   "group": "Managers and busy readers",
+   "title": "Get the gist of a long report in two minutes",
+   "situation": "A 60-page quarterly report lands an hour before the leadership meeting.",
+   "action": "Drop the PDF in and ask for a five-bullet summary, the biggest risk, and which page it is on.",
+   "result": "A short, accurate brief you can check against the page numbers, plus follow-up answers on demand.",
+   "without": "Skimming headings and hoping you didn't miss the one paragraph that matters."
+  },
+  {
+   "group": "Finance and operations",
+   "title": "Ask a spreadsheet questions in plain English",
+   "situation": "A budget export with hundreds of rows, and you need to know what's over plan.",
+   "action": "Attach the CSV or Excel file and ask which lines are over budget, by how much, and why that might be.",
+   "result": "A ranked list of the problem lines with totals, without writing a single formula.",
+   "without": "Building pivot tables or waiting on the one colleague who knows the spreadsheet."
+  },
+  {
+   "group": "Anyone who gets stuck",
+   "title": "Show Claude the screen you're stuck on",
+   "situation": "A confusing error message or settings page you don't understand.",
+   "action": "Take a screenshot and paste it straight into the chat, then ask what it means and what to click.",
+   "result": "A plain-language explanation and step-by-step fix based on exactly what's on your screen.",
+   "without": "Trying to type out the error word for word, or describing a screen Claude can't see."
+  },
+  {
+   "group": "Managers and busy readers",
+   "title": "See what changed between two versions",
+   "situation": "A vendor sends back 'a few small edits' to a contract or policy.",
+   "action": "Attach the old and new versions together and ask what changed and which changes matter.",
+   "result": "A side-by-side list of changes, with the ones that shift cost, risk, or deadlines flagged first.",
+   "without": "Reading both versions line by line, or trusting the other side's summary."
+  },
+  {
+   "group": "People away from their desk",
+   "title": "Turn a whiteboard photo into action items",
+   "situation": "The meeting ends with a whiteboard full of arrows, names, and half-sentences.",
+   "action": "Snap a photo, attach it, and ask for clean notes with owners and next steps.",
+   "result": "Typed-up notes and a to-do list you can paste into the team chat within a minute.",
+   "without": "Someone rewrites the board from memory, days later, and half of it is lost."
+  },
+  {
+   "group": "Marketing and sales",
+   "title": "Pull the story out of a chart-heavy deck",
+   "situation": "A research report or competitor deck saved as a PDF, full of charts and graphs.",
+   "action": "Attach the PDF and ask what the charts actually show and which three points to use with customers.",
+   "result": "Talking points that reflect the charts too, not just the text (for PDFs up to 100 pages).",
+   "without": "Squinting at graphs and guessing what the trend means."
+  },
+  {
+   "group": "Teams that work in Google Drive",
+   "title": "Ask about a live Google Doc or Sheet",
+   "situation": "The plan everyone keeps editing lives in Google Drive, not on your laptop.",
+   "action": "Click +, choose Add from Google Drive, pick the doc, and ask your question.",
+   "result": "Answers based on the doc as it is right now. Later edits in Drive reach Claude on your next message.",
+   "without": "Downloading a copy that's out of date the moment someone edits the original."
+  },
+  {
+   "group": "Engineers",
+   "title": "Ask how a piece of your code works",
+   "situation": "A new teammate needs to understand a project they've never seen.",
+   "action": "Click +, choose Add from GitHub, pick the repository, and ask how a feature works.",
+   "result": "An explanation grounded in the real files, which they can keep questioning.",
+   "without": "Booking an hour with the one person who wrote it."
+  },
+  {
+   "group": "Product and design",
+   "title": "Get feedback on a screen or mockup",
+   "situation": "A new sign-up screen design is ready for a quick sanity check.",
+   "action": "Attach a screenshot and ask what's confusing, what's missing, and how to word the buttons.",
+   "result": "Specific notes on that screen, plus suggested wording you can try right away.",
+   "without": "Waiting for the next review meeting for first impressions."
+  },
+  {
+   "group": "Students and learners",
+   "title": "Turn a chapter into a practice quiz",
+   "situation": "A textbook chapter or training manual to learn before an exam or certification.",
+   "action": "Attach the chapter (PDF or e-book) and ask for ten questions, then check your answers with Claude.",
+   "result": "A quiz drawn only from your material, with explanations when you get one wrong.",
+   "without": "Re-reading the chapter and hoping it sticks."
+  }
+ ],
+ "explanations": [
+  {
+   "style": "Everyday analogy",
+   "text": "It's the difference between describing a document to a colleague over the phone and just handing it to them. The + button is how you hand it over."
+  },
+  {
+   "style": "Business value",
+   "text": "Most of our work lives in files: reports, spreadsheets, contracts, decks. Attaching them means Claude works on our real material, so hours of reading, comparing, and summarizing become minutes, and answers can be checked against the source."
+  },
+  {
+   "style": "For managers and busy readers",
+   "text": "Think of it as a reader who goes through the whole 60-page report before your meeting and briefs you in five bullets, with page numbers so you can verify anything that matters."
+  },
+  {
+   "style": "For the skeptic in the room",
+   "text": "Claude isn't guessing from the internet here. It's answering from the file you gave it. Ask it which page something is on and check. That's the point."
+  }
+ ],
+ "script": {
+  "hook": "Raise your hand if you've ever pasted a wall of text into a chat box and lost all the tables. This little + button fixes that.",
+  "setup": [
+   "Sign in to claude.ai and open a fresh chat. Zoom the browser to about 125% so the room can read it.",
+   "Have these files on your desktop, all non-confidential: a 20 to 40 page PDF report with a few charts, a budget CSV or Excel file, a screenshot of a confusing error, and two versions of a short contract.",
+   "Take a photo of a messy whiteboard on your phone and get it onto your laptop (or attach it from the Claude phone app).",
+   "If you'll attach an Excel file, check that code execution and file creation is turned on in Settings first.",
+   "Optional: connect Google Drive or GitHub in Customize > Connectors beforehand, so the Add from Drive or Add from GitHub option shows up in the + menu.",
+   "Do one full dry run the day before, and keep the finished chat open in a second tab as a backup."
+  ],
+  "steps": [
+   {
+    "time": "0:00",
+    "do": "Point to the + at the lower left of the message box and open it.",
+    "say": "This is how you hand Claude your actual work: files, photos, screenshots, even docs from Google Drive."
+   },
+   {
+    "time": "0:40",
+    "do": "Drag the PDF report into the chat. Ask: 'Summarize this in five bullets for a busy exec. What's the biggest risk, and which page is it on?'",
+    "say": "No copy-pasting. I just dropped the whole report in, charts and all."
+   },
+   {
+    "time": "1:50",
+    "do": "Open the PDF to the page Claude named and show the room it matches.",
+    "say": "Don't take its word for it. It tells us where to look, and we can check."
+   },
+   {
+    "time": "2:30",
+    "do": "Copy the error screenshot and paste it with Cmd+V or Ctrl+V. Ask: 'What does this mean, and what do I click to fix it?'",
+    "say": "If you can see it, Claude can see it. No more typing out error messages."
+   },
+   {
+    "time": "3:20",
+    "do": "Attach the whiteboard photo. Ask: 'Turn this into clean meeting notes with owners and next steps.'",
+    "say": "This is the whiteboard from our last meeting. Watch what happens.",
+    "wow": true
+   },
+   {
+    "time": "4:30",
+    "do": "Attach both contract versions together. Ask: 'What changed between these, and which changes affect cost or deadlines?'",
+    "say": "Two files at once. It compares them for us and flags what matters."
+   },
+   {
+    "time": "5:30",
+    "do": "Scroll back through the chat to show all four answers.",
+    "say": "Anything you'd forward, screenshot, or print for a colleague, you can hand to Claude with this button. Try it with one file from your inbox today."
+   }
+  ]
+ },
+ "questions": [
+  {
+   "q": "What kinds of files can I attach?",
+   "a": "Documents like PDF, Word (DOCX), plain text, CSV, Excel (XLSX), HTML, RTF, OpenDocument, EPUB, and JSON, plus images in JPEG, PNG, GIF, and WebP. Excel needs the code execution and file creation setting turned on. Audio and video aren't on the list."
+  },
+  {
+   "q": "How big can files be, and how many can I add?",
+   "a": "Up to 20 files per chat and up to 500MB each. PDFs can be up to 1,000 pages and images up to 8000x8000 pixels. Everything still has to fit in what Claude can hold in one conversation, so a pile of very long files can hit a length limit before the size limit."
+  },
+  {
+   "q": "Does it really read the charts, or just the words?",
+   "a": "For PDFs of 100 pages or fewer, Claude looks at the charts, images, and graphics as well as the text. For longer PDFs, and for Word and other non-PDF documents, it reads the text only and ignores pictures. If the visuals matter, save as PDF and keep it under 100 pages, or attach a screenshot of the chart."
+  },
+  {
+   "q": "Will it remember my file in my next chat?",
+   "a": "No. An attachment belongs to the chat you added it to. To reuse the same files across many chats, put them in a Project's files, where every chat in that project can use them."
+  },
+  {
+   "q": "If I attach a Google Doc and someone edits it, does Claude see the update?",
+   "a": "Yes. A file added from Google Drive is re-read from Drive each time you send a message. Docs come through as text without their images, Sheets as plain tables with every tab, and Slides as plain text. Very large Google files (over about 10MB) arrive as just a name and details."
+  },
+  {
+   "q": "Is our data safe, and is it used to train the model?",
+   "a": "It depends on your plan and settings. On Team and Enterprise plans, business terms apply. On individual plans there's a privacy setting that controls whether chats help improve the model. Check your plan's privacy settings before the demo, and only use non-confidential files on screen."
+  },
+  {
+   "q": "Can it get things wrong?",
+   "a": "Yes, like any assistant. That's why the demo asks which page an answer is on. For numbers and anything legal, treat Claude's answer as a fast first pass and check it against the source."
+  },
+  {
+   "q": "Does this work on my phone?",
+   "a": "Yes, the Claude phone apps let you attach photos and files from the chat box. The exact menu wording varies by device, so try it on your own phone before you rely on it in front of a room."
+  }
+ ],
+ "notFor": [
+  "It isn't a file storage or sharing drive. Attachments live in that one chat, not in a shared folder.",
+  "It doesn't change your original file. Claude reads it and answers, and your copy stays untouched.",
+  "Pictures inside Word and other non-PDF documents are ignored, and PDFs over 100 pages are read as text only.",
+  "No audio or video files.",
+  "GitHub attachments include file names and contents only, not commit history, pull requests, or issues.",
+  "In Projects, Google Drive and GitHub files can be added to private projects only, not shared ones. Both need connecting first in Customize > Connectors, and on Team and Enterprise plans an admin has to enable them.",
+  "Check before the demo: which plan your team is on, the usage limits that come with it, and the privacy settings. These change, so don't quote them from memory."
+ ],
+ "sources": [
+  "https://support.claude.com/en/articles/8241126-upload-files-to-claude",
+  "https://claude.com/docs/connectors/google/drive",
+  "https://claude.com/docs/connectors/github"
+ ]
+}
+</script>
+
+<script>
+(function () {
+  const d = JSON.parse(document.getElementById("demo-data").textContent);
+  const app = document.getElementById("app");
+  const NS = "http://www.w3.org/2000/svg";
+
+  function h(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === "class") n.className = v; else if (k.startsWith("on")) n.addEventListener(k.slice(2), v); else n.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) n.append(k);
+    return n;
+  }
+  const band = (id, cls, ...kids) => h("section", { id, class: "band " + (cls || "") }, h("div", { class: "inner" + (cls && cls.includes("wide") ? " wide" : "") }, ...kids));
+  const head = (eyebrow, loud, quiet, center) => h("div", { class: "head reveal" + (center ? " center" : "") },
+    eyebrow ? h("div", { class: "eyebrow" }, eyebrow) : null,
+    h("h2", { class: "h2" }, loud, quiet ? h("span", { class: "quiet" }, " " + quiet) : null));
+  const slug = s => String(s).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const store = {
+    get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+    set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+  };
+
+  // Local nav
+  const links = [["Overview", "problem"], ["Uses", "uses"], ["Explain", "explain"], ["Script", "script"], ["Q&A", "qa"]];
+  app.append(h("nav", { class: "nav", "aria-label": "Sections" }, h("div", { class: "nav-in" },
+    h("div", { class: "nav-title" }, d.feature),
+    h("div", { class: "nav-links" }, links.map(([t, id]) => h("a", { href: "#" + id }, t))),
+    h("button", { class: "pill", type: "button", onclick: togglePresent }, "Present"))));
+
+  // Hero
+  const steps = d.script.steps;
+  app.append(h("header", { class: "band hero" }, h("div", { class: "inner" },
+    h("div", { class: "eyebrow" }, d.product ? d.product + " demo" : "Demo"),
+    h("h1", null, d.feature),
+    h("p", { class: "lede" }, d.oneLiner),
+    h("div", { class: "ctas" },
+      h("button", { class: "pill lg", type: "button", onclick: togglePresent }, "Start the demo"),
+      h("button", { class: "more", type: "button", onclick: () => document.getElementById("uses").scrollIntoView() }, "See every use")),
+    h("div", { class: "stats" },
+      h("div", { class: "stat" }, h("b", null, String(d.useCases.length)), h("span", null, "ways people use it")),
+      h("div", { class: "stat" }, h("b", null, String(d.explanations.length)), h("span", null, "ways to explain it")),
+      h("div", { class: "stat" }, h("b", null, d.demoLength || steps[steps.length - 1].time), h("span", null, "demo, start to finish"))),
+    d.audience ? h("p", { class: "meta" }, "Written for: " + d.audience) : null)));
+
+  // Problem
+  app.append(band("problem", "alt",
+    head("Why it exists", "The problem it solves.", "And what changes."),
+    h("div", { class: "ba" },
+      h("div", { class: "ba-tile before reveal" }, h("h3", null, "Without it"), h("ul", null, d.problem.before.map(t => h("li", null, t)))),
+      h("div", { class: "ba-tile after reveal" }, h("h3", null, "With it"), h("ul", null, d.problem.after.map(t => h("li", null, t)))))));
+
+  // Journey sketch
+  if (d.flow && d.flow.nodes && d.flow.nodes.length) {
+    const board = h("div", { class: "board reveal" });
+    app.append(band("journey", "",
+      head("At a glance", "How someone uses it.", null, true),
+      board, d.flowCaption ? h("p", { class: "caption" }, d.flowCaption) : null));
+    board.append(drawFlow(d.flow));
+  }
+
+  // Use cases
+  const groups = [...new Set(d.useCases.map(u => u.group))];
+  const tiles = d.useCases.map((u, i) => h("article", { class: "uc reveal", "data-group": u.group },
+    h("div", { class: "who" }, h("span", { class: "rank" }, String(i + 1).padStart(2, "0")), h("span", null, u.group)),
+    h("h3", null, u.title),
+    h("p", { class: "situation" }, u.situation),
+    h("p", { class: "do" }, h("b", null, "They "), lowerFirst(u.action)),
+    h("p", { class: "result" }, u.result),
+    u.without ? h("p", { class: "without" }, "Without it: " + u.without) : null));
+  const bento = h("div", { class: "bento" }, tiles);
+  const segBtns = ["All", ...groups].map(g => h("button", { type: "button", "aria-pressed": g === "All" ? "true" : "false", onclick: () => filter(g) }, g));
+  function filter(g) {
+    segBtns.forEach(b => b.setAttribute("aria-pressed", String(b.textContent === g)));
+    let first = true;
+    tiles.forEach(t => {
+      const show = g === "All" || t.dataset.group === g;
+      t.hidden = !show; t.classList.toggle("feature", show && first); if (show) first = false;
+    });
+  }
+  app.append(band("uses", "wide",
+    head("What people use it for", d.useCases.length + " ways to use it.", "Ranked by how often people reach for it.", true),
+    groups.length > 1 ? h("div", { class: "seg", role: "group", "aria-label": "Filter by who uses it" }, segBtns) : null,
+    bento));
+  filter("All");
+
+  // Ways to explain it
+  const quoteP = h("p", { "aria-live": "polite" });
+  const copyBtn = h("button", { class: "copy", type: "button" }, "Copy this line");
+  let current = 0;
+  const tabBtns = d.explanations.map((x, i) => h("button", { type: "button", role: "tab", "aria-selected": "false", onclick: () => pick(i) }, x.style));
+  function pick(i) {
+    current = i; quoteP.textContent = d.explanations[i].text; copyBtn.textContent = "Copy this line";
+    tabBtns.forEach((b, j) => { b.setAttribute("aria-selected", String(i === j)); b.tabIndex = i === j ? 0 : -1; });
+  }
+  const tablist = h("div", { class: "tabs", role: "tablist", "aria-label": "Ways to explain it" }, tabBtns);
+  tablist.addEventListener("keydown", e => {
+    const n = d.explanations.length;
+    if (e.key === "ArrowRight") { pick((current + 1) % n); tabBtns[current].focus(); e.preventDefault(); }
+    if (e.key === "ArrowLeft") { pick((current - 1 + n) % n); tabBtns[current].focus(); e.preventDefault(); }
+  });
+  copyBtn.addEventListener("click", () => {
+    const text = d.explanations[current].text;
+    const done = () => { copyBtn.textContent = "Copied"; };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents(quoteP); const s = getSelection(); s.removeAllRanges(); s.addRange(r); copyBtn.textContent = "Selected, press Copy"; };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+  app.append(band("explain", "stage",
+    head("Pick the framing for your room", "Ways to explain it.", "Same feature, different story.", true),
+    tablist, h("div", { class: "quote reveal", role: "tabpanel" }, quoteP, copyBtn)));
+  pick(0);
+
+  // Demo script
+  const key = "demo-prep-" + slug(d.feature);
+  const saved = (store.get(key) || "").split(",");
+  const prep = h("div", { class: "prep" }, h("h3", null, "Before you start"),
+    d.script.setup.map((s, i) => {
+      const box = h("input", { type: "checkbox", id: "prep-" + i, checked: saved.includes(String(i)) });
+      box.addEventListener("change", () => store.set(key, [...prep.querySelectorAll("input")].map((b, j) => b.checked ? j : "").filter(String).join(",")));
+      return h("label", { for: "prep-" + i }, box, h("span", null, s));
+    }));
+  const stepEls = steps.map(s => h("li", { class: "step reveal" + (s.wow ? " wow" : "") },
+    h("div", { class: "t" }, s.time),
+    h("div", null, h("div", { class: "d" }, s.do, s.wow ? h("span", { class: "wow-tag" }, "The moment") : null), h("p", { class: "s" }, s.say))));
+  app.append(band("script", "alt",
+    head("Run of show", "The demo, step by step.", d.demoLength ? "About " + d.demoLength + "." : null),
+    h("div", { class: "script" },
+      h("div", { class: "side" }, d.script.hook ? h("div", { class: "hook" }, h("small", null, "Open with"), d.script.hook) : null, prep),
+      h("ol", { class: "steps" }, stepEls))));
+
+  // Q&A
+  app.append(band("qa", "",
+    head("Be ready for", "Questions people will ask.", null),
+    h("div", { class: "faq reveal" }, d.questions.map(x => h("details", null, h("summary", null, x.q), h("p", null, x.a))))));
+
+  // Limits
+  const noIcon = () => { const s = document.createElementNS(NS, "svg"); s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("fill", "none"); s.setAttribute("stroke-width", "1.6"); s.setAttribute("aria-hidden", "true");
+    s.innerHTML = '<circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/>'; return s; };
+  app.append(band("limits", "alt",
+    head("Say it before they do", "What it is not for.", null),
+    h("ul", { class: "limits" }, d.notFor.map(t => h("li", { class: "reveal" }, noIcon(), h("span", null, t))))));
+
+  // Sources
+  if (d.sources && d.sources.length) {
+    app.append(h("footer", { class: "foot" }, h("div", { class: "inner" }, h("div", null, "Checked against"),
+      h("ol", null, d.sources.map(s => h("li", null, /^https?:\/\//.test(s) ? h("a", { href: s, target: "_blank", rel: "noopener" }, s) : h("code", null, s)))))));
+  }
+
+  // Present mode: arrow keys step through sections; the HUD shows the clock and what to do now.
+  let presenting = false, t0 = 0, tick = null, hud = null;
+  const toSec = t => { const m = String(t).match(/(\d+):(\d{2})/); return m ? +m[1] * 60 + +m[2] : 0; };
+  const fmt = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+  function togglePresent() { presenting ? stopPresent() : startPresent(); }
+  function startPresent() {
+    presenting = true; document.body.classList.add("presenting"); t0 = Date.now();
+    const clock = h("div", { class: "hud-clock" }, "0:00");
+    const now = h("div", { class: "hud-now" });
+    hud = h("div", { class: "hud", role: "status" }, clock, now, h("div", { class: "hud-btns" },
+      h("button", { type: "button", "aria-label": "Previous section", onclick: () => go(-1) }, "↑"),
+      h("button", { type: "button", "aria-label": "Next section", onclick: () => go(1) }, "↓"),
+      h("button", { type: "button", class: "x", onclick: stopPresent }, "End")));
+    document.body.append(hud);
+    const update = () => {
+      const el = Math.floor((Date.now() - t0) / 1000);
+      clock.replaceChildren(fmt(el), h("small", null, d.demoLength ? "/ " + d.demoLength : ""));
+      let i = 0; steps.forEach((s, j) => { if (toSec(s.time) <= el) i = j; });
+      stepEls.forEach((e, j) => e.classList.toggle("now", j === i));
+      const next = steps[i + 1];
+      now.replaceChildren(h("span", null, next ? "Now · next at " + next.time : "Now · last step"), h("b", null, steps[i].do));
+    };
+    update(); tick = setInterval(update, 1000);
+    try { const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+    window.scrollTo({ top: 0 });
+  }
+  function stopPresent() {
+    presenting = false; document.body.classList.remove("presenting"); clearInterval(tick);
+    if (hud) hud.remove(); hud = null; stepEls.forEach(e => e.classList.remove("now"));
+    try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {}
+  }
+  function go(dir) {
+    const secs = [...document.querySelectorAll("header.band, section.band")];
+    const y = window.scrollY + 80;
+    let idx = 0; secs.forEach((s, i) => { if (s.offsetTop <= y) idx = i; });
+    const target = secs[Math.max(0, Math.min(secs.length - 1, idx + dir))];
+    target.scrollIntoView({ block: "start" });
+  }
+  document.addEventListener("keydown", e => {
+    if (!presenting || e.target.closest("input, textarea, [role=tablist]")) return;
+    if (["ArrowDown", "ArrowRight", "PageDown", " "].includes(e.key)) { go(1); e.preventDefault(); }
+    else if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) { go(-1); e.preventDefault(); }
+    else if (e.key === "Escape") stopPresent();
+  });
+
+  function lowerFirst(s) { s = String(s); return /^[A-Z][a-z]/.test(s) ? s[0].toLowerCase() + s.slice(1) : s; }
+
+  // Hand-drawn journey: same {nodes, edges} spec as designing-software-architecture's diagrams. Black ink on white.
+  function drawFlow(spec) {
+    const css = getComputedStyle(document.documentElement);
+    const ink = css.getPropertyValue("--sketch-ink").trim() || "#1d1d1f";
+    const fill = css.getPropertyValue("--sketch-fill").trim() || "#ffffff";
+    const pad = 36;
+    const nodes = {}; spec.nodes.forEach(n => { nodes[n.id] = Object.assign({ w: 160, h: 70, shape: "rectangle" }, n); });
+    const all = Object.values(nodes);
+    const minX = Math.min(...all.map(n => n.x)) - pad, minY = Math.min(...all.map(n => n.y)) - pad;
+    const maxX = Math.max(...all.map(n => n.x + n.w)) + pad, maxY = Math.max(...all.map(n => n.y + n.h)) + pad;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Journey: " + all.map(n => n.label.replace(/\n/g, " ")).join(", then "));
+    const rc = window.rough ? rough.svg(svg) : null;
+    const opt = { stroke: ink, strokeWidth: 1.7, roughness: 1.15, bowing: .9, fill, fillStyle: "solid", seed: 7 };
+    const plain = (tag, attrs) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
+    const shape = n => {
+      const cx = n.x + n.w / 2, cy = n.y + n.h / 2;
+      if (n.shape === "ellipse") return rc ? rc.ellipse(cx, cy, n.w, n.h, opt) : plain("ellipse", { cx, cy, rx: n.w / 2, ry: n.h / 2, fill, stroke: ink, "stroke-width": 2 });
+      if (n.shape === "diamond") { const pts = [[cx, n.y], [n.x + n.w, cy], [cx, n.y + n.h], [n.x, cy]];
+        return rc ? rc.polygon(pts, opt) : plain("polygon", { points: pts.join(" "), fill, stroke: ink, "stroke-width": 2 }); }
+      return rc ? rc.rectangle(n.x, n.y, n.w, n.h, opt) : plain("rect", { x: n.x, y: n.y, width: n.w, height: n.h, rx: 10, fill, stroke: ink, "stroke-width": 2 });
+    };
+    const anchor = (n, o) => {
+      const dx = (o.x + o.w / 2) - (n.x + n.w / 2), dy = (o.y + o.h / 2) - (n.y + n.h / 2);
+      if (Math.abs(dx) >= Math.abs(dy)) return [n.x + (dx > 0 ? n.w : 0), n.y + n.h / 2];
+      return [n.x + n.w / 2, n.y + (dy > 0 ? n.h : 0)];
+    };
+    const text = (x, y, str, size, weight) => {
+      const lines = String(str).split("\n");
+      const t = plain("text", { x, y: y - (lines.length - 1) * size * 0.6, "text-anchor": "middle", "dominant-baseline": "middle",
+        "font-family": "Kalam, 'Bradley Hand', 'Comic Sans MS', cursive", "font-size": size, "font-weight": weight || 400, fill: ink });
+      lines.forEach((ln, i) => { const ts = plain("tspan", { x, dy: i ? size * 1.2 : 0 }); ts.textContent = ln; t.appendChild(ts); });
+      return t;
+    };
+    (spec.edges || []).forEach(e => {
+      const a = nodes[e.from], b = nodes[e.to]; if (!a || !b) return;
+      const [x1, y1] = anchor(a, b), [x2, y2] = anchor(b, a);
+      const lo = Object.assign({}, opt, e.dashed ? { strokeLineDash: [8, 8] } : {});
+      const ang = Math.atan2(y2 - y1, x2 - x1), L = 14;
+      const h1 = [x2 - L * Math.cos(ang - .45), y2 - L * Math.sin(ang - .45)];
+      const h2 = [x2 - L * Math.cos(ang + .45), y2 - L * Math.sin(ang + .45)];
+      if (rc) { svg.appendChild(rc.line(x1, y1, x2, y2, lo)); svg.appendChild(rc.line(x2, y2, ...h1, opt)); svg.appendChild(rc.line(x2, y2, ...h2, opt)); }
+      else {
+        svg.appendChild(plain("line", { x1, y1, x2, y2, stroke: ink, "stroke-width": 2, "stroke-dasharray": e.dashed ? "8 8" : "none" }));
+        svg.appendChild(plain("polyline", { points: [h1, [x2, y2], h2].join(" "), fill: "none", stroke: ink, "stroke-width": 2 }));
+      }
+      if (e.label) {
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, w = e.label.length * 8 + 14;
+        svg.appendChild(plain("rect", { x: mx - w / 2, y: my - 13, width: w, height: 26, rx: 6, fill }));
+        svg.appendChild(text(mx, my, e.label, 15));
+      }
+    });
+    all.forEach(n => { svg.appendChild(shape(n)); svg.appendChild(text(n.x + n.w / 2, n.y + n.h / 2, n.label, 18, 700)); });
+    return svg;
+  }
+})();
+</script>
