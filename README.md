@@ -9,6 +9,7 @@ Agent skills for [Claude Code](https://claude.com/claude-code).
 | [designing-software-architecture](src/general/designing-software-architecture/SKILL.md) | Designing a system or major feature, comparing approaches (monolith vs services, SQL vs NoSQL, sync vs async), reviewing a design, or writing an ADR. Draws diagrams as plain white, hand-drawn [Excalidraw](https://excalidraw.com) files. |
 | [demoing-features](src/general/demoing-features/SKILL.md) | Explaining why a feature or button exists and what people use it for, or preparing to demo a feature or product. Produces a styled web page with every use case, several ways to explain it, a demo script, and a hand-drawn sketch of the user's journey. |
 | [compressing-agent-prompts](src/agents/compressing-agent-prompts/SKILL.md) | Reviewing an agent's system prompt (subagent, SKILL.md, CLAUDE.md, tool description): scores how much of it is needed, flags duplicates, filler, conflicts, and vague rules, and compresses it without changing what the agent does, checked by a static gate and a behavioral test. |
+| [auditing-agent-token-usage](src/agents/auditing-agent-token-usage/SKILL.md) | Finding out why an LLM agent uses far more tokens than its task needs. Predicts the cost from the code, measures real usage through a logging proxy, explains every gap as an issue with file:line evidence and a fix, and shows it all on an Apple-style report page. |
 
 ## Install
 
@@ -20,6 +21,7 @@ mkdir -p ~/.claude/skills
 ln -s "$(pwd)/skills/src/general/designing-software-architecture" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/general/demoing-features" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/agents/compressing-agent-prompts" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/agents/auditing-agent-token-usage" ~/.claude/skills/
 ```
 
 Claude Code picks up the skills in new sessions and uses them automatically. Try:
@@ -27,6 +29,7 @@ Claude Code picks up the skills in new sessions and uses them automatically. Try
 - "Design the architecture for a URL shortener"
 - "Why is there an attachment button in Claude?" or "I want to demo our sharing feature to the sales team"
 - "How good is the prompt in `.claude/agents/reviewer.md`? Compress it without changing what it does"
+- "Our support agent costs way too much per ticket. Find out where the tokens go"
 
 ## Usage
 
@@ -84,11 +87,25 @@ Reads an agent's prompt, splits it into individual instructions, and labels each
 
 The report gives the size saved, a signal score (how much of the original was needed), quality issues, a ledger mapping every original instruction to its new place, and the test results. It reports "no measurable regression across N checks", never a guarantee.
 
+### auditing-agent-token-usage
+
+Gives three numbers per task: **Ideal** (what the task needs), **Predicted** (what the code implies), and **Actual** (measured). Every number is labeled measured, counted, or estimated. Four Python scripts, standard library only:
+
+| Script | Does |
+|---|---|
+| `count_tokens.py` | Exact token counts (Anthropic count_tokens API or tiktoken), else a labeled estimate |
+| `usage_proxy.py` | Sits between the agent and the API with no code changes (`ANTHROPIC_BASE_URL` / `OPENAI_BASE_URL`). Logs real usage per call, handles streaming, enforces a budget cap, never stores keys or content |
+| `analyze_trace.py` | Turns 3+ runs into stats, a by-source breakdown, and findings from 18 detectors (resent history, huge tool results, missing or broken caching, retry storms, repeated tool calls, and more) |
+| `build_report.py` | Checks the audit JSON and builds the report page: hero numbers, where the tokens go, a hand-drawn agent map, ranked issue cards with code evidence and fixes, and before/after |
+
+Running the agent costs money, so the skill shows the cost first and waits for a yes, stubs tools with side effects, and always sets a budget cap. Tests: `python3 -m unittest discover -s src/agents/auditing-agent-token-usage/tests`.
+
 ## Examples
 
 - [test/example-url-shortener](test/example-url-shortener/) shows the architecture and demo skills on a URL shortener: the [design write-up](test/example-url-shortener/README.md), the [diagram](test/example-url-shortener/architecture.excalidraw) and its [spec](test/example-url-shortener/spec.json), and the [demo pack](test/example-url-shortener/demo.html) for a sales and marketing audience, built from [demo.json](test/example-url-shortener/demo.json).
 - [test/example-attachment-button](test/example-attachment-button/) shows the demo skill on a public product feature, "Why is there an attachment button in Claude?": the [demo pack](test/example-attachment-button/demo.html) and its [demo.json](test/example-attachment-button/demo.json), with sources checked against Claude's help pages.
 - [test/example-prompt-compression](test/example-prompt-compression/) shows a customer-support agent prompt cut by 60% (~604 → ~244 tokens): the [original](test/example-prompt-compression/support-agent.md), the [compressed prompt](test/example-prompt-compression/support-agent.compressed.md), the [report](test/example-prompt-compression/support-agent.compression.md), and the [behavioral tests](test/example-prompt-compression/tests.md).
+- [test/example-token-audit](test/example-token-audit/) shows a token audit of a bug-triage agent with six planted problems: 168,068 tokens per task measured against 2,103 for the fixed version (80× less). See the [report page](test/example-token-audit/report.html), the [audit JSON](test/example-token-audit/token-audit.json), and the [agent](test/example-token-audit/wasteful_agent.py).
 
 ## Repo layout
 
@@ -105,8 +122,15 @@ src/agents/
   compressing-agent-prompts/
     SKILL.md
     scripts/prompt_check.py
+  auditing-agent-token-usage/
+    SKILL.md
+    references/                # issue catalog, per-SDK instrumenting
+    scripts/                   # count_tokens, usage_proxy, analyze_trace, build_report
+    assets/report-template.html
+    tests/                     # 21 tests + a fake API for running agents offline
 test/
   example-url-shortener/       # architecture + demo skills
   example-attachment-button/   # demo skill on a public product feature
   example-prompt-compression/  # prompt compression skill
+  example-token-audit/         # token audit skill
 ```

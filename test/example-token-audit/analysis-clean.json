@@ -1,0 +1,164 @@
+{
+ "runs": 3,
+ "median_run": "test/example-token-audit/traces/clean_agent-run2.jsonl",
+ "calls": {
+  "median": 5,
+  "min": 5,
+  "max": 5
+ },
+ "tokens": {
+  "total": {
+   "median": 2103,
+   "min": 2103,
+   "max": 2103
+  },
+  "input": {
+   "median": 1457,
+   "min": 1457,
+   "max": 1457
+  },
+  "output": {
+   "median": 110,
+   "min": 110,
+   "max": 110
+  },
+  "cache_read": {
+   "median": 402,
+   "min": 402,
+   "max": 402
+  },
+  "cache_write": {
+   "median": 134,
+   "min": 134,
+   "max": 134
+  }
+ },
+ "models": [
+  "claude-haiku-5-5",
+  "claude-sonnet-5-5"
+ ],
+ "errors": 0,
+ "cache_hit_rate": 0.202,
+ "attribution": {
+  "system": 190,
+  "tools": 365,
+  "history": 478,
+  "current": 57,
+  "tool_results": 905,
+  "media": 0,
+  "output": 110
+ },
+ "per_call": [
+  {
+   "call": 1,
+   "model": "claude-sonnet-5-5",
+   "input": 25,
+   "output": 23,
+   "cache_read": 0,
+   "cache_write": 134,
+   "stop_reason": "tool_use",
+   "tools": [
+    "read_file"
+   ],
+   "blocks": {
+    "system": 46,
+    "tools": 88,
+    "history": 0,
+    "current": 25,
+    "tool_results": 0,
+    "media": 0
+   }
+  },
+  {
+   "call": 2,
+   "model": "claude-sonnet-5-5",
+   "input": 496,
+   "output": 23,
+   "cache_read": 134,
+   "cache_write": 0,
+   "stop_reason": "tool_use",
+   "tools": [
+    "search_logs"
+   ],
+   "blocks": {
+    "system": 46,
+    "tools": 89,
+    "history": 48,
+    "current": 0,
+    "tool_results": 448,
+    "media": 0
+   }
+  },
+  {
+   "call": 3,
+   "model": "claude-sonnet-5-5",
+   "input": 586,
+   "output": 23,
+   "cache_read": 134,
+   "cache_write": 0,
+   "stop_reason": "tool_use",
+   "tools": [
+    "search_logs"
+   ],
+   "blocks": {
+    "system": 47,
+    "tools": 90,
+    "history": 155,
+    "current": 0,
+    "tool_results": 428,
+    "media": 0
+   }
+  },
+  {
+   "call": 4,
+   "model": "claude-sonnet-5-5",
+   "input": 318,
+   "output": 19,
+   "cache_read": 134,
+   "cache_write": 0,
+   "stop_reason": "end_turn",
+   "tools": [],
+   "blocks": {
+    "system": 51,
+    "tools": 98,
+    "history": 275,
+    "current": 0,
+    "tool_results": 29,
+    "media": 0
+   }
+  },
+  {
+   "call": 5,
+   "model": "claude-haiku-5-5",
+   "input": 32,
+   "output": 22,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "end_turn",
+   "tools": [],
+   "blocks": {
+    "system": 0,
+    "tools": 0,
+    "history": 0,
+    "current": 32,
+    "tool_results": 0,
+    "media": 0
+   }
+  }
+ ],
+ "findings": [
+  {
+   "id": "repeated-tool-call",
+   "title": "The same tool is called again with the same arguments",
+   "severity": "low",
+   "tokens_involved": 50,
+   "share": 0.024,
+   "calls": [
+    3
+   ],
+   "evidence": "1 repeat call(s) of search_logs; each repeat's result is resent in later calls",
+   "hit_runs": "3/3"
+  }
+ ],
+ "note": "tokens_involved overlap between findings; never add them up. Attribution blocks are estimates scaled to measured input."
+}

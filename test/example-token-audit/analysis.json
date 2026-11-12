@@ -1,0 +1,321 @@
+{
+ "runs": 3,
+ "median_run": "test/example-token-audit/traces/wasteful_agent-run2.jsonl",
+ "calls": {
+  "median": 8,
+  "min": 8,
+  "max": 8
+ },
+ "tokens": {
+  "total": {
+   "median": 168068,
+   "min": 168068,
+   "max": 168068
+  },
+  "input": {
+   "median": 163020,
+   "min": 163020,
+   "max": 163020
+  },
+  "output": {
+   "median": 5048,
+   "min": 5048,
+   "max": 5048
+  },
+  "cache_read": {
+   "median": 0,
+   "min": 0,
+   "max": 0
+  },
+  "cache_write": {
+   "median": 0,
+   "min": 0,
+   "max": 0
+  }
+ },
+ "models": [
+  "claude-sonnet-5-5"
+ ],
+ "errors": 0,
+ "cache_hit_rate": 0.0,
+ "attribution": {
+  "system": 314,
+  "tools": 684,
+  "history": 134291,
+  "current": 3748,
+  "tool_results": 23980,
+  "media": 0,
+  "output": 5048
+ },
+ "per_call": [
+  {
+   "call": 1,
+   "model": "claude-sonnet-5-5",
+   "input": 155,
+   "output": 23,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "tool_use",
+   "tools": [
+    "read_file"
+   ],
+   "blocks": {
+    "system": 41,
+    "tools": 89,
+    "history": 0,
+    "current": 25,
+    "tool_results": 0,
+    "media": 0
+   }
+  },
+  {
+   "call": 2,
+   "model": "claude-sonnet-5-5",
+   "input": 18921,
+   "output": 23,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "tool_use",
+   "tools": [
+    "search_logs"
+   ],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 46,
+    "current": 0,
+    "tool_results": 18751,
+    "media": 0
+   }
+  },
+  {
+   "call": 3,
+   "model": "claude-sonnet-5-5",
+   "input": 20700,
+   "output": 23,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "tool_use",
+   "tools": [
+    "search_logs"
+   ],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 18834,
+    "current": 0,
+    "tool_results": 1742,
+    "media": 0
+   }
+  },
+  {
+   "call": 4,
+   "model": "claude-sonnet-5-5",
+   "input": 22478,
+   "output": 23,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "tool_use",
+   "tools": [
+    "search_logs"
+   ],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 20611,
+    "current": 0,
+    "tool_results": 1743,
+    "media": 0
+   }
+  },
+  {
+   "call": 5,
+   "model": "claude-sonnet-5-5",
+   "input": 24257,
+   "output": 1238,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "end_turn",
+   "tools": [],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 22389,
+    "current": 0,
+    "tool_results": 1744,
+    "media": 0
+   }
+  },
+  {
+   "call": 6,
+   "model": "claude-sonnet-5-5",
+   "input": 25503,
+   "output": 1238,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "end_turn",
+   "tools": [],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 24137,
+    "current": 1241,
+    "tool_results": 0,
+    "media": 0
+   }
+  },
+  {
+   "call": 7,
+   "model": "claude-sonnet-5-5",
+   "input": 25503,
+   "output": 1238,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "end_turn",
+   "tools": [],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 24137,
+    "current": 1241,
+    "tool_results": 0,
+    "media": 0
+   }
+  },
+  {
+   "call": 8,
+   "model": "claude-sonnet-5-5",
+   "input": 25503,
+   "output": 1242,
+   "cache_read": 0,
+   "cache_write": 0,
+   "stop_reason": "end_turn",
+   "tools": [],
+   "blocks": {
+    "system": 39,
+    "tools": 85,
+    "history": 24137,
+    "current": 1241,
+    "tool_results": 0,
+    "media": 0
+   }
+  }
+ ],
+ "findings": [
+  {
+   "id": "no-cache",
+   "title": "Prompt caching is not used",
+   "severity": "high",
+   "tokens_involved": 134747,
+   "share": 0.802,
+   "calls": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "evidence": "0 cached tokens across 8 calls; ~134,747 tokens repeated a previous call's prefix",
+   "hit_runs": "3/3"
+  },
+  {
+   "id": "huge-tool-result",
+   "title": "A tool result is very large and stays in context",
+   "severity": "high",
+   "tokens_involved": 131082,
+   "share": 0.78,
+   "calls": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "evidence": "1 large tool result(s), biggest ~18,726 tokens, carried in 7 calls",
+   "hit_runs": "3/3"
+  },
+  {
+   "id": "history-growth",
+   "title": "Conversation history is resent on every call",
+   "severity": "high",
+   "tokens_involved": 109824,
+   "share": 0.653,
+   "calls": [
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "evidence": "history grew from 0 to 24,055 est. tokens over 8 calls; 109,824 tokens of earlier turns were sent again",
+   "hit_runs": "3/3"
+  },
+  {
+   "id": "retry-storm",
+   "title": "Identical requests are sent back to back",
+   "severity": "high",
+   "tokens_involved": 53486,
+   "share": 0.318,
+   "calls": [
+    7,
+    8
+   ],
+   "evidence": "2 call(s) repeat the previous request exactly",
+   "hit_runs": "3/3"
+  },
+  {
+   "id": "repeated-tool-call",
+   "title": "The same tool is called again with the same arguments",
+   "severity": "medium",
+   "tokens_involved": 15642,
+   "share": 0.093,
+   "calls": [
+    3,
+    4
+   ],
+   "evidence": "2 repeat call(s) of search_logs; each repeat's result is resent in later calls",
+   "hit_runs": "3/3"
+  },
+  {
+   "id": "unstable-prefix",
+   "title": "System prompt or tools differ between runs",
+   "severity": "medium",
+   "tokens_involved": 992,
+   "share": null,
+   "calls": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+   ],
+   "hit_runs": "3/3",
+   "evidence": "the first call's prefix differs between runs at the same size: likely a timestamp or ID, which defeats caching across requests"
+  },
+  {
+   "id": "verbose-output",
+   "title": "Answers are longer than the task needs",
+   "severity": "low",
+   "tokens_involved": 4956,
+   "share": 0.029,
+   "calls": [
+    5,
+    6,
+    7,
+    8
+   ],
+   "evidence": "median final answer 1,238 tokens; max_tokens 8,000",
+   "hit_runs": "3/3"
+  }
+ ],
+ "note": "tokens_involved overlap between findings; never add them up. Attribution blocks are estimates scaled to measured input."
+}

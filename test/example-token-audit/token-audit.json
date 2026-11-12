@@ -1,0 +1,169 @@
+{
+ "agent": "Bug-triage agent",
+ "project": "test/example-token-audit/wasteful_agent.py",
+ "task": {"name": "Summarize open bugs", "description": "Summarize the open bugs in bugs.json and find the cause in the logs"},
+ "model": "claude-sonnet-5-5 (fake API)",
+ "date": "2026-11-13",
+ "predictOnly": false,
+ "numbers": {
+  "ideal": 2103,
+  "predicted": 41085,
+  "actual": 168068,
+  "actualRange": [168068, 168068],
+  "runs": 3,
+  "labels": {"ideal": "measured", "predicted": "estimated", "actual": "measured"}
+ },
+ "cost": null,
+ "sources": [
+  {"source": "Conversation history, resent", "tokens": 134291},
+  {"source": "New tool results", "tokens": 23980},
+  {"source": "Model output", "tokens": 5048},
+  {"source": "Latest message", "tokens": 3748},
+  {"source": "Tool definitions", "tokens": 684},
+  {"source": "System prompt", "tokens": 314}
+ ],
+ "calls": [
+  {"call": 1, "input": 155, "cacheRead": 0, "cacheWrite": 0, "output": 23, "tools": ["read_file"]},
+  {"call": 2, "input": 18921, "cacheRead": 0, "cacheWrite": 0, "output": 23, "tools": ["search_logs"]},
+  {"call": 3, "input": 20700, "cacheRead": 0, "cacheWrite": 0, "output": 23, "tools": ["search_logs"]},
+  {"call": 4, "input": 22478, "cacheRead": 0, "cacheWrite": 0, "output": 23, "tools": ["search_logs"]},
+  {"call": 5, "input": 24257, "cacheRead": 0, "cacheWrite": 0, "output": 1238, "tools": []},
+  {"call": 6, "input": 25503, "cacheRead": 0, "cacheWrite": 0, "output": 1238, "tools": []},
+  {"call": 7, "input": 25503, "cacheRead": 0, "cacheWrite": 0, "output": 1238, "tools": []},
+  {"call": 8, "input": 25503, "cacheRead": 0, "cacheWrite": 0, "output": 1242, "tools": []}
+ ],
+ "cacheHitRate": 0,
+ "map": {
+  "nodes": [
+   {"id": "task", "label": "Task", "x": 0, "y": 150, "w": 140},
+   {"id": "loop", "label": "Agent loop\n(no turn limit)", "x": 290, "y": 140, "w": 180, "h": 90},
+   {"id": "model", "label": "Model API", "x": 740, "y": 150, "shape": "ellipse"},
+   {"id": "retry", "label": "JSON check", "x": 1110, "y": 150, "hot": "replays everything"},
+   {"id": "history", "label": "Message history", "x": 280, "y": 430, "w": 200, "shape": "ellipse", "hot": "never trimmed"},
+   {"id": "tools", "label": "Tools\nread_file · search_logs", "x": 710, "y": 420, "w": 220, "h": 90, "hot": "40 KB result"}
+  ],
+  "edges": [
+   {"from": "task", "to": "loop", "label": "prompt"},
+   {"from": "loop", "to": "model", "label": "everything, every call"},
+   {"from": "model", "to": "tools", "label": "tool call"},
+   {"from": "tools", "to": "history", "label": "full result"},
+   {"from": "history", "to": "loop", "label": "resent", "dashed": true},
+   {"from": "model", "to": "retry", "label": "answer"}
+  ]
+ },
+ "mapCaption": "Every call sends the whole history. One 40 KB file read stays in it for the rest of the task, and a failed JSON check sends the whole thing again.",
+ "issues": [
+  {
+   "id": "huge-tool-result",
+   "title": "read_file puts a 40 KB export into context",
+   "category": "Context",
+   "severity": "high",
+   "tokensWasted": 128457,
+   "confidence": "estimated",
+   "risk": "safe",
+   "fixSummary": "Return only the open bugs, or cap results at 1,500 characters.",
+   "fix": "The task needs the 29 open bugs, not all 200. Filter in the tool (status == open) or cap tool results at 1,500 characters with a note of the full size. The ~18,700-token result rides along in 7 of 8 calls; cut to ~375 tokens, that saves ~128,000 tokens per task.",
+   "evidence": {
+    "code": [{"file": "test/example-token-audit/wasteful_agent.py", "line": 29, "snippet": "results = [{\"type\": \"tool_result\", \"tool_use_id\": b[\"id\"], \"content\": RUN[b[\"name\"]](b[\"input\"])}"},
+             {"file": "test/example-token-audit/agent_tools.py", "line": 9, "snippet": "def read_file(path):\n    \"\"\"The whole bug export: ~40 KB of JSON.\"\"\""}],
+    "trace": "huge-tool-result (3/3 runs): one ~18,726-token tool result, first in call 2 and carried in calls 2–8."
+   },
+   "diff": "- \"content\": RUN[b[\"name\"]](b[\"input\"])\n+ out = RUN[b[\"name\"]](b[\"input\"])\n+ \"content\": out if len(out) <= 1500 else out[:1500] + f\"\\n... (truncated, {len(out)} chars total)\""
+  },
+  {
+   "id": "no-cache",
+   "title": "Nothing is cached, and a timestamp would break caching anyway",
+   "category": "Caching",
+   "severity": "high",
+   "tokensWasted": 121272,
+   "confidence": "estimated",
+   "risk": "safe",
+   "fixSummary": "Remove the timestamp and mark the system prompt and history for caching.",
+   "fix": "0 of 168,068 tokens were read from cache. ~134,700 tokens repeat a previous call's prefix and could be cache reads (billed at about a tenth of full price). The count shown is that 90% in full-price-equivalent tokens. Move the timestamp out of the system prompt (it changes on every run) and add cache_control to the system prompt and the last message.",
+   "evidence": {
+    "code": [{"file": "test/example-token-audit/wasteful_agent.py", "line": 16, "snippet": "SYSTEM = (f\"You are a bug triage assistant. Current time: {datetime.now().isoformat()}. \""}],
+    "trace": "no-cache (3/3 runs): cache_read = 0 and cache_write = 0 across 8 calls. unstable-prefix: the first call's system prompt differs between runs at the same size."
+   },
+   "diff": "- SYSTEM = (f\"You are a bug triage assistant. Current time: {datetime.now().isoformat()}. \"\n+ SYSTEM = [{\"type\": \"text\", \"cache_control\": {\"type\": \"ephemeral\"},\n+            \"text\": \"You are a bug triage assistant. ...\"}]"
+  },
+  {
+   "id": "retry-storm",
+   "title": "A non-JSON answer replays the whole conversation, three times",
+   "category": "Loop",
+   "severity": "high",
+   "tokensWasted": 80147,
+   "confidence": "measured",
+   "risk": "behavior-affecting",
+   "fixSummary": "Repair the answer with one small call instead of resending everything.",
+   "fix": "Calls 6–8 (80,227 tokens) exist only to get JSON. A small repair call (\"Convert to JSON: <answer>\") costs about 80 tokens. A second bug: body['messages'] is the same list the loop appends to, so each retry also resends the previous answer. Verify the repaired JSON keeps the same content.",
+   "evidence": {
+    "code": [{"file": "test/example-token-audit/wasteful_agent.py", "line": 34, "snippet": "for _ in range(5):\n    if is_json(answer):\n        break\n    answer = text_of(call_model(body))"}],
+    "trace": "retry-storm (3/3 runs): calls 7 and 8 repeat call 6's request exactly; call 6 is call 5 plus its own answer."
+   },
+   "diff": "- answer = text_of(call_model(body))\n+ answer = text_of(call_model({\"model\": \"claude-haiku-5-5\", \"max_tokens\": 300,\n+     \"messages\": [{\"role\": \"user\", \"content\": \"Convert to JSON: \" + answer}]}))"
+  },
+  {
+   "id": "history-growth",
+   "title": "Old tool results stay in history at full size",
+   "category": "Context",
+   "severity": "medium",
+   "tokensWasted": 20256,
+   "confidence": "estimated",
+   "risk": "behavior-affecting",
+   "fixSummary": "Shrink tool results to a short stub once the model has used them.",
+   "fix": "History grows from 0 to ~24,000 tokens over 8 calls and every turn is resent. Besides the big file (counted above), three 1,738-token search results are resent 12 times in total. Replace a tool result with a ~50-token stub after the next turn. Check that later answers don't need the trimmed details.",
+   "evidence": {
+    "code": [{"file": "test/example-token-audit/wasteful_agent.py", "line": 26, "snippet": "messages.append({\"role\": \"assistant\", \"content\": resp[\"content\"]})  # never trimmed"}],
+    "trace": "history-growth (3/3 runs): 109,824 tokens of earlier turns sent again (overlaps with the 40 KB result)."
+   }
+  },
+  {
+   "id": "repeated-tool-call",
+   "title": "search_logs runs three times with the same query",
+   "category": "Loop",
+   "severity": "medium",
+   "tokensWasted": 15642,
+   "confidence": "estimated",
+   "risk": "behavior-affecting",
+   "fixSummary": "Answer repeat calls with \"same result as above\" instead of re-running them.",
+   "fix": "The model asked for search_logs(\"timeout\") in calls 2, 3, and 4. Each repeat adds another 1,738-token copy that is resent in every later call. Deduplicate by (tool, arguments) and return a one-line note; also add a turn limit so a model that keeps repeating cannot run forever.",
+   "evidence": {
+    "code": [{"file": "test/example-token-audit/wasteful_agent.py", "line": 22, "snippet": "while True:   # no turn limit"}],
+    "trace": "repeated-tool-call (3/3 runs): 2 repeats of search_logs with identical arguments (calls 3, 4)."
+   }
+  },
+  {
+   "id": "verbose-output",
+   "title": "The prompt asks for detail and allows 8,000 output tokens",
+   "category": "Output",
+   "severity": "low",
+   "tokensWasted": 4880,
+   "confidence": "estimated",
+   "risk": "behavior-affecting",
+   "fixSummary": "Ask for a brief answer and lower max_tokens to 500.",
+   "fix": "Each final answer is ~1,240 tokens for a task that needs a few sentences. The cost here is small because output is only 3% of the total, but long answers also grow history. Change \"Explain in detail\" to \"Be brief\" and set max_tokens to 500. Confirm the shorter answer still covers what users need.",
+   "evidence": {
+    "code": [{"file": "test/example-token-audit/wasteful_agent.py", "line": 17, "snippet": "\"Summarize the open bugs and their likely cause. Explain in detail. Reply in JSON.\""}],
+    "trace": "verbose-output (3/3 runs): median final answer 1,238 tokens; max_tokens 8,000."
+   }
+  }
+ ],
+ "afterFix": {
+  "count": 6,
+  "tokens": 2103,
+  "label": "measured",
+  "note": "Measured, not projected: clean_agent.py applies all six fixes and was run 3 times through the same proxy (2,103 tokens per task, 20% read from cache)."
+ },
+ "method": {
+  "tokenizer": "Usage from API responses (exact). Block sizes are chars/4 estimates scaled to the measured input of each call.",
+  "notes": [
+   "Predicted (41,085) assumes the code's best case: one search, no retries. The gap to actual comes from the model repeating the search and the retry loop.",
+   "Ideal is the fixed agent (clean_agent.py), measured the same way.",
+   "Waste figures overlap: the 40 KB result is also part of resent history. They are not added up anywhere."
+  ],
+  "notMeasured": [
+   "Dollar cost: this example runs against a fake API, so no prices apply.",
+   "Run-to-run variance: the fake model is deterministic, so all 3 runs match exactly. A real model will vary."
+  ]
+ }
+}

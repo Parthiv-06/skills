@@ -1,0 +1,805 @@
+<title>Bug-triage agent token audit</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kalam:wght@400;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<style>
+/* Same look as src/general/demoing-features/assets/demo-template.html: white page, 980px grid, #f5f5f7 tiles. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --tile: #f5f5f7; --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800;
+  --full: #bf4800; --cached: #0071e3; /* per-call chart series; validated pair (dataviz validator, light) */
+  --glass: rgba(255, 255, 255, .72);
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, monospace;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(64px, 10vw, 128px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(28px, 4vw, 48px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; letter-spacing: .004em; color: var(--flame); }
+.h2 { font-size: clamp(36px, 5.6vw, 60px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.head { display: grid; gap: 14px; }
+.head.center { text-align: center; justify-items: center; }
+
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--glass); }
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 21px; font-weight: 600; letter-spacing: .011em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 22px; font-size: 12px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+.pill { border: 0; cursor: pointer; border-radius: 980px; background: var(--accent); color: #fff; font-size: 12px; padding: 5px 12px; white-space: nowrap; }
+.pill:hover { background: #0077ed; text-decoration: none; }
+@media (max-width: 760px) { .nav-links { display: none; } .nav-in .pill { margin-left: auto; } }
+
+/* Hero */
+.hero { text-align: center; padding-block: clamp(64px, 10vw, 128px) clamp(56px, 8vw, 96px); }
+.hero .inner { justify-items: center; gap: 20px; }
+.hero h1 { font-size: clamp(60px, 13vw, 132px); line-height: 1; font-weight: 700; letter-spacing: -.05em; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero .lede { font-size: clamp(24px, 3.2vw, 36px); line-height: 1.18; font-weight: 600; letter-spacing: -.03em; max-width: 24ch; }
+.hero .lede .quiet { color: var(--fg3); }
+.flag { display: inline-block; border-radius: 980px; padding: 6px 14px; font-size: 14px; font-weight: 600; background: var(--tile); color: var(--flame); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 24px clamp(20px, 4vw, 48px);
+  margin-top: clamp(20px, 3vw, 36px); padding-top: clamp(24px, 4vw, 40px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 4px; justify-items: center; }
+.stat b { font-size: clamp(30px, 4vw, 44px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 14px; color: var(--fg2); }
+.stat small { font-size: 12px; color: var(--fg3); }
+.meta { font-size: 14px; color: var(--fg3); }
+
+/* Cards */
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 20px; }
+.card { background: var(--tile); border-radius: var(--r-lg); padding: clamp(24px, 3vw, 40px); display: grid; gap: 18px; align-content: start; min-width: 0; }
+.card h3 { font-size: clamp(22px, 2.2vw, 28px); font-weight: 700; letter-spacing: -.028em; line-height: 1.14; }
+.card .sub { color: var(--fg2); font-size: 15px; margin-top: -10px; }
+
+/* Bars: where the tokens go (one hue, sorted, direct labels) */
+.bars { display: grid; gap: 14px; }
+.bar-row { display: grid; grid-template-columns: minmax(96px, 30%) 1fr; gap: 6px 14px; align-items: center; }
+.bar-row .lbl { font-size: 15px; font-weight: 500; }
+.bar-row .val { grid-column: 2; font-size: 13px; color: var(--fg2); font-variant-numeric: tabular-nums; }
+.track { height: 12px; border-radius: 4px; background: #e8e8ed; overflow: hidden; }
+.fill { height: 100%; border-radius: 4px; background: var(--fg); min-width: 2px; }
+
+/* Per-call chart */
+.legend { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--fg2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.tip { position: absolute; pointer-events: none; background: #fff; border-radius: 12px; padding: 10px 12px; font-size: 13px; line-height: 1.4;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, .14); min-width: 150px; z-index: 5; transform: translate(-50%, -100%); white-space: nowrap; }
+.tip b { display: block; font-size: 14px; margin-bottom: 2px; }
+.tip .k { color: var(--fg2); }
+.mini { display: flex; gap: 28px; flex-wrap: wrap; }
+.mini div { display: grid; }
+.mini b { font-size: 28px; letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.mini span { font-size: 13px; color: var(--fg2); }
+.as-table summary { cursor: pointer; font-size: 14px; color: var(--link); list-style: none; }
+.as-table summary::-webkit-details-marker { display: none; }
+.as-table table { margin-top: 12px; width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+.as-table th, .as-table td { text-align: right; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.as-table th:first-child, .as-table td:first-child { text-align: left; }
+.as-table .scroll { overflow-x: auto; }
+
+/* Sketch */
+.board { background: #fff; border-radius: var(--r-lg); overflow-x: auto; padding: clamp(12px, 2vw, 24px);
+  border: 1px solid #e8e8ed; box-shadow: 0 1px 2px rgba(0, 0, 0, .03), 0 18px 50px rgba(0, 0, 0, .06); }
+.board svg { display: block; width: 100%; min-width: 600px; height: auto; }
+.caption { text-align: center; font-size: 17px; color: var(--fg2); max-width: 56ch; margin: 0 auto; }
+
+/* Issues */
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile); justify-self: center; max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 16px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.bento { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); grid-auto-flow: dense; gap: 20px; }
+.issue { background: var(--tile); border-radius: var(--r-lg); padding: clamp(26px, 3vw, 36px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.issue .who { font-size: 14px; font-weight: 600; color: var(--flame); display: flex; gap: 10px; align-items: baseline; }
+.issue .rank { font-variant-numeric: tabular-nums; color: var(--fg3); font-weight: 500; }
+.issue h3 { font-size: clamp(22px, 2.2vw, 28px); line-height: 1.14; font-weight: 700; letter-spacing: -.028em; }
+.waste b { font-size: clamp(30px, 3.4vw, 40px); font-weight: 700; letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1; }
+.waste span { display: block; font-size: 14px; color: var(--fg2); margin-top: 4px; }
+.badges { display: flex; flex-wrap: wrap; gap: 6px; }
+.badge { font-size: 12px; font-weight: 600; border-radius: 980px; padding: 4px 10px; background: var(--bg); color: var(--fg2); display: inline-flex; gap: 6px; align-items: center; }
+.badge .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--fg3); }
+.badge.high .dot { background: var(--flame); } .badge.medium .dot { background: #f5a623; }
+.fixline { font-size: 17px; font-weight: 600; letter-spacing: -.02em; line-height: 1.3; }
+.fixline::before { content: "→ "; color: var(--accent); }
+.issue details { border-top: 1px solid var(--line); padding-top: 12px; margin-top: auto; }
+.issue summary { cursor: pointer; font-size: 15px; color: var(--link); list-style: none; }
+.issue summary::-webkit-details-marker { display: none; }
+.issue summary::after { content: " +"; }
+.issue details[open] summary::after { content: " −"; }
+.ev { display: grid; gap: 14px; margin-top: 14px; }
+.ev h4 { margin: 0; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--fg3); }
+.code { background: #fff; border-radius: 12px; border: 1px solid #e8e8ed; overflow: hidden; }
+.code .file { font: 12px var(--mono); color: var(--fg2); padding: 8px 12px; border-bottom: 1px solid #e8e8ed; overflow-wrap: anywhere; }
+.code pre, pre.diff { margin: 0; padding: 12px; font: 12.5px/1.5 var(--mono); overflow-x: auto; color: var(--fg); }
+pre.diff { background: #fff; border-radius: 12px; border: 1px solid #e8e8ed; }
+pre.diff .add { color: #0a7d38; } pre.diff .del { color: #b42318; }
+.ev p { font-size: 15px; color: var(--fg2); }
+@media (min-width: 760px) {
+  .issue.feature { grid-column: span 2; padding: clamp(36px, 4.4vw, 52px);
+    border: 2px solid transparent; background: linear-gradient(var(--tile), var(--tile)) padding-box, var(--grad) border-box; }
+  .issue.feature h3 { font-size: clamp(30px, 3.4vw, 40px); letter-spacing: -.035em; }
+  .issue.feature .waste b { background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; font-size: clamp(40px, 5vw, 60px); }
+}
+.empty { text-align: center; color: var(--fg2); font-size: 21px; }
+
+/* Before / after */
+.ba { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 20px; }
+.ba-tile { border-radius: var(--r-lg); padding: clamp(28px, 4vw, 48px); display: grid; gap: 14px; align-content: start; background: var(--tile); }
+.ba-tile.after { background: linear-gradient(#fff, #fff) padding-box, var(--grad) border-box; border: 2px solid transparent; }
+.ba-tile h3 { font-size: 14px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--fg3); }
+.ba-tile b { font-size: clamp(40px, 6vw, 64px); font-weight: 700; letter-spacing: -.045em; line-height: 1; font-variant-numeric: tabular-nums; }
+.ba-tile .money { font-size: 19px; font-weight: 600; color: var(--fg2); }
+.ba-tile ul { margin: 6px 0 0; padding-left: 1.1em; color: var(--fg2); display: grid; gap: 6px; font-size: 15px; }
+
+/* Method */
+.faq { border-top: 1px solid var(--line); }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { list-style: none; cursor: pointer; display: flex; justify-content: space-between; gap: 24px; align-items: center;
+  padding: 22px 0; font-size: clamp(19px, 2vw, 22px); font-weight: 600; letter-spacing: -.02em; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; font-size: 28px; font-weight: 300; color: var(--fg3); transition: transform .3s ease; flex: none; }
+.faq details[open] summary::after { transform: rotate(45deg); }
+.faq .body { padding: 0 0 24px; color: var(--fg2); display: grid; gap: 8px; }
+.faq ul { margin: 0; padding-left: 1.2em; display: grid; gap: 6px; }
+
+.foot { padding-block: 28px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.foot .inner { border-top: 1px solid var(--line); padding-top: 18px; font-size: 12px; color: var(--fg3); gap: 6px; }
+.foot a { overflow-wrap: anywhere; }
+
+@keyframes rise { from { opacity: .2; transform: translateY(28px) scale(.985); } }
+@keyframes land { from { opacity: .35; transform: translateY(14px); } }
+@media (prefers-reduced-motion: no-preference) {
+  .hero .inner > * { animation: land .9s cubic-bezier(.2, .7, .2, 1) both; }
+  @supports (animation-timeline: view()) { .reveal { animation: rise linear both; animation-timeline: view(); animation-range: entry 0% entry 55%; } }
+}
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .faq summary::after { transition: none; } }
+</style>
+
+<div id="app"></div>
+
+<!-- Filled by scripts/build_report.py. Schema: the "Audit JSON" table in SKILL.md. -->
+<script id="audit-data" type="application/json">
+{
+ "agent": "Bug-triage agent",
+ "project": "test/example-token-audit/wasteful_agent.py",
+ "task": {
+  "name": "Summarize open bugs",
+  "description": "Summarize the open bugs in bugs.json and find the cause in the logs"
+ },
+ "model": "claude-sonnet-5-5 (fake API)",
+ "date": "2026-11-13",
+ "predictOnly": false,
+ "numbers": {
+  "ideal": 2103,
+  "predicted": 41085,
+  "actual": 168068,
+  "actualRange": [
+   168068,
+   168068
+  ],
+  "runs": 3,
+  "labels": {
+   "ideal": "measured",
+   "predicted": "estimated",
+   "actual": "measured"
+  }
+ },
+ "cost": null,
+ "sources": [
+  {
+   "source": "Conversation history, resent",
+   "tokens": 134291
+  },
+  {
+   "source": "New tool results",
+   "tokens": 23980
+  },
+  {
+   "source": "Model output",
+   "tokens": 5048
+  },
+  {
+   "source": "Latest message",
+   "tokens": 3748
+  },
+  {
+   "source": "Tool definitions",
+   "tokens": 684
+  },
+  {
+   "source": "System prompt",
+   "tokens": 314
+  }
+ ],
+ "calls": [
+  {
+   "call": 1,
+   "input": 155,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 23,
+   "tools": [
+    "read_file"
+   ]
+  },
+  {
+   "call": 2,
+   "input": 18921,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 23,
+   "tools": [
+    "search_logs"
+   ]
+  },
+  {
+   "call": 3,
+   "input": 20700,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 23,
+   "tools": [
+    "search_logs"
+   ]
+  },
+  {
+   "call": 4,
+   "input": 22478,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 23,
+   "tools": [
+    "search_logs"
+   ]
+  },
+  {
+   "call": 5,
+   "input": 24257,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 1238,
+   "tools": []
+  },
+  {
+   "call": 6,
+   "input": 25503,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 1238,
+   "tools": []
+  },
+  {
+   "call": 7,
+   "input": 25503,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 1238,
+   "tools": []
+  },
+  {
+   "call": 8,
+   "input": 25503,
+   "cacheRead": 0,
+   "cacheWrite": 0,
+   "output": 1242,
+   "tools": []
+  }
+ ],
+ "cacheHitRate": 0,
+ "map": {
+  "nodes": [
+   {
+    "id": "task",
+    "label": "Task",
+    "x": 0,
+    "y": 150,
+    "w": 140
+   },
+   {
+    "id": "loop",
+    "label": "Agent loop\n(no turn limit)",
+    "x": 290,
+    "y": 140,
+    "w": 180,
+    "h": 90
+   },
+   {
+    "id": "model",
+    "label": "Model API",
+    "x": 740,
+    "y": 150,
+    "shape": "ellipse"
+   },
+   {
+    "id": "retry",
+    "label": "JSON check",
+    "x": 1110,
+    "y": 150,
+    "hot": "replays everything"
+   },
+   {
+    "id": "history",
+    "label": "Message history",
+    "x": 280,
+    "y": 430,
+    "w": 200,
+    "shape": "ellipse",
+    "hot": "never trimmed"
+   },
+   {
+    "id": "tools",
+    "label": "Tools\nread_file · search_logs",
+    "x": 710,
+    "y": 420,
+    "w": 220,
+    "h": 90,
+    "hot": "40 KB result"
+   }
+  ],
+  "edges": [
+   {
+    "from": "task",
+    "to": "loop",
+    "label": "prompt"
+   },
+   {
+    "from": "loop",
+    "to": "model",
+    "label": "everything, every call"
+   },
+   {
+    "from": "model",
+    "to": "tools",
+    "label": "tool call"
+   },
+   {
+    "from": "tools",
+    "to": "history",
+    "label": "full result"
+   },
+   {
+    "from": "history",
+    "to": "loop",
+    "label": "resent",
+    "dashed": true
+   },
+   {
+    "from": "model",
+    "to": "retry",
+    "label": "answer"
+   }
+  ]
+ },
+ "mapCaption": "Every call sends the whole history. One 40 KB file read stays in it for the rest of the task, and a failed JSON check sends the whole thing again.",
+ "issues": [
+  {
+   "id": "huge-tool-result",
+   "title": "read_file puts a 40 KB export into context",
+   "category": "Context",
+   "severity": "high",
+   "tokensWasted": 128457,
+   "confidence": "estimated",
+   "risk": "safe",
+   "fixSummary": "Return only the open bugs, or cap results at 1,500 characters.",
+   "fix": "The task needs the 29 open bugs, not all 200. Filter in the tool (status == open) or cap tool results at 1,500 characters with a note of the full size. The ~18,700-token result rides along in 7 of 8 calls; cut to ~375 tokens, that saves ~128,000 tokens per task.",
+   "evidence": {
+    "code": [
+     {
+      "file": "test/example-token-audit/wasteful_agent.py",
+      "line": 29,
+      "snippet": "results = [{\"type\": \"tool_result\", \"tool_use_id\": b[\"id\"], \"content\": RUN[b[\"name\"]](b[\"input\"])}"
+     },
+     {
+      "file": "test/example-token-audit/agent_tools.py",
+      "line": 9,
+      "snippet": "def read_file(path):\n    \"\"\"The whole bug export: ~40 KB of JSON.\"\"\""
+     }
+    ],
+    "trace": "huge-tool-result (3/3 runs): one ~18,726-token tool result, first in call 2 and carried in calls 2–8."
+   },
+   "diff": "- \"content\": RUN[b[\"name\"]](b[\"input\"])\n+ out = RUN[b[\"name\"]](b[\"input\"])\n+ \"content\": out if len(out) <= 1500 else out[:1500] + f\"\\n... (truncated, {len(out)} chars total)\""
+  },
+  {
+   "id": "no-cache",
+   "title": "Nothing is cached, and a timestamp would break caching anyway",
+   "category": "Caching",
+   "severity": "high",
+   "tokensWasted": 121272,
+   "confidence": "estimated",
+   "risk": "safe",
+   "fixSummary": "Remove the timestamp and mark the system prompt and history for caching.",
+   "fix": "0 of 168,068 tokens were read from cache. ~134,700 tokens repeat a previous call's prefix and could be cache reads (billed at about a tenth of full price). The count shown is that 90% in full-price-equivalent tokens. Move the timestamp out of the system prompt (it changes on every run) and add cache_control to the system prompt and the last message.",
+   "evidence": {
+    "code": [
+     {
+      "file": "test/example-token-audit/wasteful_agent.py",
+      "line": 16,
+      "snippet": "SYSTEM = (f\"You are a bug triage assistant. Current time: {datetime.now().isoformat()}. \""
+     }
+    ],
+    "trace": "no-cache (3/3 runs): cache_read = 0 and cache_write = 0 across 8 calls. unstable-prefix: the first call's system prompt differs between runs at the same size."
+   },
+   "diff": "- SYSTEM = (f\"You are a bug triage assistant. Current time: {datetime.now().isoformat()}. \"\n+ SYSTEM = [{\"type\": \"text\", \"cache_control\": {\"type\": \"ephemeral\"},\n+            \"text\": \"You are a bug triage assistant. ...\"}]"
+  },
+  {
+   "id": "retry-storm",
+   "title": "A non-JSON answer replays the whole conversation, three times",
+   "category": "Loop",
+   "severity": "high",
+   "tokensWasted": 80147,
+   "confidence": "measured",
+   "risk": "behavior-affecting",
+   "fixSummary": "Repair the answer with one small call instead of resending everything.",
+   "fix": "Calls 6–8 (80,227 tokens) exist only to get JSON. A small repair call (\"Convert to JSON: <answer>\") costs about 80 tokens. A second bug: body['messages'] is the same list the loop appends to, so each retry also resends the previous answer. Verify the repaired JSON keeps the same content.",
+   "evidence": {
+    "code": [
+     {
+      "file": "test/example-token-audit/wasteful_agent.py",
+      "line": 34,
+      "snippet": "for _ in range(5):\n    if is_json(answer):\n        break\n    answer = text_of(call_model(body))"
+     }
+    ],
+    "trace": "retry-storm (3/3 runs): calls 7 and 8 repeat call 6's request exactly; call 6 is call 5 plus its own answer."
+   },
+   "diff": "- answer = text_of(call_model(body))\n+ answer = text_of(call_model({\"model\": \"claude-haiku-5-5\", \"max_tokens\": 300,\n+     \"messages\": [{\"role\": \"user\", \"content\": \"Convert to JSON: \" + answer}]}))"
+  },
+  {
+   "id": "history-growth",
+   "title": "Old tool results stay in history at full size",
+   "category": "Context",
+   "severity": "medium",
+   "tokensWasted": 20256,
+   "confidence": "estimated",
+   "risk": "behavior-affecting",
+   "fixSummary": "Shrink tool results to a short stub once the model has used them.",
+   "fix": "History grows from 0 to ~24,000 tokens over 8 calls and every turn is resent. Besides the big file (counted above), three 1,738-token search results are resent 12 times in total. Replace a tool result with a ~50-token stub after the next turn. Check that later answers don't need the trimmed details.",
+   "evidence": {
+    "code": [
+     {
+      "file": "test/example-token-audit/wasteful_agent.py",
+      "line": 26,
+      "snippet": "messages.append({\"role\": \"assistant\", \"content\": resp[\"content\"]})  # never trimmed"
+     }
+    ],
+    "trace": "history-growth (3/3 runs): 109,824 tokens of earlier turns sent again (overlaps with the 40 KB result)."
+   }
+  },
+  {
+   "id": "repeated-tool-call",
+   "title": "search_logs runs three times with the same query",
+   "category": "Loop",
+   "severity": "medium",
+   "tokensWasted": 15642,
+   "confidence": "estimated",
+   "risk": "behavior-affecting",
+   "fixSummary": "Answer repeat calls with \"same result as above\" instead of re-running them.",
+   "fix": "The model asked for search_logs(\"timeout\") in calls 2, 3, and 4. Each repeat adds another 1,738-token copy that is resent in every later call. Deduplicate by (tool, arguments) and return a one-line note; also add a turn limit so a model that keeps repeating cannot run forever.",
+   "evidence": {
+    "code": [
+     {
+      "file": "test/example-token-audit/wasteful_agent.py",
+      "line": 22,
+      "snippet": "while True:   # no turn limit"
+     }
+    ],
+    "trace": "repeated-tool-call (3/3 runs): 2 repeats of search_logs with identical arguments (calls 3, 4)."
+   }
+  },
+  {
+   "id": "verbose-output",
+   "title": "The prompt asks for detail and allows 8,000 output tokens",
+   "category": "Output",
+   "severity": "low",
+   "tokensWasted": 4880,
+   "confidence": "estimated",
+   "risk": "behavior-affecting",
+   "fixSummary": "Ask for a brief answer and lower max_tokens to 500.",
+   "fix": "Each final answer is ~1,240 tokens for a task that needs a few sentences. The cost here is small because output is only 3% of the total, but long answers also grow history. Change \"Explain in detail\" to \"Be brief\" and set max_tokens to 500. Confirm the shorter answer still covers what users need.",
+   "evidence": {
+    "code": [
+     {
+      "file": "test/example-token-audit/wasteful_agent.py",
+      "line": 17,
+      "snippet": "\"Summarize the open bugs and their likely cause. Explain in detail. Reply in JSON.\""
+     }
+    ],
+    "trace": "verbose-output (3/3 runs): median final answer 1,238 tokens; max_tokens 8,000."
+   }
+  }
+ ],
+ "afterFix": {
+  "count": 6,
+  "tokens": 2103,
+  "label": "measured",
+  "note": "Measured, not projected: clean_agent.py applies all six fixes and was run 3 times through the same proxy (2,103 tokens per task, 20% read from cache)."
+ },
+ "method": {
+  "tokenizer": "Usage from API responses (exact). Block sizes are chars/4 estimates scaled to the measured input of each call.",
+  "notes": [
+   "Predicted (41,085) assumes the code's best case: one search, no retries. The gap to actual comes from the model repeating the search and the retry loop.",
+   "Ideal is the fixed agent (clean_agent.py), measured the same way.",
+   "Waste figures overlap: the 40 KB result is also part of resent history. They are not added up anywhere."
+  ],
+  "notMeasured": [
+   "Dollar cost: this example runs against a fake API, so no prices apply.",
+   "Run-to-run variance: the fake model is deterministic, so all 3 runs match exactly. A real model will vary."
+  ]
+ }
+}
+</script>
+
+<script>
+(function () {
+  const d = JSON.parse(document.getElementById("audit-data").textContent);
+  const app = document.getElementById("app");
+  const NS = "http://www.w3.org/2000/svg";
+  const n = (x, digits) => x == null ? "–" : Number(x).toLocaleString("en-US", { maximumFractionDigits: digits == null ? 0 : digits });
+  const money = x => x == null ? "–" : "$" + (x >= 100 ? n(x) : x >= 1 ? n(x, 2) : n(x, 4));
+  const pct = x => (x * 100 >= 10 ? n(x * 100) : n(x * 100, 1)) + "%";
+
+  function h(tag, attrs, ...kids) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (v == null || v === false) continue;
+      if (k === "class") el.className = v; else if (k.startsWith("on")) el.addEventListener(k.slice(2), v); else el.setAttribute(k, v === true ? "" : v);
+    }
+    for (const k of kids.flat()) if (k != null && k !== false) el.append(k);
+    return el;
+  }
+  function s(tag, attrs) { const el = document.createElementNS(NS, tag); for (const [k, v] of Object.entries(attrs || {})) el.setAttribute(k, v); return el; }
+  const band = (id, wide, ...kids) => h("section", { id, class: "band" }, h("div", { class: "inner" + (wide ? " wide" : "") }, ...kids));
+  const head = (eyebrow, loud, quiet, center) => h("div", { class: "head reveal" + (center ? " center" : "") },
+    eyebrow ? h("div", { class: "eyebrow" }, eyebrow) : null,
+    h("h2", { class: "h2" }, loud, quiet ? h("span", { class: "quiet" }, " " + quiet) : null));
+  const LABEL = { measured: "measured", counted: "counted exactly", estimated: "estimated" };
+
+  const N = d.numbers, labels = N.labels || {};
+  const actual = d.predictOnly ? null : N.actual;
+  const headline = actual != null ? actual : N.predicted;
+  const factor = N.ideal ? headline / N.ideal : null;
+
+  // Nav
+  const links = [["Overview", "top"], ["Where", "where"], ["Map", "map"], ["Issues", "issues"], ["Fix", "fix"], ["Method", "method"]]
+    .filter(([, id]) => id !== "map" || (d.map && d.map.nodes && d.map.nodes.length)).filter(([, id]) => id !== "fix" || d.afterFix);
+  app.append(h("nav", { class: "nav", "aria-label": "Sections" }, h("div", { class: "nav-in" },
+    h("div", { class: "nav-title" }, d.agent + " · token audit"),
+    h("div", { class: "nav-links" }, links.map(([t, id]) => h("a", { href: "#" + id }, t))),
+    h("a", { class: "pill", href: "#issues" }, (d.issues || []).length + " issues"))));
+
+  // Hero
+  app.append(h("header", { id: "top", class: "band hero" }, h("div", { class: "inner" },
+    h("div", { class: "eyebrow" }, "Token audit · " + d.task.name),
+    d.predictOnly ? h("span", { class: "flag" }, "Prediction only: the agent was not run") : null,
+    h("h1", null, n(headline)),
+    h("p", { class: "lede" }, "tokens per task.", h("span", { class: "quiet" },
+      N.ideal ? " It needs about " + n(N.ideal) + (factor >= 1.5 ? " — " + n(factor, factor < 10 ? 1 : 0) + "× too many." : ".") : "")),
+    h("div", { class: "stats" },
+      h("div", { class: "stat" }, h("b", null, n(N.ideal)), h("span", null, "Ideal"), h("small", null, LABEL[labels.ideal] || "estimated")),
+      h("div", { class: "stat" }, h("b", null, n(N.predicted)), h("span", null, "Predicted from code"), h("small", null, LABEL[labels.predicted] || "estimated")),
+      h("div", { class: "stat" }, h("b", null, actual != null ? n(actual) : "–"), h("span", null, "Actual"),
+        h("small", null, actual != null ? "median of " + N.runs + " runs" + (N.actualRange ? " · " + n(N.actualRange[0]) + "–" + n(N.actualRange[1]) : "") : "not measured")),
+      d.cost ? h("div", { class: "stat" }, h("b", null, money(d.cost.perTask)), h("span", null, "per task"), h("small", null, money(d.cost.per1k) + " per 1,000 tasks")) : null),
+    h("p", { class: "meta" }, [d.model, d.date, d.task.description].filter(Boolean).join(" · ")))));
+
+  // Where the tokens go
+  const total = (d.sources || []).reduce((a, x) => a + x.tokens, 0) || 1;
+  const sorted = [...(d.sources || [])].sort((a, b) => b.tokens - a.tokens);
+  const max = sorted.length ? sorted[0].tokens : 1;
+  const sourcesCard = h("div", { class: "card reveal" },
+    h("h3", null, "By source"), h("p", { class: "sub" }, "Every token in the " + (actual != null ? "median run" : "prediction") + ", by what it was spent on."),
+    h("div", { class: "bars" }, sorted.map(x => h("div", { class: "bar-row" },
+      h("div", { class: "lbl" }, x.source),
+      h("div", { class: "track", role: "img", "aria-label": x.source + ": " + n(x.tokens) + " tokens" }, h("div", { class: "fill", style: "width:" + (x.tokens / max * 100) + "%" })),
+      h("div", { class: "val" }, n(x.tokens) + " tokens · " + pct(x.tokens / total))))),
+    tableOf(["Source", "Tokens", "Share"], sorted.map(x => [x.source, n(x.tokens), pct(x.tokens / total)])));
+  const cards = [sourcesCard];
+  if (d.calls && d.calls.length) cards.push(callsCard(d.calls));
+  app.append(band("where", true, head("Where the tokens go", "Follow the tokens.", "Call by call.", true), h("div", { class: "grid2" }, cards)));
+
+  function callsCard(calls) {
+    const W = 640, H = 260, L = 52, B = 28, T = 10;
+    const tot = c => (c.input || 0) + (c.cacheWrite || 0) + (c.cacheRead || 0);
+    const top = Math.max(...calls.map(tot), 1);
+    const step = Math.pow(10, Math.floor(Math.log10(top)));
+    const yMax = Math.ceil(top / step) * step;
+    const y = v => T + (H - T - B) * (1 - v / yMax);
+    const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, role: "img", "aria-label": "Input tokens per call: " + calls.map(c => "call " + c.call + " " + n(tot(c))).join(", ") });
+    [0, .5, 1].forEach(f => {
+      const v = yMax * f;
+      svg.append(s("line", { x1: L, x2: W, y1: y(v), y2: y(v), stroke: "#e8e8ed", "stroke-width": 1 }));
+      const t = s("text", { x: L - 8, y: y(v), "text-anchor": "end", "dominant-baseline": "middle", "font-size": 11, fill: "#86868b" });
+      t.textContent = v >= 1000 ? n(v / 1000, 1) + "k" : n(v); svg.append(t);
+    });
+    const slot = (W - L) / calls.length, bw = Math.max(4, Math.min(36, slot * .62));
+    const chart = h("div", { class: "chart" });
+    const tip = h("div", { class: "tip", hidden: true });
+    calls.forEach((c, i) => {
+      const x = L + slot * i + (slot - bw) / 2, full = (c.input || 0) + (c.cacheWrite || 0), cached = c.cacheRead || 0;
+      const g = s("g", {});
+      if (full) g.append(s("rect", { x, y: y(full), width: bw, height: Math.max(1, y(0) - y(full)), rx: 3, fill: "var(--full)" }));
+      if (cached) g.append(s("rect", { x, y: y(full + cached), width: bw, height: Math.max(1, y(full) - y(full + cached) - (full ? 2 : 0)), rx: 3, fill: "var(--cached)" }));
+      if (calls.length <= 24 || i % 5 === 0) {
+        const t = s("text", { x: x + bw / 2, y: H - 8, "text-anchor": "middle", "font-size": 11, fill: "#86868b" }); t.textContent = c.call; g.append(t);
+      }
+      const hit = s("rect", { x: L + slot * i, y: T, width: slot, height: H - T - B, fill: "transparent", tabindex: 0, "aria-label": "Call " + c.call });
+      const show = () => {
+        tip.hidden = false;
+        tip.replaceChildren(h("b", null, "Call " + c.call + (c.tools && c.tools.length ? " → " + c.tools.join(", ") : "")),
+          h("div", null, h("span", { class: "k" }, "Full price "), n(full)),
+          h("div", null, h("span", { class: "k" }, "From cache "), n(cached)),
+          h("div", null, h("span", { class: "k" }, "Output "), n(c.output)));
+        const r = svg.getBoundingClientRect(), k = r.width / W;
+        tip.style.left = Math.min(Math.max((x + bw / 2) * k, 80), r.width - 80) + "px";
+        tip.style.top = (y(full + cached) * k - 8) + "px";
+      };
+      hit.addEventListener("mouseenter", show); hit.addEventListener("focus", show);
+      hit.addEventListener("mouseleave", () => { tip.hidden = true; }); hit.addEventListener("blur", () => { tip.hidden = true; });
+      g.append(hit); svg.append(g);
+    });
+    chart.append(svg, tip);
+    const sum = k => calls.reduce((a, c) => a + (c[k] || 0), 0);
+    return h("div", { class: "card reveal" },
+      h("h3", null, "By call"), h("p", { class: "sub" }, "Input tokens sent on each model call. Rising bars mean the context keeps growing."),
+      h("div", { class: "legend" }, h("span", null, h("i", { style: "background:var(--full)" }), "Full price"), h("span", null, h("i", { style: "background:var(--cached)" }), "Read from cache")),
+      chart,
+      h("div", { class: "mini" },
+        h("div", null, h("b", null, String(calls.length)), h("span", null, "model calls")),
+        h("div", null, h("b", null, pct(d.cacheHitRate || 0)), h("span", null, "cache hit rate")),
+        h("div", null, h("b", null, n(sum("output"))), h("span", null, "output tokens"))),
+      tableOf(["Call", "Full price", "Cached", "Output", "Tools"], calls.map(c => [c.call, n((c.input || 0) + (c.cacheWrite || 0)), n(c.cacheRead || 0), n(c.output), (c.tools || []).join(", ")])));
+  }
+
+  function tableOf(cols, rows) {
+    return h("details", { class: "as-table" }, h("summary", null, "Show as table"),
+      h("div", { class: "scroll" }, h("table", null, h("thead", null, h("tr", null, cols.map(c => h("th", null, c)))),
+        h("tbody", null, rows.map(r => h("tr", null, r.map(v => h("td", null, String(v)))))))));
+  }
+
+  // Agent map
+  if (d.map && d.map.nodes && d.map.nodes.length) {
+    const board = h("div", { class: "board reveal" });
+    app.append(band("map", false, head("How the agent works", "The agent, mapped.", "Hot spots circled.", true), board,
+      d.mapCaption ? h("p", { class: "caption" }, d.mapCaption) : null));
+    board.append(drawMap(d.map));
+  }
+
+  // Issues
+  const issues = [...(d.issues || [])].sort((a, b) => b.tokensWasted - a.tokensWasted);
+  const base = headline || 1;
+  const cats = [...new Set(issues.map(i => i.category))];
+  const tiles = issues.map((x, i) => h("article", { class: "issue reveal", "data-cat": x.category },
+    h("div", { class: "who" }, h("span", { class: "rank" }, String(i + 1).padStart(2, "0")), h("span", null, x.category)),
+    h("h3", null, x.title),
+    h("div", { class: "waste" }, h("b", null, n(x.tokensWasted)), h("span", null, "tokens wasted per task · " + pct(x.tokensWasted / base) + " of the total")),
+    h("div", { class: "badges" },
+      h("span", { class: "badge " + x.severity }, h("span", { class: "dot" }), x.severity[0].toUpperCase() + x.severity.slice(1)),
+      h("span", { class: "badge" }, x.confidence === "measured" ? "Measured" : "Estimated"),
+      h("span", { class: "badge" }, x.risk === "safe" ? "Safe fix" : "Fix changes behavior: verify")),
+    h("p", { class: "fixline" }, x.fixSummary || x.fix),
+    h("details", null, h("summary", null, "Evidence and fix"), h("div", { class: "ev" },
+      x.evidence && x.evidence.code && x.evidence.code.length ? [h("h4", null, "In the code"), x.evidence.code.map(c =>
+        h("div", { class: "code" }, h("div", { class: "file" }, c.file + (c.line ? ":" + c.line : "")), c.snippet ? h("pre", null, c.snippet) : null))] : null,
+      x.evidence && x.evidence.trace ? [h("h4", null, "In the trace"), h("p", null, x.evidence.trace)] : null,
+      h("h4", null, "Fix"), h("p", null, x.fix),
+      x.diff ? h("pre", { class: "diff" }, x.diff.split("\n").map(line =>
+        h("span", { class: line.startsWith("+") ? "add" : line.startsWith("-") ? "del" : null }, line + "\n"))) : null))));
+  const bento = h("div", { class: "bento" }, tiles.length ? tiles : h("p", { class: "empty" }, "No issues found. This agent spends close to what the task needs."));
+  const segBtns = ["All", ...cats].map(c => h("button", { type: "button", "aria-pressed": String(c === "All"), onclick: () => filter(c) }, c));
+  function filter(c) {
+    segBtns.forEach(b => b.setAttribute("aria-pressed", String(b.textContent === c)));
+    let first = true;
+    tiles.forEach(t => { const on = c === "All" || t.dataset.cat === c; t.hidden = !on; t.classList.toggle("feature", on && first); if (on) first = false; });
+  }
+  app.append(band("issues", true,
+    head("What is wasting tokens", issues.length + (issues.length === 1 ? " issue." : " issues."), "Ranked by tokens wasted.", true),
+    cats.length > 1 ? h("div", { class: "seg", role: "group", "aria-label": "Filter by category" }, segBtns) : null, bento,
+    issues.length > 1 ? h("p", { class: "caption" }, "Issues can overlap: one large tool result is also resent history. Savings do not simply add up; the next section models them together.") : null));
+  filter("All");
+
+  // Fix the top N
+  if (d.afterFix) {
+    const a = d.afterFix;
+    const which = a.count >= issues.length ? "all " + a.count : "the top " + a.count;
+    app.append(band("fix", false, head("What fixing buys you", "Fix " + which + ".", "See the difference.", true),
+      h("div", { class: "ba" },
+        h("div", { class: "ba-tile reveal" }, h("h3", null, "Today"), h("b", null, n(headline)), h("div", { class: "money" }, "tokens per task" + (d.cost ? " · " + money(d.cost.perTask) : ""))),
+        h("div", { class: "ba-tile after reveal" }, h("h3", null, "After " + which + " fixes (" + (a.label || "estimated") + ")"), h("b", null, n(a.tokens)),
+          h("div", { class: "money" }, "tokens per task" + (a.cost != null ? " · " + money(a.cost) : "") + (headline ? " · " + pct(1 - a.tokens / headline) + " less" : "")),
+          h("ul", null, issues.slice(0, a.count).map(x => h("li", null, x.title))))),
+      a.note ? h("p", { class: "caption" }, a.note) : null));
+  }
+
+  // Method
+  const m = d.method || {};
+  const item = (q, body) => h("details", null, h("summary", null, q), h("div", { class: "body" }, body));
+  app.append(band("method", false, head("How these numbers were made", "Method.", null),
+    h("div", { class: "faq reveal" },
+      item("Counting and runs", h("ul", null,
+        h("li", null, "Ideal: " + (LABEL[labels.ideal] || "estimated") + ". Predicted: " + (LABEL[labels.predicted] || "estimated") + ". Actual: " + (actual != null ? "measured from API usage fields, median of " + N.runs + " runs" : "not measured") + "."),
+        m.tokenizer ? h("li", null, "Tokenizer: " + m.tokenizer) : null,
+        d.model ? h("li", null, "Model: " + d.model) : null)),
+      d.cost ? item("Pricing", h("p", null, "Prices from ", h("a", { href: d.cost.pricingSource, target: "_blank", rel: "noopener" }, d.cost.pricingSource), ", checked " + d.cost.pricingDate + ". Cache reads and writes are priced separately.")) : null,
+      m.notes && m.notes.length ? item("Notes", h("ul", null, m.notes.map(t => h("li", null, t)))) : null,
+      m.notMeasured && m.notMeasured.length ? item("Not measured", h("ul", null, m.notMeasured.map(t => h("li", null, t)))) : null)));
+
+  app.append(h("footer", { class: "foot" }, h("div", { class: "inner" },
+    h("div", null, "Made with the auditing-agent-token-usage skill" + (d.project ? " · " + d.project : "")))));
+
+  // Hand-drawn agent map. Same {nodes, edges} spec as the architecture skill; nodes with hot: true are circled.
+  function drawMap(spec) {
+    const ink = "#1d1d1f", fill = "#ffffff", flame = "#bf4800", pad = 44;
+    const nodes = {}; spec.nodes.forEach(x => { nodes[x.id] = Object.assign({ w: 160, h: 70, shape: "rectangle" }, x); });
+    const all = Object.values(nodes);
+    const minX = Math.min(...all.map(x => x.x)) - pad, minY = Math.min(...all.map(x => x.y)) - pad;
+    const maxX = Math.max(...all.map(x => x.x + x.w)) + pad, maxY = Math.max(...all.map(x => x.y + x.h + (x.hot ? 50 : 0))) + pad;
+    const svg = s("svg", { viewBox: `${minX} ${minY} ${maxX - minX} ${maxY - minY}`, role: "img",
+      "aria-label": "Agent map: " + all.map(x => x.label.replace(/\n/g, " ") + (x.hot ? " (hot spot)" : "")).join(", ") });
+    const rc = window.rough ? rough.svg(svg) : null;
+    const opt = { stroke: ink, strokeWidth: 1.7, roughness: 1.15, bowing: .9, fill, fillStyle: "solid", seed: 7 };
+    const shape = x => {
+      const cx = x.x + x.w / 2, cy = x.y + x.h / 2;
+      if (x.shape === "ellipse") return rc ? rc.ellipse(cx, cy, x.w, x.h, opt) : s("ellipse", { cx, cy, rx: x.w / 2, ry: x.h / 2, fill, stroke: ink, "stroke-width": 2 });
+      if (x.shape === "diamond") { const pts = [[cx, x.y], [x.x + x.w, cy], [cx, x.y + x.h], [x.x, cy]];
+        return rc ? rc.polygon(pts, opt) : s("polygon", { points: pts.join(" "), fill, stroke: ink, "stroke-width": 2 }); }
+      return rc ? rc.rectangle(x.x, x.y, x.w, x.h, opt) : s("rect", { x: x.x, y: x.y, width: x.w, height: x.h, rx: 10, fill, stroke: ink, "stroke-width": 2 });
+    };
+    const anchor = (a, o) => {
+      const dx = (o.x + o.w / 2) - (a.x + a.w / 2), dy = (o.y + o.h / 2) - (a.y + a.h / 2);
+      return Math.abs(dx) >= Math.abs(dy) ? [a.x + (dx > 0 ? a.w : 0), a.y + a.h / 2] : [a.x + a.w / 2, a.y + (dy > 0 ? a.h : 0)];
+    };
+    const text = (x, y, str, size, weight, color) => {
+      const lines = String(str).split("\n");
+      const t = s("text", { x, y: y - (lines.length - 1) * size * .6, "text-anchor": "middle", "dominant-baseline": "middle",
+        "font-family": "Kalam, 'Bradley Hand', 'Comic Sans MS', cursive", "font-size": size, "font-weight": weight || 400, fill: color || ink });
+      lines.forEach((ln, i) => { const ts = s("tspan", { x, dy: i ? size * 1.2 : 0 }); ts.textContent = ln; t.append(ts); });
+      return t;
+    };
+    (spec.edges || []).forEach(e => {
+      const a = nodes[e.from], b = nodes[e.to]; if (!a || !b) return;
+      const [x1, y1] = anchor(a, b), [x2, y2] = anchor(b, a);
+      const lo = Object.assign({}, opt, e.dashed ? { strokeLineDash: [8, 8] } : {});
+      const ang = Math.atan2(y2 - y1, x2 - x1), L = 14;
+      const h1 = [x2 - L * Math.cos(ang - .45), y2 - L * Math.sin(ang - .45)], h2 = [x2 - L * Math.cos(ang + .45), y2 - L * Math.sin(ang + .45)];
+      if (rc) { svg.append(rc.line(x1, y1, x2, y2, lo), rc.line(x2, y2, ...h1, opt), rc.line(x2, y2, ...h2, opt)); }
+      else { svg.append(s("line", { x1, y1, x2, y2, stroke: ink, "stroke-width": 2, "stroke-dasharray": e.dashed ? "8 8" : "none" }),
+        s("polyline", { points: [h1, [x2, y2], h2].join(" "), fill: "none", stroke: ink, "stroke-width": 2 })); }
+      if (e.label) {
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, w = e.label.length * 8 + 14;
+        svg.append(s("rect", { x: mx - w / 2, y: my - 13, width: w, height: 26, rx: 6, fill }), text(mx, my, e.label, 15));
+      }
+    });
+    all.forEach(x => {
+      svg.append(shape(x), text(x.x + x.w / 2, x.y + x.h / 2, x.label, 18, 700));
+      if (x.hot) {
+        const cx = x.x + x.w / 2, cy = x.y + x.h / 2;
+        svg.append(rc ? rc.ellipse(cx, cy, x.w + 44, x.h + 40, { stroke: flame, strokeWidth: 2.2, roughness: 1.8, seed: 3 })
+          : s("ellipse", { cx, cy, rx: x.w / 2 + 22, ry: x.h / 2 + 20, fill: "none", stroke: flame, "stroke-width": 2.2 }));
+        // Below the node: arrows mostly enter from the sides and above, so the label stays clear of them.
+        svg.append(text(cx, x.y + x.h + 40, typeof x.hot === "string" ? x.hot : "hot spot", 15, 700, flame));
+      }
+    });
+    return svg;
+  }
+})();
+</script>
