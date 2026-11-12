@@ -1,0 +1,246 @@
+<title>{{TITLE}}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Sans:wght@400;500;600&family=Kalam:wght@400;700&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/roughjs@4.6.6/bundled/rough.js"></script>
+<style>
+/* Layout: one presenter column; the sketch sits on a white "paper" card like an Excalidraw canvas. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #17202b; --muted: #5b6676;
+  --line: #dde2e9; --accent: #2b59c3; --marker: #ffe066; --wow: #fff3bf;
+  --paper: #ffffff; --ink: #1e1e1e;
+  --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
+  --hand: "Kalam", "Comic Sans MS", "Bradley Hand", cursive;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #11161d; --surface: #19202a; --fg: #e8edf3; --muted: #9aa6b5;
+  --line: #2a3442; --accent: #8fb0ff; --marker: #f5c518; --wow: #3a3415; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #11161d; --surface: #19202a; --fg: #e8edf3; --muted: #9aa6b5;
+  --line: #2a3442; --accent: #8fb0ff; --marker: #f5c518; --wow: #3a3415; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font: 16px/1.6 var(--body); }
+.wrap { max-width: 920px; margin: 0 auto; padding-block: 40px 72px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 56px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(2.1rem, 5vw, 3.2rem); font-weight: 800; }
+h2 { font-size: 1.5rem; font-weight: 800; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; }
+.eyebrow { font-size: .75rem; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+section { display: grid; gap: 18px; min-width: 0; }
+.lede { font-size: 1.2rem; max-width: 62ch; }
+.mark { background: linear-gradient(transparent 55%, var(--marker) 55%); padding: 0 2px; color: inherit; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 12px; font-size: .85rem; color: var(--muted); }
+.chip b { color: var(--fg); font-weight: 600; }
+
+.ba { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.ba > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 20px; min-width: 0; }
+.ba ul, .plain { margin: 8px 0 0; padding-left: 1.1em; display: grid; gap: 6px; }
+
+.paper { background: var(--paper); border-radius: 10px; border: 1px solid var(--line); overflow-x: auto; }
+.paper svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.caption { font-family: var(--hand); color: var(--muted); font-size: 1.05rem; }
+
+.group { display: grid; gap: 12px; }
+.group > h3 { color: var(--muted); font-family: var(--body); font-size: .8rem; letter-spacing: .1em; text-transform: uppercase; }
+.cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+.case { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.case h4 { margin: 0; font: 600 1.02rem/1.3 var(--body); display: flex; gap: 10px; align-items: baseline; }
+.rank { font: 700 .8rem var(--display); color: var(--accent); font-variant-numeric: tabular-nums; }
+.case dl { margin: 0; display: grid; gap: 4px; font-size: .93rem; }
+.case dt { font-size: .7rem; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-top: 4px; }
+.case dd { margin: 0; }
+.without { font-size: .88rem; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 8px; }
+
+.ways { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+.way { padding: 4px 0 4px 16px; border-left: 3px solid var(--marker); min-width: 0; }
+.way .eyebrow { margin-bottom: 4px; }
+.way p { font-size: 1.02rem; }
+
+.setup { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 20px; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; border-top: 1px solid var(--line); }
+.steps li { display: grid; grid-template-columns: 64px 1fr; gap: 16px; padding: 14px 8px; border-bottom: 1px solid var(--line); }
+.steps li.wow { background: var(--wow); border-radius: 8px; }
+.time { font: 600 .9rem var(--body); font-variant-numeric: tabular-nums; color: var(--accent); padding-top: 2px; }
+.do { font-weight: 600; }
+.say { color: var(--muted); font-size: .95rem; margin-top: 2px; }
+.say::before { content: "Say: "; font-weight: 600; color: var(--fg); }
+.wowtag { font-family: var(--hand); font-weight: 700; color: var(--fg); margin-left: 6px; }
+
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 18px; }
+details + details { margin-top: 8px; }
+summary { cursor: pointer; font-weight: 600; }
+summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+details p { margin-top: 8px; color: var(--muted); }
+.sources { font-size: .85rem; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
+.sources a { color: var(--accent); }
+@media (max-width: 480px) { .steps li { grid-template-columns: 1fr; gap: 4px; } }
+</style>
+
+<main class="wrap" id="app"></main>
+
+<!-- The skill fills this block. Every field is required except where the SKILL.md says otherwise. -->
+<script id="demo-data" type="application/json">
+{{DEMO_JSON}}
+</script>
+
+<script>
+(function () {
+  const d = JSON.parse(document.getElementById("demo-data").textContent);
+  const app = document.getElementById("app");
+  const el = (tag, cls, text) => { const n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; };
+  const add = (parent, ...kids) => { kids.forEach(k => k && parent.appendChild(k)); return parent; };
+  const list = (items, cls) => add(el("ul", cls || "plain"), ...items.map(t => el("li", null, t)));
+  const section = (eyebrow, title) => { const s = el("section"); add(s, el("div", "eyebrow", eyebrow), el("h2", null, title)); app.appendChild(s); return s; };
+
+  // Hero
+  const hero = el("section");
+  const h1 = el("h1"); h1.append(d.feature);
+  const lede = el("p", "lede"); lede.append(el("span", "mark", d.oneLiner));
+  const chips = el("div", "chips");
+  [["Product", d.product], ["Audience", d.audience], ["Demo length", d.demoLength]].forEach(([k, v]) => {
+    if (!v) return; const c = el("span", "chip"); c.append(k + ": "); c.append(el("b", null, v)); chips.appendChild(c);
+  });
+  add(hero, el("div", "eyebrow", "Demo pack"), h1, lede, chips);
+  app.appendChild(hero);
+
+  // Problem
+  const prob = section("Why it exists", "The problem it solves");
+  const ba = el("div", "ba");
+  const before = el("div"); add(before, el("h3", null, "Without it"), list(d.problem.before));
+  const after = el("div"); add(after, el("h3", null, "With it"), list(d.problem.after));
+  add(prob, add(ba, before, after));
+
+  // Flow sketch
+  if (d.flow && d.flow.nodes && d.flow.nodes.length) {
+    const s = section("At a glance", "How someone uses it");
+    const paper = el("div", "paper"); paper.appendChild(drawFlow(d.flow));
+    add(s, paper, d.flowCaption ? el("p", "caption", d.flowCaption) : null);
+  }
+
+  // Use cases, grouped by who uses it, numbered by overall rank
+  const uc = section("What people use it for", d.useCases.length + " ways people use it");
+  const groups = [];
+  d.useCases.forEach((c, i) => {
+    let g = groups.find(x => x.name === c.group); if (!g) groups.push(g = { name: c.group, items: [] });
+    g.items.push(Object.assign({ rank: i + 1 }, c));
+  });
+  groups.forEach(g => {
+    const wrap = el("div", "group"); wrap.appendChild(el("h3", null, g.name));
+    const grid = el("div", "cases");
+    g.items.forEach(c => {
+      const card = el("article", "case");
+      const h = el("h4"); add(h, el("span", "rank", String(c.rank).padStart(2, "0")), el("span", null, c.title));
+      const dl = el("dl");
+      [["Situation", c.situation], ["What they do", c.action], ["What they get", c.result]].forEach(([k, v]) => add(dl, el("dt", null, k), el("dd", null, v)));
+      add(card, h, dl, c.without ? el("p", "without", "Without it: " + c.without) : null);
+      grid.appendChild(card);
+    });
+    uc.appendChild(add(wrap, grid));
+  });
+
+  // Ways to explain it
+  const ways = section("Pick the framing for your room", "Ways to explain it");
+  const wgrid = el("div", "ways");
+  d.explanations.forEach(x => { const w = el("div", "way"); add(w, el("div", "eyebrow", x.style), el("p", null, x.text)); wgrid.appendChild(w); });
+  ways.appendChild(wgrid);
+
+  // Demo script
+  const sc = section("Run of show", "Demo script");
+  if (d.script.hook) sc.appendChild(el("p", "lede", d.script.hook));
+  const setup = el("div", "setup"); add(setup, el("h3", null, "Before you start"), list(d.script.setup));
+  const ol = el("ol", "steps");
+  d.script.steps.forEach(st => {
+    const li = el("li", st.wow ? "wow" : null);
+    const body = el("div"); const doEl = el("div", "do", st.do);
+    if (st.wow) doEl.appendChild(el("span", "wowtag", "← the moment"));
+    add(body, doEl, el("div", "say", st.say));
+    add(li, el("div", "time", st.time), body); ol.appendChild(li);
+  });
+  add(sc, setup, ol);
+
+  // Q&A
+  const qa = section("Be ready for", "Questions people will ask");
+  d.questions.forEach(x => { const det = el("details"); add(det, el("summary", null, x.q), el("p", null, x.a)); qa.appendChild(det); });
+
+  // Limits
+  const lim = section("Say it before they do", "What it is not for");
+  lim.appendChild(list(d.notFor));
+
+  // Sources
+  if (d.sources && d.sources.length) {
+    const f = el("footer", "sources"); f.append("Checked against: ");
+    d.sources.forEach((s, i) => {
+      if (i) f.append(" · ");
+      if (/^https?:\/\//.test(s)) { const a = el("a", null, s); a.href = s; a.target = "_blank"; a.rel = "noopener"; f.appendChild(a); } else f.append(s);
+    });
+    app.appendChild(f);
+  }
+
+  // Hand-drawn flow: same {nodes, edges} spec as designing-software-architecture's make_excalidraw.py.
+  function drawFlow(spec) {
+    const NS = "http://www.w3.org/2000/svg", pad = 40, ink = "#1e1e1e";
+    const nodes = {}; spec.nodes.forEach(n => { nodes[n.id] = Object.assign({ w: 160, h: 70, shape: "rectangle" }, n); });
+    const all = Object.values(nodes);
+    const minX = Math.min(...all.map(n => n.x)) - pad, minY = Math.min(...all.map(n => n.y)) - pad;
+    const maxX = Math.max(...all.map(n => n.x + n.w)) + pad, maxY = Math.max(...all.map(n => n.y + n.h)) + pad;
+    const svg = document.createElementNS(NS, "svg");
+    svg.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+    svg.setAttribute("role", "img");
+    svg.setAttribute("aria-label", "Flow: " + all.map(n => n.label).join(", "));
+    const bg = document.createElementNS(NS, "rect");
+    Object.entries({ x: minX, y: minY, width: maxX - minX, height: maxY - minY, fill: "#ffffff" }).forEach(([k, v]) => bg.setAttribute(k, v));
+    svg.appendChild(bg);
+    const rc = window.rough ? rough.svg(svg) : null;
+    const opt = { stroke: ink, strokeWidth: 1.8, roughness: 1.2, bowing: 1, fill: "#ffffff", fillStyle: "solid" };
+
+    const plain = (tag, attrs) => { const e = document.createElementNS(NS, tag); Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v)); return e; };
+    const shape = n => {
+      const cx = n.x + n.w / 2, cy = n.y + n.h / 2;
+      if (n.shape === "ellipse") return rc ? rc.ellipse(cx, cy, n.w, n.h, opt) : plain("ellipse", { cx, cy, rx: n.w / 2, ry: n.h / 2, fill: "#fff", stroke: ink, "stroke-width": 2 });
+      if (n.shape === "diamond") { const pts = [[cx, n.y], [n.x + n.w, cy], [cx, n.y + n.h], [n.x, cy]];
+        return rc ? rc.polygon(pts, opt) : plain("polygon", { points: pts.join(" "), fill: "#fff", stroke: ink, "stroke-width": 2 }); }
+      return rc ? rc.rectangle(n.x, n.y, n.w, n.h, opt) : plain("rect", { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, fill: "#fff", stroke: ink, "stroke-width": 2 });
+    };
+    const anchor = (n, o) => {
+      const dx = (o.x + o.w / 2) - (n.x + n.w / 2), dy = (o.y + o.h / 2) - (n.y + n.h / 2);
+      if (Math.abs(dx) >= Math.abs(dy)) return [n.x + (dx > 0 ? n.w : 0), n.y + n.h / 2];
+      return [n.x + n.w / 2, n.y + (dy > 0 ? n.h : 0)];
+    };
+    const text = (x, y, str, size, weight) => {
+      const lines = String(str).split("\n");
+      const t = plain("text", { x, y: y - (lines.length - 1) * size * 0.6, "text-anchor": "middle", "dominant-baseline": "middle",
+        "font-family": "Kalam, 'Comic Sans MS', cursive", "font-size": size, "font-weight": weight || 400, fill: ink });
+      lines.forEach((ln, i) => { const ts = plain("tspan", { x, dy: i ? size * 1.2 : 0 }); ts.textContent = ln; t.appendChild(ts); });
+      return t;
+    };
+
+    (spec.edges || []).forEach(e => {
+      const a = nodes[e.from], b = nodes[e.to]; if (!a || !b) return;
+      const [x1, y1] = anchor(a, b), [x2, y2] = anchor(b, a);
+      const lo = Object.assign({}, opt, e.dashed ? { strokeLineDash: [8, 8] } : {});
+      const ang = Math.atan2(y2 - y1, x2 - x1), L = 14;
+      const h1 = [x2 - L * Math.cos(ang - 0.45), y2 - L * Math.sin(ang - 0.45)];
+      const h2 = [x2 - L * Math.cos(ang + 0.45), y2 - L * Math.sin(ang + 0.45)];
+      if (rc) { svg.appendChild(rc.line(x1, y1, x2, y2, lo)); svg.appendChild(rc.line(x2, y2, ...h1, opt)); svg.appendChild(rc.line(x2, y2, ...h2, opt)); }
+      else {
+        svg.appendChild(plain("line", { x1, y1, x2, y2, stroke: ink, "stroke-width": 2, "stroke-dasharray": e.dashed ? "8 8" : "none" }));
+        svg.appendChild(plain("polyline", { points: [h1, [x2, y2], h2].join(" "), fill: "none", stroke: ink, "stroke-width": 2 }));
+      }
+      if (e.label) {
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, w = e.label.length * 8 + 12;
+        svg.appendChild(plain("rect", { x: mx - w / 2, y: my - 13, width: w, height: 26, fill: "#ffffff" }));
+        svg.appendChild(text(mx, my, e.label, 15));
+      }
+    });
+    all.forEach(n => { svg.appendChild(shape(n)); svg.appendChild(text(n.x + n.w / 2, n.y + n.h / 2, n.label, 18, 700)); });
+    return svg;
+  }
+})();
+</script>
