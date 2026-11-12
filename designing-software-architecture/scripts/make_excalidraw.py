@@ -4,9 +4,10 @@ Usage: python3 make_excalidraw.py spec.json out.excalidraw
 
 Spec:
   {"nodes": [{"id": "api", "label": "API", "x": 300, "y": 100,
-              "w": 160, "h": 70, "color": "#a5d8ff", "shape": "rectangle"}],
+              "w": 160, "h": 70, "shape": "rectangle"}],
    "edges": [{"from": "web", "to": "api", "label": "HTTPS", "dashed": false}]}
 shape: rectangle | ellipse | diamond (use ellipse for datastores/queues, diamond for decisions).
+All shapes are filled plain white; any "color" in the spec is ignored.
 """
 import json
 import random
@@ -58,7 +59,7 @@ def build(spec):
         n.setdefault("h", 70)
         box = base(
             n.get("shape", "rectangle"), n["id"], n["x"], n["y"], n["w"], n["h"],
-            backgroundColor=n.get("color", "#a5d8ff"),
+            backgroundColor="#ffffff",
             roundness={"type": 3} if n.get("shape", "rectangle") == "rectangle" else None,
         )
         tid = n["id"] + "_t"

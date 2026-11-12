@@ -1,0 +1,14 @@
+{"nodes":[
+ {"id":"user","label":"User Browser","x":0,"y":150},
+ {"id":"api","label":"Shortener App","x":300,"y":150},
+ {"id":"redis","label":"Redis cache","x":600,"y":30,"shape":"ellipse"},
+ {"id":"pg","label":"Postgres","x":600,"y":260,"shape":"ellipse"},
+ {"id":"queue","label":"Click queue","x":300,"y":420,"shape":"ellipse"},
+ {"id":"worker","label":"Stats worker","x":600,"y":420}],
+"edges":[
+ {"from":"user","to":"api","label":"GET /abc"},
+ {"from":"api","to":"redis","label":"lookup"},
+ {"from":"api","to":"pg","label":"on miss"},
+ {"from":"api","to":"queue","label":"click","dashed":true},
+ {"from":"queue","to":"worker","label":"consume","dashed":true},
+ {"from":"worker","to":"pg","label":"counts"}]}

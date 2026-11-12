@@ -42,9 +42,9 @@ Architecture is the set of decisions that are expensive to change later. Spend e
 
 Draw architecture in Excalidraw's hand-drawn style, as a `.excalidraw` file the user can drag onto https://excalidraw.com to edit or share.
 
-1. Write a JSON spec of `nodes` (id, label, x, y, optional w/h/color/shape) and `edges` (from, to, optional label/dashed). Layout: clients left, edge/API middle, data right; ~100px gaps.
+1. Write a JSON spec of `nodes` (id, label, x, y, optional w/h/shape) and `edges` (from, to, optional label/dashed). Layout: clients left, edge/API middle, data right; ~100px gaps.
 2. Run `python3 scripts/make_excalidraw.py spec.json architecture.excalidraw` (script docstring has the spec format).
-3. Conventions: rectangles for services, ellipses for datastores and queues, dashed arrows for async flows, one pastel color per layer, a label on every arrow.
+3. Conventions: rectangles for services, ellipses for datastores and queues, dashed arrows for async flows, a label on every arrow. Plain white only: white canvas, white-filled shapes, black strokes, no colors.
 4. Keep one diagram to ~12 boxes; split into context and container views beyond that.
 
 ## ADR Template
