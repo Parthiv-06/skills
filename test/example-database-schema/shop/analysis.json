@@ -1,0 +1,1147 @@
+{
+ "source": {
+  "engine": "sqlite",
+  "name": "shop.db"
+ },
+ "indexes_known": true,
+ "tables": [
+  {
+   "name": "addresses",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "address_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "line1",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "city",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "country",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "address_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "customer_id"
+     ],
+     "ref_table": "customers",
+     "ref_columns": [
+      "customer_id"
+     ]
+    }
+   ],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per address",
+   "fk_columns": [
+    "customer_id"
+   ]
+  },
+  {
+   "name": "audit_log",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "entity",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "entity_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "action",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per audit_log",
+   "fk_columns": []
+  },
+  {
+   "name": "categories",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "category_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "parent_category_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "category_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "parent_category_id"
+     ],
+     "ref_table": "categories",
+     "ref_columns": [
+      "category_id"
+     ]
+    }
+   ],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per category",
+   "fk_columns": [
+    "parent_category_id"
+   ]
+  },
+  {
+   "name": "customers",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "customer_id"
+   ],
+   "unique": [
+    [
+     "email"
+    ]
+   ],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "email"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per customer",
+   "fk_columns": []
+  },
+  {
+   "name": "employees",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "employee_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "manager_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "employee_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "manager_id"
+     ],
+     "ref_table": "employees",
+     "ref_columns": [
+      "employee_id"
+     ]
+    }
+   ],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per employee",
+   "fk_columns": [
+    "manager_id"
+   ]
+  },
+  {
+   "name": "order_items",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "line_no",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "quantity",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "unit_price_cents",
+     "type": "INTEGER",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "order_id",
+    "line_no"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "product_id"
+     ],
+     "ref_table": "products",
+     "ref_columns": [
+      "product_id"
+     ]
+    },
+    {
+     "columns": [
+      "order_id"
+     ],
+     "ref_table": "orders",
+     "ref_columns": [
+      "order_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "product_id"
+    ],
+    [
+     "order_id",
+     "line_no"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per order + line_no",
+   "fk_columns": [
+    "order_id",
+    "product_id"
+   ]
+  },
+  {
+   "name": "orders",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "billing_address_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "shipping_address_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "placed_at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "order_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "shipping_address_id"
+     ],
+     "ref_table": "addresses",
+     "ref_columns": [
+      "address_id"
+     ]
+    },
+    {
+     "columns": [
+      "billing_address_id"
+     ],
+     "ref_table": "addresses",
+     "ref_columns": [
+      "address_id"
+     ]
+    },
+    {
+     "columns": [
+      "customer_id"
+     ],
+     "ref_table": "customers",
+     "ref_columns": [
+      "customer_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "customer_id"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per order",
+   "fk_columns": [
+    "billing_address_id",
+    "customer_id",
+    "shipping_address_id"
+   ]
+  },
+  {
+   "name": "payments",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "amount_cents",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "method",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "paid_at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "order_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "order_id"
+     ],
+     "ref_table": "orders",
+     "ref_columns": [
+      "order_id"
+     ]
+    }
+   ],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per payment",
+   "fk_columns": [
+    "order_id"
+   ]
+  },
+  {
+   "name": "product_tags",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "tag_id",
+     "type": "INTEGER",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "product_id",
+    "tag_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "tag_id"
+     ],
+     "ref_table": "tags",
+     "ref_columns": [
+      "tag_id"
+     ]
+    },
+    {
+     "columns": [
+      "product_id"
+     ],
+     "ref_table": "products",
+     "ref_columns": [
+      "product_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "product_id",
+     "tag_id"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": true,
+   "grain_draft": "one row per product + tag pair",
+   "fk_columns": [
+    "product_id",
+    "tag_id"
+   ]
+  },
+  {
+   "name": "products",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "sku",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "category_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "price_cents",
+     "type": "INTEGER",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "product_id"
+   ],
+   "unique": [
+    [
+     "sku"
+    ]
+   ],
+   "foreign_keys": [
+    {
+     "columns": [
+      "category_id"
+     ],
+     "ref_table": "categories",
+     "ref_columns": [
+      "category_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "sku"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per product",
+   "fk_columns": [
+    "category_id"
+   ]
+  },
+  {
+   "name": "shipments",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "shipment_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "handled_by",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "carrier",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "shipped_at",
+     "type": "TEXT",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "shipment_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "handled_by"
+     ],
+     "ref_table": "employees",
+     "ref_columns": [
+      "employee_id"
+     ]
+    },
+    {
+     "columns": [
+      "order_id"
+     ],
+     "ref_table": "orders",
+     "ref_columns": [
+      "order_id"
+     ]
+    }
+   ],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per shipment",
+   "fk_columns": [
+    "handled_by",
+    "order_id"
+   ]
+  },
+  {
+   "name": "tags",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "tag_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "label",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "tag_id"
+   ],
+   "unique": [
+    [
+     "label"
+    ]
+   ],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "label"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per tag",
+   "fk_columns": []
+  },
+  {
+   "name": "v_customer_ltv",
+   "kind": "view",
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "nullable": true
+    },
+    {
+     "name": "lifetime_cents",
+     "type": "",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT c.customer_id, c.email, COALESCE(SUM(t.total_cents), 0) AS lifetime_cents\nFROM customers c\nLEFT JOIN v_order_totals t ON t.customer_id = c.customer_id\nGROUP BY c.customer_id, c.email",
+   "pk_source": "none",
+   "junction": false,
+   "grain_draft": "derived (a view): see what it reads",
+   "reads": [
+    "customers",
+    "v_order_totals"
+   ],
+   "joins": [
+    [
+     "v_order_totals.customer_id",
+     "customers.customer_id"
+    ]
+   ],
+   "fk_columns": []
+  },
+  {
+   "name": "v_order_totals",
+   "kind": "view",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "total_cents",
+     "type": "",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT o.order_id, o.customer_id, SUM(oi.quantity * oi.unit_price_cents) AS total_cents\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nGROUP BY o.order_id, o.customer_id",
+   "pk_source": "none",
+   "junction": false,
+   "grain_draft": "derived (a view): see what it reads",
+   "reads": [
+    "orders",
+    "order_items"
+   ],
+   "joins": [
+    [
+     "order_items.order_id",
+     "orders.order_id"
+    ]
+   ],
+   "fk_columns": []
+  }
+ ],
+ "relationships": [
+  {
+   "from": "addresses",
+   "from_columns": [
+    "customer_id"
+   ],
+   "to": "customers",
+   "to_columns": [
+    "customer_id"
+   ],
+   "source": "declared",
+   "id": "R1",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "addresses.customer_id = customers.customer_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.customer_id) AS matched FROM addresses c LEFT JOIN customers p ON c.customer_id = p.customer_id WHERE c.customer_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "categories",
+   "from_columns": [
+    "parent_category_id"
+   ],
+   "to": "categories",
+   "to_columns": [
+    "category_id"
+   ],
+   "source": "declared",
+   "id": "R2",
+   "role": "parent",
+   "self": true,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "categories.parent_category_id = categories.category_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.category_id) AS matched FROM categories c LEFT JOIN categories p ON c.parent_category_id = p.category_id WHERE c.parent_category_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "employees",
+   "from_columns": [
+    "manager_id"
+   ],
+   "to": "employees",
+   "to_columns": [
+    "employee_id"
+   ],
+   "source": "declared",
+   "id": "R3",
+   "role": "manager",
+   "self": true,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "employees.manager_id = employees.employee_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.employee_id) AS matched FROM employees c LEFT JOIN employees p ON c.manager_id = p.employee_id WHERE c.manager_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "order_items",
+   "from_columns": [
+    "order_id"
+   ],
+   "to": "orders",
+   "to_columns": [
+    "order_id"
+   ],
+   "source": "declared",
+   "id": "R4",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "order_items.order_id = orders.order_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.order_id) AS matched FROM order_items c LEFT JOIN orders p ON c.order_id = p.order_id WHERE c.order_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "order_items",
+   "from_columns": [
+    "product_id"
+   ],
+   "to": "products",
+   "to_columns": [
+    "product_id"
+   ],
+   "source": "declared",
+   "id": "R5",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "order_items.product_id = products.product_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.product_id) AS matched FROM order_items c LEFT JOIN products p ON c.product_id = p.product_id WHERE c.product_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "orders",
+   "from_columns": [
+    "billing_address_id"
+   ],
+   "to": "addresses",
+   "to_columns": [
+    "address_id"
+   ],
+   "source": "declared",
+   "id": "R6",
+   "role": "billing",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "orders.billing_address_id = addresses.address_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.address_id) AS matched FROM orders c LEFT JOIN addresses p ON c.billing_address_id = p.address_id WHERE c.billing_address_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "orders",
+   "from_columns": [
+    "customer_id"
+   ],
+   "to": "customers",
+   "to_columns": [
+    "customer_id"
+   ],
+   "source": "declared",
+   "id": "R7",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "orders.customer_id = customers.customer_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.customer_id) AS matched FROM orders c LEFT JOIN customers p ON c.customer_id = p.customer_id WHERE c.customer_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "orders",
+   "from_columns": [
+    "shipping_address_id"
+   ],
+   "to": "addresses",
+   "to_columns": [
+    "address_id"
+   ],
+   "source": "declared",
+   "id": "R8",
+   "role": "shipping",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "orders.shipping_address_id = addresses.address_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.address_id) AS matched FROM orders c LEFT JOIN addresses p ON c.shipping_address_id = p.address_id WHERE c.shipping_address_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "payments",
+   "from_columns": [
+    "order_id"
+   ],
+   "to": "orders",
+   "to_columns": [
+    "order_id"
+   ],
+   "source": "declared",
+   "id": "R9",
+   "role": null,
+   "self": false,
+   "cardinality": "1:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "payments.order_id = orders.order_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.order_id) AS matched FROM payments c LEFT JOIN orders p ON c.order_id = p.order_id WHERE c.order_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "product_tags",
+   "from_columns": [
+    "product_id"
+   ],
+   "to": "products",
+   "to_columns": [
+    "product_id"
+   ],
+   "source": "declared",
+   "id": "R10",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "product_tags.product_id = products.product_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.product_id) AS matched FROM product_tags c LEFT JOIN products p ON c.product_id = p.product_id WHERE c.product_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "product_tags",
+   "from_columns": [
+    "tag_id"
+   ],
+   "to": "tags",
+   "to_columns": [
+    "tag_id"
+   ],
+   "source": "declared",
+   "id": "R11",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "product_tags.tag_id = tags.tag_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.tag_id) AS matched FROM product_tags c LEFT JOIN tags p ON c.tag_id = p.tag_id WHERE c.tag_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "products",
+   "from_columns": [
+    "category_id"
+   ],
+   "to": "categories",
+   "to_columns": [
+    "category_id"
+   ],
+   "source": "declared",
+   "id": "R12",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "products.category_id = categories.category_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.category_id) AS matched FROM products c LEFT JOIN categories p ON c.category_id = p.category_id WHERE c.category_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "shipments",
+   "from_columns": [
+    "handled_by"
+   ],
+   "to": "employees",
+   "to_columns": [
+    "employee_id"
+   ],
+   "source": "declared",
+   "id": "R13",
+   "role": "handled_by",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "shipments.handled_by = employees.employee_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.employee_id) AS matched FROM shipments c LEFT JOIN employees p ON c.handled_by = p.employee_id WHERE c.handled_by IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "shipments",
+   "from_columns": [
+    "order_id"
+   ],
+   "to": "orders",
+   "to_columns": [
+    "order_id"
+   ],
+   "source": "declared",
+   "id": "R14",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "shipments.order_id = orders.order_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.order_id) AS matched FROM shipments c LEFT JOIN orders p ON c.order_id = p.order_id WHERE c.order_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  }
+ ],
+ "many_to_many": [
+  {
+   "via": "product_tags",
+   "between": [
+    "products",
+    "tags"
+   ],
+   "relationships": [
+    "R10",
+    "R11"
+   ]
+  }
+ ],
+ "lineage": [
+  {
+   "view": "v_customer_ltv",
+   "reads": [
+    "customers",
+    "v_order_totals"
+   ],
+   "joins": [
+    [
+     "v_order_totals.customer_id",
+     "customers.customer_id"
+    ]
+   ]
+  },
+  {
+   "view": "v_order_totals",
+   "reads": [
+    "orders",
+    "order_items"
+   ],
+   "joins": [
+    [
+     "order_items.order_id",
+     "orders.order_id"
+    ]
+   ]
+  }
+ ],
+ "findings": [
+  {
+   "kind": "POLYMORPHIC",
+   "where": "audit_log.entity_id",
+   "detail": "points at different tables depending on entity; not a foreign key"
+  },
+  {
+   "kind": "ISOLATED",
+   "where": "audit_log",
+   "detail": "no key connects it and no view reads it"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "addresses.customer_id",
+   "detail": "joins to customers and deletes there will scan addresses"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "categories.parent_category_id",
+   "detail": "joins to categories and deletes there will scan categories"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "employees.manager_id",
+   "detail": "joins to employees and deletes there will scan employees"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "orders.billing_address_id",
+   "detail": "joins to addresses and deletes there will scan orders"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "orders.shipping_address_id",
+   "detail": "joins to addresses and deletes there will scan orders"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "product_tags.tag_id",
+   "detail": "joins to tags and deletes there will scan product_tags"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "products.category_id",
+   "detail": "joins to categories and deletes there will scan products"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "shipments.handled_by",
+   "detail": "joins to employees and deletes there will scan shipments"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "shipments.order_id",
+   "detail": "joins to orders and deletes there will scan shipments"
+  }
+ ]
+}

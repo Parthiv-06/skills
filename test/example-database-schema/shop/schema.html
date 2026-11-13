@@ -1,0 +1,1692 @@
+<title>Shop database</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Apple product-page rhythm on a white page only: 980px reading grid, #f5f5f7 tiles, words not diagrams. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --tile: #f5f5f7; --tile2: #fbfbfd;
+  --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7; --line2: #e8e8ed;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800; --green: #1d7d3a;
+  --glass: rgba(255, 255, 255, .72);
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em;
+  -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--mono); font-size: .86em; letter-spacing: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(64px, 9vw, 120px); padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(26px, 4vw, 44px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; color: var(--flame); }
+.h2 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.sub { font-size: clamp(19px, 2vw, 23px); line-height: 1.35; font-weight: 500; color: var(--fg2); max-width: 46ch; }
+.head { display: grid; gap: 14px; }
+
+/* Nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 20px; font-size: 12px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+@media (max-width: 760px) { .nav-links { display: none; } }
+
+/* Hero */
+.hero { text-align: center; padding-block: clamp(56px, 9vw, 112px) clamp(48px, 7vw, 84px); }
+.hero .inner { justify-items: center; gap: 20px; }
+.hero h1 { font-size: clamp(46px, 8.6vw, 92px); line-height: 1.03; font-weight: 700; letter-spacing: -.045em; max-width: 14ch; overflow-wrap: anywhere; }
+.hero .lede { font-size: clamp(20px, 2.4vw, 27px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; max-width: 34ch; color: var(--fg); }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px clamp(26px, 5.5vw, 64px); margin-top: clamp(20px, 3vw, 36px);
+  padding-top: clamp(22px, 3.5vw, 36px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: clamp(34px, 4.6vw, 52px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat span { font-size: 14px; color: var(--fg2); }
+.meta { font-size: 14px; color: var(--fg3); }
+
+/* Shared bits */
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 980px; padding: 3px 11px; font-size: 13px;
+  background: var(--bg); border: 1px solid var(--line2); color: var(--fg); cursor: pointer; white-space: nowrap; }
+.chip:hover { border-color: var(--fg3); text-decoration: none; }
+.badge { display: inline-block; border-radius: 980px; padding: 2px 9px; font-size: 12px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.b-declared { background: var(--fg); color: #fff; }
+.b-inferred { background: #e8f2fe; color: #0058b0; }
+.b-guess { background: #fdf0e8; color: var(--flame); }
+.b-soft { background: var(--tile); color: var(--fg2); font-weight: 500; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile); max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 15px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search { flex: 1 1 260px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 11px 16px; background: var(--bg); font-size: 16px; }
+.search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+pre.sql { margin: 0; background: var(--tile2); border: 1px solid var(--line2); border-radius: 14px; padding: 14px 16px; overflow-x: auto;
+  font: 13.5px/1.55 var(--mono); letter-spacing: 0; color: var(--fg); white-space: pre; }
+.copy { border: 1px solid var(--line); background: var(--bg); color: var(--fg2); border-radius: 980px; padding: 4px 12px; font-size: 13px; cursor: pointer; justify-self: start; }
+.copy:hover { color: var(--fg); border-color: var(--fg3); }
+
+/* Areas */
+.areas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.area { background: var(--tile); border-radius: var(--r-lg); padding: clamp(24px, 3vw, 34px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.area h3 { font-size: clamp(22px, 2.2vw, 27px); font-weight: 700; letter-spacing: -.028em; line-height: 1.15; }
+.area p { color: var(--fg2); }
+.area .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Table cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.card { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 80px; }
+.card.flash { box-shadow: 0 0 0 3px var(--accent); }
+.card .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.card h3 { font: 600 clamp(21px, 2vw, 24px)/1.2 var(--mono); letter-spacing: -.02em; overflow-wrap: anywhere; margin-right: auto; }
+.card .what { font-size: 17px; }
+.grain { font-size: 15px; color: var(--fg2); }
+.grain b { color: var(--fg); font-weight: 600; }
+.kv { display: grid; gap: 8px; font-size: 15px; }
+.kv .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--fg3); }
+.links { display: grid; gap: 6px; }
+.link { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 14px; }
+.link .arrow { color: var(--fg3); }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-size: 14px; color: var(--link); list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " \203A"; }
+details[open] summary::after { content: " \2039"; }
+.cols { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+.cols td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+.cols td:first-child { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.cols .ty { color: var(--fg3); font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+.cols .nt { color: var(--fg2); }
+.empty { color: var(--fg3); font-size: 15px; }
+
+/* Connections */
+.conns { display: grid; gap: 14px; }
+.conn { background: var(--tile); border-radius: var(--r-md); padding: 20px 24px; display: grid; gap: 10px; min-width: 0; }
+.conn .say { font-size: clamp(18px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.02em; line-height: 1.32; }
+.conn .tech { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; color: var(--fg2); }
+.conn .tech code { color: var(--fg); overflow-wrap: anywhere; }
+.m2m { display: grid; gap: 10px; }
+.m2m div { font-size: 17px; }
+
+/* Views and paths */
+.vlist, .plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.vcard, .pcard { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.vcard h3 { font: 600 21px/1.2 var(--mono); overflow-wrap: anywhere; }
+.chain { font-size: 15px; color: var(--fg2); }
+.chain code { color: var(--fg); }
+.pcard h3 { font-size: clamp(20px, 2vw, 24px); font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.steps .sep { color: var(--fg3); font-size: 14px; }
+
+/* Findings */
+.finds { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.find { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr); gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .find { grid-template-columns: minmax(0, 1fr); } }
+.find .k { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--flame); padding-top: 3px; }
+.find .w { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.find .d { color: var(--fg2); font-size: 15px; }
+footer { padding: 40px 16px 64px; text-align: center; font-size: 13px; color: var(--fg3); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<nav class="nav"><div class="nav-in">
+  <div class="nav-title" id="navTitle"></div>
+  <div class="nav-links">
+    <a href="#areas">Areas</a><a href="#tables">Tables</a><a href="#connections">Connections</a>
+    <a href="#views">Views</a><a href="#paths">Join paths</a><a href="#findings">Findings</a>
+  </div>
+</div></nav>
+
+<header class="band hero"><div class="inner">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p class="lede" id="summary"></p>
+  <div class="stats" id="stats"></div>
+  <p class="meta">The diagram lives in the matching .excalidraw file. This page explains it in words.</p>
+</div></header>
+
+<section class="band" id="areas"><div class="inner">
+  <div class="head"><div class="eyebrow">The big picture</div><h2 class="h2">Areas. <span class="quiet">What lives where.</span></h2></div>
+  <div class="areas" id="areaList"></div>
+</div></section>
+
+<section class="band" id="tables"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every table</div><h2 class="h2">Tables. <span class="quiet">What one row means, and what it points to.</span></h2></div>
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="Search tables and columns" aria-label="Search tables and columns">
+    <div class="seg" id="areaFilter" role="group" aria-label="Filter by area"></div>
+  </div>
+  <div class="cards" id="cards"></div>
+</div></section>
+
+<section class="band" id="connections"><div class="inner">
+  <div class="head"><div class="eyebrow">Every key, in words</div><h2 class="h2">Connections. <span class="quiet">Read both directions.</span></h2>
+    <p class="sub">Each foreign key below says how the two tables relate, how sure we are, and the exact join.</p></div>
+  <div class="seg" id="labelFilter" role="group" aria-label="Filter by certainty"></div>
+  <div class="conns" id="connList"></div>
+  <div class="m2m" id="m2m"></div>
+</div></section>
+
+<section class="band" id="views"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Saved queries</div><h2 class="h2">Views. <span class="quiet">What each one answers, and what it is built from.</span></h2></div>
+  <div class="vlist" id="viewList"></div>
+</div></section>
+
+<section class="band" id="paths"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Ready to use</div><h2 class="h2">Join paths. <span class="quiet">Common questions, the route, the SQL.</span></h2></div>
+  <div class="plist" id="pathList"></div>
+</div></section>
+
+<section class="band" id="findings"><div class="inner">
+  <div class="head"><div class="eyebrow">Worth fixing</div><h2 class="h2">Findings.</h2></div>
+  <div class="finds" id="findList"></div>
+</div></section>
+
+<footer id="foot"></footer>
+
+<script id="schema-data" type="application/json">{
+ "title": "Shop database",
+ "summary": "A small online shop: customers with saved addresses buy products from a tagged, nested category catalog, and each order carries its line items, a payment, and the shipments staff send out. Every one of the 14 connections is a declared foreign key; one table, audit_log, sits apart and refers to other rows only by name and id.",
+ "source": {
+  "engine": "sqlite",
+  "name": "shop.db"
+ },
+ "domains": [
+  {
+   "name": "Customers",
+   "about": "Who buys, and where they want things billed and delivered.",
+   "tables": [
+    "customers",
+    "addresses"
+   ]
+  },
+  {
+   "name": "Catalog",
+   "about": "What is for sale, how it is grouped into a category tree, and how it is tagged.",
+   "tables": [
+    "categories",
+    "products",
+    "tags",
+    "product_tags"
+   ]
+  },
+  {
+   "name": "Orders",
+   "about": "What each customer bought, at what price, and how they paid.",
+   "tables": [
+    "orders",
+    "order_items",
+    "payments"
+   ]
+  },
+  {
+   "name": "Fulfilment",
+   "about": "Shipping orders out and the staff (with their reporting line) who handle it.",
+   "tables": [
+    "shipments",
+    "employees"
+   ]
+  },
+  {
+   "name": "Audit",
+   "about": "A change history that refers to rows in other tables by name, not by key.",
+   "tables": [
+    "audit_log"
+   ]
+  }
+ ],
+ "tables": [
+  {
+   "name": "addresses",
+   "kind": "table",
+   "domain": "Customers",
+   "what": "A postal address saved by a customer; one customer can save several.",
+   "grain": "One row per address (address_id).",
+   "answers": "",
+   "pk": [
+    "address_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "address_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "Owner of the address; required."
+    },
+    {
+     "name": "line1",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "city",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "country",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Two-letter country code, e.g. US, IN."
+    }
+   ],
+   "out": [
+    "R1"
+   ],
+   "in": [
+    "R6",
+    "R8"
+   ]
+  },
+  {
+   "name": "audit_log",
+   "kind": "table",
+   "domain": "Audit",
+   "what": "A record of an action (create, update, ...) performed on some row elsewhere in the database.",
+   "grain": "One row per logged event (id).",
+   "answers": "",
+   "pk": [
+    "id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "entity",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Name of the table the event is about, e.g. orders or products."
+    },
+    {
+     "name": "entity_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Key of that row in the table named by entity. Not a foreign key: its target changes row by row."
+    },
+    {
+     "name": "action",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "at",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "When it happened (ISO text)."
+    }
+   ],
+   "out": [],
+   "in": []
+  },
+  {
+   "name": "categories",
+   "kind": "table",
+   "domain": "Catalog",
+   "what": "A product category; categories nest inside a parent category to form a tree.",
+   "grain": "One row per category (category_id).",
+   "answers": "",
+   "pk": [
+    "category_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "category_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "parent_category_id",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The enclosing category; empty for a top-level category such as Kitchen."
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    }
+   ],
+   "out": [
+    "R2"
+   ],
+   "in": [
+    "R2",
+    "R12"
+   ]
+  },
+  {
+   "name": "customers",
+   "kind": "table",
+   "domain": "Customers",
+   "what": "A person with a shop account.",
+   "grain": "One row per customer (customer_id).",
+   "answers": "",
+   "pk": [
+    "customer_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Unique across customers: a second natural key."
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Date the account was created (ISO text)."
+    }
+   ],
+   "out": [],
+   "in": [
+    "R1",
+    "R7"
+   ]
+  },
+  {
+   "name": "employees",
+   "kind": "table",
+   "domain": "Fulfilment",
+   "what": "A staff member; each can report to a manager who is also an employee.",
+   "grain": "One row per employee (employee_id).",
+   "answers": "",
+   "pk": [
+    "employee_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "employee_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "manager_id",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The employee this person reports to; empty for the top of the hierarchy."
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    }
+   ],
+   "out": [
+    "R3"
+   ],
+   "in": [
+    "R3",
+    "R13"
+   ]
+  },
+  {
+   "name": "order_items",
+   "kind": "table",
+   "domain": "Orders",
+   "what": "One line on an order: a product, how many, and the unit price charged.",
+   "grain": "One row per order + line_no combination.",
+   "answers": "",
+   "pk": [
+    "order_id",
+    "line_no"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": true,
+     "note": "Part of the key and a foreign key to orders."
+    },
+    {
+     "name": "line_no",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "Line position within the order (1, 2, ...); only unique inside one order."
+    },
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": ""
+    },
+    {
+     "name": "quantity",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "unit_price_cents",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Price per unit at the time of purchase, which can differ from today's products.price_cents."
+    }
+   ],
+   "out": [
+    "R4",
+    "R5"
+   ],
+   "in": []
+  },
+  {
+   "name": "orders",
+   "kind": "table",
+   "domain": "Orders",
+   "what": "One checkout by a customer, with where to bill and where to ship.",
+   "grain": "One row per order (order_id).",
+   "answers": "",
+   "pk": [
+    "order_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "Who placed the order; required."
+    },
+    {
+     "name": "billing_address_id",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "Optional: empty when no separate billing address was given."
+    },
+    {
+     "name": "shipping_address_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "Required delivery address."
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Observed values: paid, shipped."
+    },
+    {
+     "name": "placed_at",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Order date (ISO text)."
+    }
+   ],
+   "out": [
+    "R6",
+    "R7",
+    "R8"
+   ],
+   "in": [
+    "R4",
+    "R9",
+    "R14"
+   ]
+  },
+  {
+   "name": "payments",
+   "kind": "table",
+   "domain": "Orders",
+   "what": "The payment taken for an order. order_id is both its primary key and its foreign key, so an order has at most one payment.",
+   "grain": "One row per order (order_id).",
+   "answers": "",
+   "pk": [
+    "order_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": true,
+     "note": "Primary key and foreign key to orders at the same time."
+    },
+    {
+     "name": "amount_cents",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Amount paid in cents; in the current data it equals the order total from v_order_totals."
+    },
+    {
+     "name": "method",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Observed values: card, upi."
+    },
+    {
+     "name": "paid_at",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    }
+   ],
+   "out": [
+    "R9"
+   ],
+   "in": []
+  },
+  {
+   "name": "product_tags",
+   "kind": "table",
+   "domain": "Catalog",
+   "what": "A junction row saying one product carries one tag.",
+   "grain": "One row per product + tag combination.",
+   "answers": "",
+   "pk": [
+    "product_id",
+    "tag_id"
+   ],
+   "pkSource": "declared",
+   "junction": true,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": true,
+     "note": "Part of the key and a foreign key to products."
+    },
+    {
+     "name": "tag_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": true,
+     "note": "Part of the key and a foreign key to tags."
+    }
+   ],
+   "out": [
+    "R10",
+    "R11"
+   ],
+   "in": []
+  },
+  {
+   "name": "products",
+   "kind": "table",
+   "domain": "Catalog",
+   "what": "An item the shop sells, with its current list price.",
+   "grain": "One row per product (product_id).",
+   "answers": "",
+   "pk": [
+    "product_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "sku",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Unique stock code: a second natural key."
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "category_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "The one category the product is filed under (can be a leaf or a parent)."
+    },
+    {
+     "name": "price_cents",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Current list price in cents. Order lines keep their own copy of the price paid."
+    }
+   ],
+   "out": [
+    "R12"
+   ],
+   "in": [
+    "R5",
+    "R10"
+   ]
+  },
+  {
+   "name": "shipments",
+   "kind": "table",
+   "domain": "Fulfilment",
+   "what": "A parcel sent for an order by a carrier, optionally recorded against the employee who handled it. An order can be split over several shipments.",
+   "grain": "One row per shipment (shipment_id).",
+   "answers": "",
+   "pk": [
+    "shipment_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "shipment_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "The order this parcel belongs to; required."
+    },
+    {
+     "name": "handled_by",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "Employee who handled it; optional."
+    },
+    {
+     "name": "carrier",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "shipped_at",
+     "type": "TEXT",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Empty until the parcel actually leaves."
+    }
+   ],
+   "out": [
+    "R13",
+    "R14"
+   ],
+   "in": []
+  },
+  {
+   "name": "tags",
+   "kind": "table",
+   "domain": "Catalog",
+   "what": "A free-form label such as gift or bestseller.",
+   "grain": "One row per tag (tag_id).",
+   "answers": "",
+   "pk": [
+    "tag_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "tag_id",
+     "type": "INTEGER",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "label",
+     "type": "TEXT",
+     "nullable": false,
+     "pk": false,
+     "fk": false,
+     "note": "Unique tag text."
+    }
+   ],
+   "out": [],
+   "in": [
+    "R11"
+   ]
+  },
+  {
+   "name": "v_customer_ltv",
+   "kind": "view",
+   "domain": "Views",
+   "what": "Each customer's lifetime spend: customers LEFT JOINed to v_order_totals on customer_id, so customers with no orders still appear with 0.",
+   "grain": "",
+   "answers": "How much has each customer spent in total, including customers who never ordered?",
+   "pk": [],
+   "pkSource": "none",
+   "junction": false,
+   "shards": null,
+   "reads": [
+    "customers",
+    "v_order_totals"
+   ],
+   "joins": [
+    [
+     "v_order_totals.customer_id",
+     "customers.customer_id"
+    ]
+   ],
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "lifetime_cents",
+     "type": "",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "COALESCE(SUM(total_cents), 0)."
+    }
+   ],
+   "out": [],
+   "in": []
+  },
+  {
+   "name": "v_order_totals",
+   "kind": "view",
+   "domain": "Views",
+   "what": "Each order's value, summed from its lines (quantity times unit price). Reads orders joined to order_items.",
+   "grain": "",
+   "answers": "What was each order worth, based on its lines?",
+   "pk": [],
+   "pkSource": "none",
+   "junction": false,
+   "shards": null,
+   "reads": [
+    "orders",
+    "order_items"
+   ],
+   "joins": [
+    [
+     "order_items.order_id",
+     "orders.order_id"
+    ]
+   ],
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": ""
+    },
+    {
+     "name": "total_cents",
+     "type": "",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "SUM(quantity * unit_price_cents) over the order's lines."
+    }
+   ],
+   "out": [],
+   "in": []
+  }
+ ],
+ "relationships": [
+  {
+   "from": "addresses",
+   "from_columns": [
+    "customer_id"
+   ],
+   "to": "customers",
+   "to_columns": [
+    "customer_id"
+   ],
+   "source": "declared",
+   "id": "R1",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "addresses.customer_id = customers.customer_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.customer_id) AS matched FROM addresses c LEFT JOIN customers p ON c.customer_id = p.customer_id WHERE c.customer_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each address belongs to exactly one customer; a customer can have many addresses, or none."
+  },
+  {
+   "from": "categories",
+   "from_columns": [
+    "parent_category_id"
+   ],
+   "to": "categories",
+   "to_columns": [
+    "category_id"
+   ],
+   "source": "declared",
+   "id": "R2",
+   "role": "parent",
+   "self": true,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "categories.parent_category_id = categories.category_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.category_id) AS matched FROM categories c LEFT JOIN categories p ON c.parent_category_id = p.category_id WHERE c.parent_category_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each category sits under at most one parent category (none for a top-level category); a category can have many child categories, or none."
+  },
+  {
+   "from": "employees",
+   "from_columns": [
+    "manager_id"
+   ],
+   "to": "employees",
+   "to_columns": [
+    "employee_id"
+   ],
+   "source": "declared",
+   "id": "R3",
+   "role": "manager",
+   "self": true,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "employees.manager_id = employees.employee_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.employee_id) AS matched FROM employees c LEFT JOIN employees p ON c.manager_id = p.employee_id WHERE c.manager_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each employee reports to at most one manager, who is another employee (none for the top of the hierarchy); a manager can have many direct reports, or none."
+  },
+  {
+   "from": "order_items",
+   "from_columns": [
+    "order_id"
+   ],
+   "to": "orders",
+   "to_columns": [
+    "order_id"
+   ],
+   "source": "declared",
+   "id": "R4",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "order_items.order_id = orders.order_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.order_id) AS matched FROM order_items c LEFT JOIN orders p ON c.order_id = p.order_id WHERE c.order_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each order line belongs to exactly one order; an order can have many lines, or none."
+  },
+  {
+   "from": "order_items",
+   "from_columns": [
+    "product_id"
+   ],
+   "to": "products",
+   "to_columns": [
+    "product_id"
+   ],
+   "source": "declared",
+   "id": "R5",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "order_items.product_id = products.product_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.product_id) AS matched FROM order_items c LEFT JOIN products p ON c.product_id = p.product_id WHERE c.product_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each order line is for exactly one product; a product can appear on many order lines, or none."
+  },
+  {
+   "from": "orders",
+   "from_columns": [
+    "billing_address_id"
+   ],
+   "to": "addresses",
+   "to_columns": [
+    "address_id"
+   ],
+   "source": "declared",
+   "id": "R6",
+   "role": "billing",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "orders.billing_address_id = addresses.address_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.address_id) AS matched FROM orders c LEFT JOIN addresses p ON c.billing_address_id = p.address_id WHERE c.billing_address_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each order is billed to at most one address (billing is optional); an address can be the billing address of many orders, or none."
+  },
+  {
+   "from": "orders",
+   "from_columns": [
+    "customer_id"
+   ],
+   "to": "customers",
+   "to_columns": [
+    "customer_id"
+   ],
+   "source": "declared",
+   "id": "R7",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "orders.customer_id = customers.customer_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.customer_id) AS matched FROM orders c LEFT JOIN customers p ON c.customer_id = p.customer_id WHERE c.customer_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Every order was placed by exactly one customer; a customer can have many orders, or none."
+  },
+  {
+   "from": "orders",
+   "from_columns": [
+    "shipping_address_id"
+   ],
+   "to": "addresses",
+   "to_columns": [
+    "address_id"
+   ],
+   "source": "declared",
+   "id": "R8",
+   "role": "shipping",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "orders.shipping_address_id = addresses.address_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.address_id) AS matched FROM orders c LEFT JOIN addresses p ON c.shipping_address_id = p.address_id WHERE c.shipping_address_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each order ships to exactly one address (required); an address can be the shipping address of many orders, or none."
+  },
+  {
+   "from": "payments",
+   "from_columns": [
+    "order_id"
+   ],
+   "to": "orders",
+   "to_columns": [
+    "order_id"
+   ],
+   "source": "declared",
+   "id": "R9",
+   "role": null,
+   "self": false,
+   "cardinality": "1:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "payments.order_id = orders.order_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.order_id) AS matched FROM payments c LEFT JOIN orders p ON c.order_id = p.order_id WHERE c.order_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each payment is for exactly one order; because payments.order_id is also its primary key, an order has at most one payment, or none yet."
+  },
+  {
+   "from": "product_tags",
+   "from_columns": [
+    "product_id"
+   ],
+   "to": "products",
+   "to_columns": [
+    "product_id"
+   ],
+   "source": "declared",
+   "id": "R10",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "product_tags.product_id = products.product_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.product_id) AS matched FROM product_tags c LEFT JOIN products p ON c.product_id = p.product_id WHERE c.product_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each product-tag row names exactly one product; a product can carry many tags, or none."
+  },
+  {
+   "from": "product_tags",
+   "from_columns": [
+    "tag_id"
+   ],
+   "to": "tags",
+   "to_columns": [
+    "tag_id"
+   ],
+   "source": "declared",
+   "id": "R11",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "product_tags.tag_id = tags.tag_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.tag_id) AS matched FROM product_tags c LEFT JOIN tags p ON c.tag_id = p.tag_id WHERE c.tag_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each product-tag row names exactly one tag; a tag can be on many products, or none."
+  },
+  {
+   "from": "products",
+   "from_columns": [
+    "category_id"
+   ],
+   "to": "categories",
+   "to_columns": [
+    "category_id"
+   ],
+   "source": "declared",
+   "id": "R12",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "products.category_id = categories.category_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.category_id) AS matched FROM products c LEFT JOIN categories p ON c.category_id = p.category_id WHERE c.category_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each product is filed under exactly one category; a category can hold many products, or none."
+  },
+  {
+   "from": "shipments",
+   "from_columns": [
+    "handled_by"
+   ],
+   "to": "employees",
+   "to_columns": [
+    "employee_id"
+   ],
+   "source": "declared",
+   "id": "R13",
+   "role": "handled_by",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "shipments.handled_by = employees.employee_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.employee_id) AS matched FROM shipments c LEFT JOIN employees p ON c.handled_by = p.employee_id WHERE c.handled_by IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each shipment was handled by at most one employee (optional); an employee can handle many shipments, or none."
+  },
+  {
+   "from": "shipments",
+   "from_columns": [
+    "order_id"
+   ],
+   "to": "orders",
+   "to_columns": [
+    "order_id"
+   ],
+   "source": "declared",
+   "id": "R14",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "shipments.order_id = orders.order_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.order_id) AS matched FROM shipments c LEFT JOIN orders p ON c.order_id = p.order_id WHERE c.order_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each shipment belongs to exactly one order; an order can have many shipments (split delivery), or none yet."
+  }
+ ],
+ "manyToMany": [
+  {
+   "via": "product_tags",
+   "between": [
+    "products",
+    "tags"
+   ],
+   "relationships": [
+    "R10",
+    "R11"
+   ]
+  }
+ ],
+ "joinPaths": [
+  {
+   "question": "Where was each order shipped, and who placed it?",
+   "path": [
+    "customers",
+    "orders",
+    "addresses"
+   ],
+   "hops": [
+    {
+     "rel": "R7",
+     "label": "declared"
+    },
+    {
+     "rel": "R8",
+     "label": "declared"
+    }
+   ],
+   "sql": "FROM customers\nJOIN orders ON orders.customer_id = customers.customer_id\nJOIN addresses ON orders.shipping_address_id = addresses.address_id"
+  },
+  {
+   "question": "Which products (and categories) did a customer buy?",
+   "path": [
+    "customers",
+    "orders",
+    "order_items",
+    "products",
+    "categories"
+   ],
+   "hops": [
+    {
+     "rel": "R7",
+     "label": "declared"
+    },
+    {
+     "rel": "R4",
+     "label": "declared"
+    },
+    {
+     "rel": "R5",
+     "label": "declared"
+    },
+    {
+     "rel": "R12",
+     "label": "declared"
+    }
+   ],
+   "sql": "FROM customers\nJOIN orders ON orders.customer_id = customers.customer_id\nJOIN order_items ON order_items.order_id = orders.order_id\nJOIN products ON order_items.product_id = products.product_id\nJOIN categories ON products.category_id = categories.category_id"
+  },
+  {
+   "question": "Which tags do the products on an order carry?",
+   "path": [
+    "orders",
+    "order_items",
+    "products",
+    "product_tags",
+    "tags"
+   ],
+   "hops": [
+    {
+     "rel": "R4",
+     "label": "declared"
+    },
+    {
+     "rel": "R5",
+     "label": "declared"
+    },
+    {
+     "rel": "R10",
+     "label": "declared"
+    },
+    {
+     "rel": "R11",
+     "label": "declared"
+    }
+   ],
+   "sql": "FROM orders\nJOIN order_items ON order_items.order_id = orders.order_id\nJOIN products ON order_items.product_id = products.product_id\nJOIN product_tags ON product_tags.product_id = products.product_id\nJOIN tags ON product_tags.tag_id = tags.tag_id"
+  },
+  {
+   "question": "Which employee handled each order's shipments? (Join employees again on manager_id to find their manager.)",
+   "path": [
+    "orders",
+    "shipments",
+    "employees"
+   ],
+   "hops": [
+    {
+     "rel": "R14",
+     "label": "declared"
+    },
+    {
+     "rel": "R13",
+     "label": "declared"
+    }
+   ],
+   "sql": "FROM orders\nJOIN shipments ON shipments.order_id = orders.order_id\nJOIN employees ON shipments.handled_by = employees.employee_id"
+  },
+  {
+   "question": "Does each payment match the order's line total?",
+   "path": [
+    "payments",
+    "orders",
+    "order_items"
+   ],
+   "hops": [
+    {
+     "rel": "R9",
+     "label": "declared"
+    },
+    {
+     "rel": "R4",
+     "label": "declared"
+    }
+   ],
+   "sql": "FROM payments\nJOIN orders ON payments.order_id = orders.order_id\nJOIN order_items ON order_items.order_id = orders.order_id"
+  }
+ ],
+ "findings": [
+  {
+   "kind": "POLYMORPHIC",
+   "where": "audit_log.entity_id",
+   "detail": "points at different tables depending on entity; not a foreign key"
+  },
+  {
+   "kind": "ISOLATED",
+   "where": "audit_log",
+   "detail": "no key connects it and no view reads it"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "addresses.customer_id",
+   "detail": "joins to customers and deletes there will scan addresses"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "categories.parent_category_id",
+   "detail": "joins to categories and deletes there will scan categories"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "employees.manager_id",
+   "detail": "joins to employees and deletes there will scan employees"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "orders.billing_address_id",
+   "detail": "joins to addresses and deletes there will scan orders"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "orders.shipping_address_id",
+   "detail": "joins to addresses and deletes there will scan orders"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "product_tags.tag_id",
+   "detail": "joins to tags and deletes there will scan product_tags"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "products.category_id",
+   "detail": "joins to categories and deletes there will scan products"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "shipments.handled_by",
+   "detail": "joins to employees and deletes there will scan shipments"
+  },
+  {
+   "kind": "UNINDEXED-FK",
+   "where": "shipments.order_id",
+   "detail": "joins to orders and deletes there will scan shipments"
+  }
+ ],
+ "notes": [
+  "orders reaches addresses two ways: billing_address_id (R6, optional) and shipping_address_id (R8, required). Always name which one you join on; joining on both at once returns only orders billed and shipped to the same address.",
+  "Nothing in the schema forces an order's billing or shipping address to belong to the same customer who placed it: R6 and R8 point at addresses, and R1 points from addresses to customers, but no constraint ties the two routes together.",
+  "Two tables point at themselves to form a hierarchy: categories (R2) and employees (R3). Walking a full tree needs a recursive query (WITH RECURSIVE), not a single join.",
+  "products and tags are many-to-many through product_tags, whose composite key (product_id, tag_id) stops the same tag being attached twice.",
+  "SQLite enforces these foreign keys only when PRAGMA foreign_keys = ON is set per connection; it was off when this file was read. PRAGMA foreign_key_check currently reports no broken links.",
+  "audit_log.entity_id is polymorphic: to join it, filter on entity first (e.g. WHERE entity = 'orders' then join orders ON order_id = entity_id). Observed entity values: orders, products.",
+  "v_customer_ltv is built on v_order_totals, so it depends on orders, order_items and customers. It counts every order regardless of status or payment."
+ ],
+ "stats": {
+  "tables": 12,
+  "views": 2,
+  "links": 14,
+  "declared": 14,
+  "inferred": 0,
+  "guess": 0
+ }
+}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("schema-data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const rel = Object.fromEntries(D.relationships.map((r) => [r.id, r]));
+  const tbl = Object.fromEntries(D.tables.map((t) => [t.name, t]));
+  const badge = (r) => `<span class="badge b-${r.confidence}">${esc(r.label)}</span>`;
+  const card = (r) => r.cardinality === "1:1" ? "one-to-one" : "many-to-one";
+  const chip = (name) => `<a class="chip mono" href="#t-${encodeURIComponent(name)}" data-go="${esc(name)}">${esc(name)}</a>`;
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                  set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+  $("navTitle").textContent = D.title;
+  $("title").textContent = D.title;
+  $("summary").textContent = D.summary;
+  $("eyebrow").textContent = `${D.source.engine} · ${D.source.name}`;
+  const s = D.stats;
+  $("stats").innerHTML = [[s.tables, "tables"], [s.views, "views"], [s.links, "connections"],
+    [s.declared, "declared in the database"], [s.inferred + s.guess, "inferred from names"]]
+    .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  $("areaList").innerHTML = D.domains.map((d) => `<div class="area"><h3>${esc(d.name)}</h3><p>${esc(d.about)}</p>
+    <div class="chips">${d.tables.map(chip).join("")}</div></div>`).join("");
+
+  const linkLine = (r, dir) => {
+    const other = dir === "out" ? r.to : r.from;
+    const cols = dir === "out" ? r.from_columns.join(", ") : r.from_columns.map((c) => `${r.from}.${c}`).join(", ");
+    return `<div class="link"><span class="arrow">${dir === "out" ? "→" : "←"}</span>${chip(other)}
+      <span>via <code>${esc(cols)}</code></span><span class="badge b-soft">${card(r)}${r.optional ? ", optional" : ""}</span>${badge(r)}</div>`;
+  };
+  const cardHtml = (t) => {
+    const view = t.kind !== "table";
+    const tags = [view ? `<span class="badge b-soft">${esc(t.kind)}</span>` : "",
+      t.junction ? `<span class="badge b-soft">link table</span>` : "",
+      t.shards ? `<span class="badge b-soft">${t.shards.count} daily shards, ${esc(t.shards.first)} to ${esc(t.shards.last)}</span>` : "",
+      `<span class="badge b-soft">${esc(t.domain)}</span>`].join("");
+    const key = t.pk.length ? `<code>${esc(t.pk.join(" + "))}</code> <span class="badge ${t.pkSource === "declared" ? "b-declared" : "b-inferred"}">${t.pkSource === "declared" ? "declared" : "inferred"}</span>` : `<span class="badge b-guess">no key</span>`;
+    const outs = t.out.map((id) => linkLine(rel[id], "out")).join("") || `<div class="empty">Points to nothing.</div>`;
+    const ins = t.in.map((id) => linkLine(rel[id], "in")).join("") || `<div class="empty">Nothing points here.</div>`;
+    const cols = t.columns.map((c) => `<tr><td>${esc(c.name)}</td><td class="ty">${esc(c.type)}${c.nullable ? "" : " · not null"}</td>
+      <td>${c.pk ? '<span class="badge b-declared">PK</span> ' : ""}${c.fk ? '<span class="badge b-soft">FK</span>' : ""}</td><td class="nt">${esc(c.note)}</td></tr>`).join("");
+    return `<article class="card" id="t-${encodeURIComponent(t.name)}" data-name="${esc(t.name)}" data-domain="${esc(t.domain)}"
+      data-text="${esc((t.name + " " + t.columns.map((c) => c.name).join(" ") + " " + t.what).toLowerCase())}">
+      <div class="top"><h3>${esc(t.name)}</h3>${tags}</div>
+      <p class="what">${esc(t.what)}</p>
+      ${view ? `<p class="grain"><b>Answers:</b> ${esc(t.answers)}</p>` : `<p class="grain"><b>Grain:</b> ${esc(t.grain)}</p>`}
+      ${view ? `<div class="kv"><span class="lbl">Built from</span><div class="steps">${t.reads.map(chip).join("")}</div></div>` :
+      `<div class="kv"><span class="lbl">Key</span><div>${key}</div></div>
+      <div class="kv"><span class="lbl">Points to</span><div class="links">${outs}</div></div>
+      <div class="kv"><span class="lbl">Referenced by</span><div class="links">${ins}</div></div>`}
+      ${t.columns.length ? `<details><summary>All ${t.columns.length} columns</summary><table class="cols">${cols}</table></details>` : ""}
+    </article>`;
+  };
+  $("cards").innerHTML = D.tables.map(cardHtml).join("");
+
+  const areas = ["All", ...D.domains.map((d) => d.name), ...(s.views ? ["Views"] : [])];
+  let area = store.get("schema-area") || "All";
+  if (!areas.includes(area)) area = "All";
+  $("areaFilter").innerHTML = areas.map((a) => `<button type="button" data-a="${esc(a)}">${esc(a)}</button>`).join("");
+  const applyTables = () => {
+    const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll(".card").forEach((c) => {
+      c.hidden = !((area === "All" || c.dataset.domain === area) && (!q || c.dataset.text.includes(q)));
+    });
+    $("areaFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.a === area)));
+  };
+  $("areaFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return;
+    area = b.dataset.a; store.set("schema-area", area); applyTables(); });
+  $("q").addEventListener("input", applyTables);
+  applyTables();
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-go]"); if (!a) return;
+    e.preventDefault();
+    area = "All"; $("q").value = ""; applyTables();
+    const el = $("t-" + encodeURIComponent(a.dataset.go)); if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400);
+  });
+
+  let lab = "All";
+  const labs = ["All", "declared", "inferred", "guess"].filter((l) => l === "All" || D.relationships.some((r) => r.confidence === l));
+  $("labelFilter").innerHTML = labs.map((l) => `<button type="button" data-l="${l}">${l === "All" ? "All" : l[0].toUpperCase() + l.slice(1)}</button>`).join("");
+  const conns = () => {
+    $("connList").innerHTML = D.relationships.filter((r) => lab === "All" || r.confidence === lab).map((r) => `<div class="conn">
+      <p class="say">${esc(r.sentence)}</p>
+      <div class="tech"><code>${esc(r.from)}.${esc(r.from_columns.join(", "))} → ${esc(r.to)}.${esc(r.to_columns.join(", "))}</code>
+        ${badge(r)}<span class="badge b-soft">${card(r)}</span><span class="badge b-soft">${r.optional ? "optional" : "required"}</span>
+        ${r.role ? `<span class="badge b-soft">role: ${esc(r.role)}</span>` : ""}${r.self ? '<span class="badge b-soft">points to its own table</span>' : ""}
+        ${r.type_mismatch ? `<span class="badge b-guess">type mismatch: ${esc(r.type_mismatch)}</span>` : ""}</div>
+      <code class="mono" style="color:var(--fg2)">ON ${esc(r.join)}</code></div>`).join("");
+    $("labelFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.l === lab)));
+  };
+  $("labelFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { lab = b.dataset.l; conns(); } });
+  conns();
+  $("m2m").innerHTML = D.manyToMany.length ? `<div class="kv"><span class="lbl">Many-to-many, through a link table</span></div>` +
+    D.manyToMany.map((m) => `<div>${chip(m.between[0])} ↔ ${chip(m.between[1])} through ${chip(m.via)}</div>`).join("") : "";
+
+  const chainOf = (name, seen = new Set()) => {
+    const t = tbl[name]; if (!t || t.kind === "table" || seen.has(name)) return esc(name);
+    seen.add(name);
+    return `${esc(name)} ← (${t.reads.map((r) => chainOf(r, seen)).join(", ")})`;
+  };
+  const views = D.tables.filter((t) => t.kind !== "table");
+  $("viewList").innerHTML = views.map((v) => `<div class="vcard"><div class="top" style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline">
+      <h3>${esc(v.name)}</h3><span class="badge b-soft">${esc(v.kind)}</span></div>
+      <p class="what">${esc(v.answers)}</p>
+      <div class="kv"><span class="lbl">Built from</span><div class="steps">${v.reads.map(chip).join("")}</div></div>
+      ${v.joins.length ? `<div class="kv"><span class="lbl">Joined on</span>${v.joins.map((j) => `<code>${esc(j[0])} = ${esc(j[1])}</code>`).join("<br>")}</div>` : ""}
+      <p class="chain"><b>Lineage:</b> <code>${chainOf(v.name)}</code></p></div>`).join("") || `<p class="empty">No views in this schema.</p>`;
+
+  $("pathList").innerHTML = D.joinPaths.map((p, i) => `<div class="pcard"><h3>${esc(p.question)}</h3>
+      <div class="steps">${p.path.map((n, k) => (k ? `<span class="sep">→</span>` : "") + chip(n)).join("")}</div>
+      <div class="steps">${p.hops.map((h) => `<span class="badge b-${rel[h.rel].confidence}">${esc(h.rel)} · ${esc(h.label)}</span>`).join("")}</div>
+      <pre class="sql" id="sql${i}">${esc(p.sql)}</pre><button class="copy" type="button" data-copy="sql${i}">Copy SQL</button></div>`).join("");
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy]"); if (!b) return;
+    try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); b.textContent = "Copied"; }
+    catch { b.textContent = "Select and copy"; }
+    setTimeout(() => (b.textContent = "Copy SQL"), 1400);
+  });
+
+  const finds = D.findings.map((f) => `<div class="find"><div class="k">${esc(f.kind)}</div><div><div class="w">${esc(f.where)}</div><div class="d">${esc(f.detail)}</div></div></div>`);
+  const notes = D.notes.map((n) => `<div class="find"><div class="k">NOTE</div><div><div class="d">${esc(n)}</div></div></div>`);
+  $("findList").innerHTML = [...finds, ...notes].join("") || `<p class="empty">Nothing to fix.</p>`;
+  $("foot").textContent = `${D.title} · ${D.source.engine} · ${s.tables} tables, ${s.views} views, ${s.links} connections`;
+})();
+</script>
