@@ -1,0 +1,18 @@
+# Project metadata and runtime dependencies for the shopco services monorepo.
+# One installable project; services/ and common/ ship together in one image.
+[project]
+name = "shopco"
+version = "0.4.0"
+requires-python = ">=3.11"
+dependencies = [
+  "requests>=2.31",
+  "httpx>=0.27",
+  "pandas>=2.2",
+  "redis>=5.0",
+  "tenacity>=8.2",
+  "pytest>=8.0",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
