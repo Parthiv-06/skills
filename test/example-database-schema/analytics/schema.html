@@ -1,0 +1,1191 @@
+<title>acme.analytics dataset</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Apple product-page rhythm on a white page only: 980px reading grid, #f5f5f7 tiles, words not diagrams. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --tile: #f5f5f7; --tile2: #fbfbfd;
+  --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7; --line2: #e8e8ed;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800; --green: #1d7d3a;
+  --glass: rgba(255, 255, 255, .72);
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em;
+  -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--mono); font-size: .86em; letter-spacing: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(64px, 9vw, 120px); padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(26px, 4vw, 44px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; color: var(--flame); }
+.h2 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.sub { font-size: clamp(19px, 2vw, 23px); line-height: 1.35; font-weight: 500; color: var(--fg2); max-width: 46ch; }
+.head { display: grid; gap: 14px; }
+
+/* Nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 20px; font-size: 12px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+@media (max-width: 760px) { .nav-links { display: none; } }
+
+/* Hero */
+.hero { text-align: center; padding-block: clamp(56px, 9vw, 112px) clamp(48px, 7vw, 84px); }
+.hero .inner { justify-items: center; gap: 20px; }
+.hero h1 { font-size: clamp(46px, 8.6vw, 92px); line-height: 1.03; font-weight: 700; letter-spacing: -.045em; max-width: 14ch; overflow-wrap: anywhere; }
+.hero .lede { font-size: clamp(20px, 2.4vw, 27px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; max-width: 34ch; color: var(--fg); }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px clamp(26px, 5.5vw, 64px); margin-top: clamp(20px, 3vw, 36px);
+  padding-top: clamp(22px, 3.5vw, 36px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: clamp(34px, 4.6vw, 52px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat span { font-size: 14px; color: var(--fg2); }
+.meta { font-size: 14px; color: var(--fg3); }
+
+/* Shared bits */
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 980px; padding: 3px 11px; font-size: 13px;
+  background: var(--bg); border: 1px solid var(--line2); color: var(--fg); cursor: pointer; white-space: nowrap; }
+.chip:hover { border-color: var(--fg3); text-decoration: none; }
+.badge { display: inline-block; border-radius: 980px; padding: 2px 9px; font-size: 12px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.b-declared { background: var(--fg); color: #fff; }
+.b-inferred { background: #e8f2fe; color: #0058b0; }
+.b-guess { background: #fdf0e8; color: var(--flame); }
+.b-soft { background: var(--tile); color: var(--fg2); font-weight: 500; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile); max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 15px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search { flex: 1 1 260px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 11px 16px; background: var(--bg); font-size: 16px; }
+.search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+pre.sql { margin: 0; background: var(--tile2); border: 1px solid var(--line2); border-radius: 14px; padding: 14px 16px; overflow-x: auto;
+  font: 13.5px/1.55 var(--mono); letter-spacing: 0; color: var(--fg); white-space: pre; }
+.copy { border: 1px solid var(--line); background: var(--bg); color: var(--fg2); border-radius: 980px; padding: 4px 12px; font-size: 13px; cursor: pointer; justify-self: start; }
+.copy:hover { color: var(--fg); border-color: var(--fg3); }
+
+/* Areas */
+.areas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.area { background: var(--tile); border-radius: var(--r-lg); padding: clamp(24px, 3vw, 34px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.area h3 { font-size: clamp(22px, 2.2vw, 27px); font-weight: 700; letter-spacing: -.028em; line-height: 1.15; }
+.area p { color: var(--fg2); }
+.area .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Table cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.card { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 80px; }
+.card.flash { box-shadow: 0 0 0 3px var(--accent); }
+.card .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.card h3 { font: 600 clamp(21px, 2vw, 24px)/1.2 var(--mono); letter-spacing: -.02em; overflow-wrap: anywhere; margin-right: auto; }
+.card .what { font-size: 17px; }
+.grain { font-size: 15px; color: var(--fg2); }
+.grain b { color: var(--fg); font-weight: 600; }
+.kv { display: grid; gap: 8px; font-size: 15px; }
+.kv .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--fg3); }
+.links { display: grid; gap: 6px; }
+.link { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 14px; }
+.link .arrow { color: var(--fg3); }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-size: 14px; color: var(--link); list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " \203A"; }
+details[open] summary::after { content: " \2039"; }
+.cols { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+.cols td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+.cols td:first-child { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.cols .ty { color: var(--fg3); font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+.cols .nt { color: var(--fg2); }
+.empty { color: var(--fg3); font-size: 15px; }
+
+/* Connections */
+.conns { display: grid; gap: 14px; }
+.conn { background: var(--tile); border-radius: var(--r-md); padding: 20px 24px; display: grid; gap: 10px; min-width: 0; }
+.conn .say { font-size: clamp(18px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.02em; line-height: 1.32; }
+.conn .tech { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; color: var(--fg2); }
+.conn .tech code { color: var(--fg); overflow-wrap: anywhere; }
+.m2m { display: grid; gap: 10px; }
+.m2m div { font-size: 17px; }
+
+/* Views and paths */
+.vlist, .plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.vcard, .pcard { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.vcard h3 { font: 600 21px/1.2 var(--mono); overflow-wrap: anywhere; }
+.chain { font-size: 15px; color: var(--fg2); }
+.chain code { color: var(--fg); }
+.pcard h3 { font-size: clamp(20px, 2vw, 24px); font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.steps .sep { color: var(--fg3); font-size: 14px; }
+
+/* Findings */
+.finds { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.find { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr); gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .find { grid-template-columns: minmax(0, 1fr); } }
+.find .k { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--flame); padding-top: 3px; }
+.find .w { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.find .d { color: var(--fg2); font-size: 15px; }
+footer { padding: 40px 16px 64px; text-align: center; font-size: 13px; color: var(--fg3); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<nav class="nav"><div class="nav-in">
+  <div class="nav-title" id="navTitle"></div>
+  <div class="nav-links">
+    <a href="#areas">Areas</a><a href="#tables">Tables</a><a href="#connections">Connections</a>
+    <a href="#views">Views</a><a href="#paths">Join paths</a><a href="#findings">Findings</a>
+  </div>
+</div></nav>
+
+<header class="band hero"><div class="inner">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p class="lede" id="summary"></p>
+  <div class="stats" id="stats"></div>
+  <p class="meta">The diagram lives in the matching .excalidraw file. This page explains it in words.</p>
+</div></header>
+
+<section class="band" id="areas"><div class="inner">
+  <div class="head"><div class="eyebrow">The big picture</div><h2 class="h2">Areas. <span class="quiet">What lives where.</span></h2></div>
+  <div class="areas" id="areaList"></div>
+</div></section>
+
+<section class="band" id="tables"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every table</div><h2 class="h2">Tables. <span class="quiet">What one row means, and what it points to.</span></h2></div>
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="Search tables and columns" aria-label="Search tables and columns">
+    <div class="seg" id="areaFilter" role="group" aria-label="Filter by area"></div>
+  </div>
+  <div class="cards" id="cards"></div>
+</div></section>
+
+<section class="band" id="connections"><div class="inner">
+  <div class="head"><div class="eyebrow">Every key, in words</div><h2 class="h2">Connections. <span class="quiet">Read both directions.</span></h2>
+    <p class="sub">Each foreign key below says how the two tables relate, how sure we are, and the exact join.</p></div>
+  <div class="seg" id="labelFilter" role="group" aria-label="Filter by certainty"></div>
+  <div class="conns" id="connList"></div>
+  <div class="m2m" id="m2m"></div>
+</div></section>
+
+<section class="band" id="views"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Saved queries</div><h2 class="h2">Views. <span class="quiet">What each one answers, and what it is built from.</span></h2></div>
+  <div class="vlist" id="viewList"></div>
+</div></section>
+
+<section class="band" id="paths"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Ready to use</div><h2 class="h2">Join paths. <span class="quiet">Common questions, the route, the SQL.</span></h2></div>
+  <div class="plist" id="pathList"></div>
+</div></section>
+
+<section class="band" id="findings"><div class="inner">
+  <div class="head"><div class="eyebrow">Worth fixing</div><h2 class="h2">Findings.</h2></div>
+  <div class="finds" id="findList"></div>
+</div></section>
+
+<footer id="foot"></footer>
+
+<script id="schema-data" type="application/json">{
+ "title": "acme.analytics dataset",
+ "summary": "Product analytics for Acme: who the users are, what they do in the product (sessions and day-sharded click events), what they buy, and which marketing campaigns touched them. Seven tables hang off users as the central hub, and three reporting views roll events and purchases up into daily actives and revenue per user and per country.",
+ "source": {
+  "engine": "bigquery",
+  "name": "analytics.sql"
+ },
+ "domains": [
+  {
+   "name": "People",
+   "about": "The users themselves, including who referred whom.",
+   "tables": [
+    "users"
+   ]
+  },
+  {
+   "name": "Behaviour",
+   "about": "Visits to the product and the individual events inside them.",
+   "tables": [
+    "sessions",
+    "events_*"
+   ]
+  },
+  {
+   "name": "Commerce",
+   "about": "The item catalogue and the purchases made against it.",
+   "tables": [
+    "items",
+    "purchases"
+   ]
+  },
+  {
+   "name": "Marketing",
+   "about": "Campaigns and which users each one touched.",
+   "tables": [
+    "campaigns",
+    "user_campaigns"
+   ]
+  },
+  {
+   "name": "Reporting views",
+   "about": "Saved queries that roll the tables up into metrics; they store no data of their own.",
+   "tables": [
+    "v_daily_active",
+    "v_user_revenue",
+    "v_country_revenue"
+   ]
+  }
+ ],
+ "tables": [
+  {
+   "name": "users",
+   "kind": "table",
+   "domain": "People",
+   "what": "One person with an Acme account. The hub of the dataset: sessions, events, purchases and campaign touches all point back here by user_id.",
+   "grain": "One row per user (user_id).",
+   "answers": "",
+   "pk": [
+    "user_id"
+   ],
+   "pkSource": "inferred",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "The user's identifier. Every other table's user_id appears to refer to this column."
+    },
+    {
+     "name": "signup_date",
+     "type": "DATE",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Calendar date the account was created."
+    },
+    {
+     "name": "country",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Country of the user; nullable, and the grouping key of v_country_revenue."
+    },
+    {
+     "name": "referrer_user_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The user_id of the user who referred this one, if any. Points back into users itself (self-reference); NULL for users who were not referred."
+    }
+   ],
+   "out": [
+    "R9"
+   ],
+   "in": [
+    "R3",
+    "R5",
+    "R6",
+    "R8",
+    "R9"
+   ]
+  },
+  {
+   "name": "sessions",
+   "kind": "table",
+   "domain": "Behaviour",
+   "what": "One visit to the product on one device.",
+   "grain": "One row per session (session_id).",
+   "answers": "",
+   "pk": [
+    "session_id"
+   ],
+   "pkSource": "inferred",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "session_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "Session identifier; events_*.session_id appears to refer to it."
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The user the session belongs to. Nullable, so sessions can exist before or without a known user."
+    },
+    {
+     "name": "started_at",
+     "type": "TIMESTAMP",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "When the session began."
+    },
+    {
+     "name": "device",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Device type of the session (free text, values not documented)."
+    }
+   ],
+   "out": [
+    "R6"
+   ],
+   "in": [
+    "R2"
+   ]
+  },
+  {
+   "name": "events_*",
+   "kind": "table",
+   "domain": "Behaviour",
+   "what": "One tracked action (a page view, click, add to cart and so on, named in event_name). Physically split into one table per day, events_20261101 to events_20261103, which BigQuery queries together through the wildcard events_*.",
+   "grain": "One row per event (event_id), one shard per day.",
+   "answers": "",
+   "pk": [
+    "event_id"
+   ],
+   "pkSource": "inferred",
+   "junction": false,
+   "shards": {
+    "count": 3,
+    "first": "20261101",
+    "last": "20261103"
+   },
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "event_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "Event identifier. Uniqueness is assumed across all shards, not only within a day; nothing enforces it."
+    },
+    {
+     "name": "session_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The session the event happened in (nullable)."
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The user who did it (nullable). Stored directly on the event as well as via the session, so the two can disagree."
+    },
+    {
+     "name": "event_name",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "What kind of action this was (values not documented)."
+    },
+    {
+     "name": "event_ts",
+     "type": "TIMESTAMP",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "When it happened. v_daily_active turns this into a day with DATE(event_ts), which is UTC."
+    },
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "The item the event is about, when it is about one (nullable)."
+    }
+   ],
+   "out": [
+    "R1",
+    "R2",
+    "R3"
+   ],
+   "in": []
+  },
+  {
+   "name": "items",
+   "kind": "table",
+   "domain": "Commerce",
+   "what": "One product in the catalogue that can be viewed and bought.",
+   "grain": "One row per item (item_id).",
+   "answers": "",
+   "pk": [
+    "item_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "Declared primary key (NOT ENFORCED, so BigQuery does not stop duplicates)."
+    },
+    {
+     "name": "item_name",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Display name."
+    },
+    {
+     "name": "category",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Product category; the natural grouping for revenue by category."
+    }
+   ],
+   "out": [],
+   "in": [
+    "R1",
+    "R4"
+   ]
+  },
+  {
+   "name": "purchases",
+   "kind": "table",
+   "domain": "Commerce",
+   "what": "One purchase of one item by one user, with its price.",
+   "grain": "One row per purchase (purchase_id).",
+   "answers": "",
+   "pk": [
+    "purchase_id"
+   ],
+   "pkSource": "declared",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "purchase_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "Declared primary key (NOT ENFORCED)."
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "Who bought; appears to refer to users.user_id but is not declared. Nullable."
+    },
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": true,
+     "note": "What was bought; the only declared FOREIGN KEY in the dataset (to items.item_id, NOT ENFORCED). Nullable."
+    },
+    {
+     "name": "amount",
+     "type": "NUMERIC",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Price paid, in the currency of the same row."
+    },
+    {
+     "name": "currency",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Currency of amount. Amounts in different currencies cannot be summed as-is."
+    },
+    {
+     "name": "purchased_at",
+     "type": "TIMESTAMP",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "When the purchase happened. There is no session_id or event_id here, so a purchase cannot be tied to a session except by user and time."
+    }
+   ],
+   "out": [
+    "R4",
+    "R5"
+   ],
+   "in": []
+  },
+  {
+   "name": "campaigns",
+   "kind": "table",
+   "domain": "Marketing",
+   "what": "One marketing campaign on one channel.",
+   "grain": "One row per campaign (campaign_id).",
+   "answers": "",
+   "pk": [
+    "campaign_id"
+   ],
+   "pkSource": "inferred",
+   "junction": false,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "campaign_id",
+     "type": "INT64",
+     "nullable": false,
+     "pk": true,
+     "fk": false,
+     "note": "Campaign identifier, an INT64 number. Note the type: user_campaigns stores it as STRING."
+    },
+    {
+     "name": "name",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Campaign name."
+    },
+    {
+     "name": "channel",
+     "type": "STRING",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "Marketing channel (values not documented)."
+    }
+   ],
+   "out": [],
+   "in": [
+    "R7"
+   ]
+  },
+  {
+   "name": "user_campaigns",
+   "kind": "table",
+   "domain": "Marketing",
+   "what": "A bridge table recording that a campaign touched a user, and when first. It turns users and campaigns into a many-to-many relationship.",
+   "grain": "One row per user + campaign pair (no key declared).",
+   "answers": "",
+   "pk": [],
+   "pkSource": "none",
+   "junction": true,
+   "shards": null,
+   "reads": [],
+   "joins": [],
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "The user touched; appears to refer to users.user_id. NOT NULL."
+    },
+    {
+     "name": "campaign_id",
+     "type": "STRING",
+     "nullable": false,
+     "pk": false,
+     "fk": true,
+     "note": "The campaign; stored as STRING although campaigns.campaign_id is INT64, so joining needs a cast. NOT NULL."
+    },
+    {
+     "name": "first_touch_ts",
+     "type": "TIMESTAMP",
+     "nullable": true,
+     "pk": false,
+     "fk": false,
+     "note": "When the campaign first reached this user."
+    }
+   ],
+   "out": [
+    "R7",
+    "R8"
+   ],
+   "in": []
+  },
+  {
+   "name": "v_daily_active",
+   "kind": "view",
+   "domain": "Reporting views",
+   "what": "Daily active users. Columns: day (DATE(event_ts)) and dau (COUNT(DISTINCT user_id)). Reads every events_* shard and groups by day. Events with no user_id do not count, and there is no _TABLE_SUFFIX filter, so every query scans all shards.",
+   "grain": "",
+   "answers": "How many distinct identified users were active on each day?",
+   "pk": [],
+   "pkSource": "none",
+   "junction": false,
+   "shards": null,
+   "reads": [
+    "events_*"
+   ],
+   "joins": [],
+   "columns": [],
+   "out": [],
+   "in": []
+  },
+  {
+   "name": "v_user_revenue",
+   "kind": "view",
+   "domain": "Reporting views",
+   "what": "Lifetime revenue per user. Columns: user_id, country, revenue (SUM(purchases.amount)). Starts from users and LEFT JOINs purchases on purchases.user_id = users.user_id, so every user appears, and users who never bought get revenue NULL, not 0. Amounts are summed regardless of currency.",
+   "grain": "",
+   "answers": "How much has each user spent in total, and in which country are they?",
+   "pk": [],
+   "pkSource": "none",
+   "junction": false,
+   "shards": null,
+   "reads": [
+    "users",
+    "purchases"
+   ],
+   "joins": [
+    [
+     "purchases.user_id",
+     "users.user_id"
+    ]
+   ],
+   "columns": [],
+   "out": [],
+   "in": []
+  },
+  {
+   "name": "v_country_revenue",
+   "kind": "view",
+   "domain": "Reporting views",
+   "what": "Revenue and user count per country. Columns: country, revenue (SUM of v_user_revenue.revenue), users (COUNT(*)). Built only on v_user_revenue, so it inherits its rules: users counts everyone including non-buyers, users with no country fall into one NULL row, and currencies are mixed.",
+   "grain": "",
+   "answers": "How much revenue, and how many users, does each country have?",
+   "pk": [],
+   "pkSource": "none",
+   "junction": false,
+   "shards": null,
+   "reads": [
+    "v_user_revenue"
+   ],
+   "joins": [],
+   "columns": [],
+   "out": [],
+   "in": []
+  }
+ ],
+ "relationships": [
+  {
+   "from": "events_*",
+   "from_columns": [
+    "item_id"
+   ],
+   "to": "items",
+   "to_columns": [
+    "item_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R1",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "events_*.item_id = items.item_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.item_id) AS matched FROM events_* c LEFT JOIN items p ON c.item_id = p.item_id WHERE c.item_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each event appears to be about at most one item (item_id is nullable, so many events are about none); an item can appear in many events, or none. Matched by name only, not declared."
+  },
+  {
+   "from": "events_*",
+   "from_columns": [
+    "session_id"
+   ],
+   "to": "sessions",
+   "to_columns": [
+    "session_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R2",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "events_*.session_id = sessions.session_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.session_id) AS matched FROM events_* c LEFT JOIN sessions p ON c.session_id = p.session_id WHERE c.session_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each event appears to belong to at most one session (session_id is nullable); a session can contain many events, or none. Matched by name only, not declared."
+  },
+  {
+   "from": "events_*",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R3",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "events_*.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM events_* c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each event appears to be done by at most one user (user_id is nullable); a user can have many events, or none. Not declared, and it can disagree with the user found through the event's session."
+  },
+  {
+   "from": "purchases",
+   "from_columns": [
+    "item_id"
+   ],
+   "to": "items",
+   "to_columns": [
+    "item_id"
+   ],
+   "source": "declared",
+   "id": "R4",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "purchases.item_id = items.item_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.item_id) AS matched FROM purchases c LEFT JOIN items p ON c.item_id = p.item_id WHERE c.item_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared",
+   "sentence": "Each purchase is for at most one item (declared FOREIGN KEY, NOT ENFORCED; item_id is nullable); an item can be bought in many purchases, or none."
+  },
+  {
+   "from": "purchases",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R5",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "purchases.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM purchases c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each purchase appears to be made by at most one user (user_id is nullable); a user can make many purchases, or none. Not declared, but v_user_revenue relies on exactly this join."
+  },
+  {
+   "from": "sessions",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R6",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "sessions.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM sessions c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each session appears to belong to at most one user (user_id is nullable, so anonymous sessions are possible); a user can have many sessions, or none. Matched by name only, not declared."
+  },
+  {
+   "from": "user_campaigns",
+   "from_columns": [
+    "campaign_id"
+   ],
+   "to": "campaigns",
+   "to_columns": [
+    "campaign_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R7",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": "STRING vs INT64",
+   "join": "SAFE_CAST(user_campaigns.campaign_id AS INT64) = campaigns.campaign_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.campaign_id) AS matched FROM user_campaigns c LEFT JOIN campaigns p ON c.campaign_id = p.campaign_id WHERE c.campaign_id IS NOT NULL",
+   "match": null,
+   "confidence": "guess",
+   "label": "guess",
+   "sentence": "Each user_campaigns row appears to name exactly one campaign; a campaign can have many such rows, or none. This is a guess: it is not declared and the types differ (STRING here, INT64 in campaigns), so the join needs SAFE_CAST(user_campaigns.campaign_id AS INT64) = campaigns.campaign_id."
+  },
+  {
+   "from": "user_campaigns",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R8",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "user_campaigns.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM user_campaigns c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each user_campaigns row appears to name exactly one user (user_id is NOT NULL); a user can have many campaign touches, or none. Matched by name only, not declared."
+  },
+  {
+   "from": "users",
+   "from_columns": [
+    "referrer_user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": "referrer",
+   "id": "R9",
+   "self": true,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "users.referrer_user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM users c LEFT JOIN users p ON c.referrer_user_id = p.user_id WHERE c.referrer_user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred",
+   "sentence": "Each user appears to have been referred by at most one other user (referrer_user_id is nullable); a user can refer many users, or none. A self-reference inferred from the name, not declared."
+  }
+ ],
+ "manyToMany": [
+  {
+   "via": "user_campaigns",
+   "between": [
+    "campaigns",
+    "users"
+   ],
+   "relationships": [
+    "R7",
+    "R8"
+   ]
+  }
+ ],
+ "joinPaths": [
+  {
+   "question": "Which item categories bring in the most revenue?",
+   "path": [
+    "purchases",
+    "items"
+   ],
+   "hops": [
+    {
+     "rel": "R4",
+     "label": "declared"
+    }
+   ],
+   "sql": "FROM purchases\nJOIN items ON purchases.item_id = items.item_id"
+  },
+  {
+   "question": "Which signup cohorts and countries buy, and how much?",
+   "path": [
+    "users",
+    "purchases"
+   ],
+   "hops": [
+    {
+     "rel": "R5",
+     "label": "inferred"
+    }
+   ],
+   "sql": "FROM users\nJOIN purchases ON purchases.user_id = users.user_id"
+  },
+  {
+   "question": "Which devices do users use, and what do they do in each session?",
+   "path": [
+    "events_*",
+    "sessions",
+    "users"
+   ],
+   "hops": [
+    {
+     "rel": "R2",
+     "label": "inferred"
+    },
+    {
+     "rel": "R6",
+     "label": "inferred"
+    }
+   ],
+   "sql": "FROM `events_*`\nJOIN sessions ON `events_*`.session_id = sessions.session_id\nJOIN users ON sessions.user_id = users.user_id"
+  },
+  {
+   "question": "Which items are viewed or clicked most, by category?",
+   "path": [
+    "events_*",
+    "items"
+   ],
+   "hops": [
+    {
+     "rel": "R1",
+     "label": "inferred"
+    }
+   ],
+   "sql": "FROM `events_*`\nJOIN items ON `events_*`.item_id = items.item_id"
+  }
+ ],
+ "findings": [
+  {
+   "kind": "INFERRED-PK",
+   "where": "users",
+   "detail": "no declared key; user_id looks like it"
+  },
+  {
+   "kind": "INFERRED-PK",
+   "where": "sessions",
+   "detail": "no declared key; session_id looks like it"
+  },
+  {
+   "kind": "INFERRED-PK",
+   "where": "events_*",
+   "detail": "no declared key; event_id looks like it"
+  },
+  {
+   "kind": "INFERRED-PK",
+   "where": "campaigns",
+   "detail": "no declared key; campaign_id looks like it"
+  },
+  {
+   "kind": "NO-PK",
+   "where": "user_campaigns",
+   "detail": "no declared or obvious key, so rows can't be told apart"
+  },
+  {
+   "kind": "TYPE-MISMATCH",
+   "where": "user_campaigns.campaign_id",
+   "detail": "STRING here, INT64 in campaigns.campaign_id; the join needs a CAST and may silently match nothing"
+  },
+  {
+   "kind": "UNDECLARED-FK",
+   "where": "8 links",
+   "detail": "work only by naming convention; declare them (BigQuery: NOT ENFORCED) so tools and people can trust them"
+  }
+ ],
+ "notes": [
+  "Only two keys and one foreign key are actually declared in the DDL: items.item_id and purchases.purchase_id as PRIMARY KEY, and purchases.item_id -> items.item_id as FOREIGN KEY, all NOT ENFORCED. BigQuery uses them for query optimisation only; it never rejects duplicates or orphans. Every other key and link on this page is inferred from column names.",
+  "Keys: items.item_id and purchases.purchase_id are declared primary keys. users.user_id, sessions.session_id, events_*.event_id and campaigns.campaign_id are inferred keys (NOT NULL and named like the table), so their uniqueness is assumed, not guaranteed. user_campaigns has no key at all; (user_id, campaign_id) is the natural one to declare.",
+  "None of the inferred links has been checked against data: there was no live BigQuery access. Each one carries a verify_sql in analysis.json (LEFT JOIN, count matched vs total) that should be dry-run for bytes first, then run, before relying on the link.",
+  "Campaign join: BigQuery will not compare a STRING column with an INT64 column, so a plain user_campaigns.campaign_id = campaigns.campaign_id raises a 'No matching signature' error. Use SAFE_CAST(uc.campaign_id AS INT64) = c.campaign_id; any campaign_id that is not a number becomes NULL and silently drops out. That is why no join path through campaigns is offered above: the generated SQL there would not run.",
+  "Referrals (R9) join users to itself, so the query needs two aliases, which is why it is not listed as a join path: FROM users AS u JOIN users AS ref ON u.referrer_user_id = ref.user_id gives each referred user with their referrer.",
+  "Events reach a user two ways: directly (events_*.user_id, R3) and through their session (events_*.session_id -> sessions.user_id, R2 then R6). Nothing guarantees the two agree, and either can be NULL. Pick one deliberately; v_daily_active uses the direct events_*.user_id.",
+  "events_* is one logical table stored as 3 daily shards (20261101 to 20261103). Filter with _TABLE_SUFFIX BETWEEN '20261101' AND '20261103' to limit what is scanned; v_daily_active has no such filter and reads every shard on every query.",
+  "Revenue views add up purchases.amount without looking at purchases.currency, so if more than one currency exists, v_user_revenue and v_country_revenue mix them. Group or convert by currency first.",
+  "v_user_revenue is one row per user only if users.user_id is truly unique; since that key is not declared, a duplicated user_id would double that user's revenue in both revenue views.",
+  "Purchases carry no session_id or event_id, so there is no key path from a session or event to the purchase it led to; attribution would have to match on user_id and time, which is an assumption, not a connection in this schema.",
+  "View lineage: v_daily_active reads events_*; v_user_revenue reads users LEFT JOIN purchases (the same join as R5); v_country_revenue reads only v_user_revenue. Changing v_user_revenue changes v_country_revenue too."
+ ],
+ "stats": {
+  "tables": 7,
+  "views": 3,
+  "links": 9,
+  "declared": 1,
+  "inferred": 7,
+  "guess": 1
+ }
+}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("schema-data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const rel = Object.fromEntries(D.relationships.map((r) => [r.id, r]));
+  const tbl = Object.fromEntries(D.tables.map((t) => [t.name, t]));
+  const badge = (r) => `<span class="badge b-${r.confidence}">${esc(r.label)}</span>`;
+  const card = (r) => r.cardinality === "1:1" ? "one-to-one" : "many-to-one";
+  const chip = (name) => `<a class="chip mono" href="#t-${encodeURIComponent(name)}" data-go="${esc(name)}">${esc(name)}</a>`;
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                  set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+  $("navTitle").textContent = D.title;
+  $("title").textContent = D.title;
+  $("summary").textContent = D.summary;
+  $("eyebrow").textContent = `${D.source.engine} · ${D.source.name}`;
+  const s = D.stats;
+  $("stats").innerHTML = [[s.tables, "tables"], [s.views, "views"], [s.links, "connections"],
+    [s.declared, "declared in the database"], [s.inferred + s.guess, "inferred from names"]]
+    .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  $("areaList").innerHTML = D.domains.map((d) => `<div class="area"><h3>${esc(d.name)}</h3><p>${esc(d.about)}</p>
+    <div class="chips">${d.tables.map(chip).join("")}</div></div>`).join("");
+
+  const linkLine = (r, dir) => {
+    const other = dir === "out" ? r.to : r.from;
+    const cols = dir === "out" ? r.from_columns.join(", ") : r.from_columns.map((c) => `${r.from}.${c}`).join(", ");
+    return `<div class="link"><span class="arrow">${dir === "out" ? "→" : "←"}</span>${chip(other)}
+      <span>via <code>${esc(cols)}</code></span><span class="badge b-soft">${card(r)}${r.optional ? ", optional" : ""}</span>${badge(r)}</div>`;
+  };
+  const cardHtml = (t) => {
+    const view = t.kind !== "table";
+    const tags = [view ? `<span class="badge b-soft">${esc(t.kind)}</span>` : "",
+      t.junction ? `<span class="badge b-soft">link table</span>` : "",
+      t.shards ? `<span class="badge b-soft">${t.shards.count} daily shards, ${esc(t.shards.first)} to ${esc(t.shards.last)}</span>` : "",
+      `<span class="badge b-soft">${esc(t.domain)}</span>`].join("");
+    const key = t.pk.length ? `<code>${esc(t.pk.join(" + "))}</code> <span class="badge ${t.pkSource === "declared" ? "b-declared" : "b-inferred"}">${t.pkSource === "declared" ? "declared" : "inferred"}</span>` : `<span class="badge b-guess">no key</span>`;
+    const outs = t.out.map((id) => linkLine(rel[id], "out")).join("") || `<div class="empty">Points to nothing.</div>`;
+    const ins = t.in.map((id) => linkLine(rel[id], "in")).join("") || `<div class="empty">Nothing points here.</div>`;
+    const cols = t.columns.map((c) => `<tr><td>${esc(c.name)}</td><td class="ty">${esc(c.type)}${c.nullable ? "" : " · not null"}</td>
+      <td>${c.pk ? '<span class="badge b-declared">PK</span> ' : ""}${c.fk ? '<span class="badge b-soft">FK</span>' : ""}</td><td class="nt">${esc(c.note)}</td></tr>`).join("");
+    return `<article class="card" id="t-${encodeURIComponent(t.name)}" data-name="${esc(t.name)}" data-domain="${esc(t.domain)}"
+      data-text="${esc((t.name + " " + t.columns.map((c) => c.name).join(" ") + " " + t.what).toLowerCase())}">
+      <div class="top"><h3>${esc(t.name)}</h3>${tags}</div>
+      <p class="what">${esc(t.what)}</p>
+      ${view ? `<p class="grain"><b>Answers:</b> ${esc(t.answers)}</p>` : `<p class="grain"><b>Grain:</b> ${esc(t.grain)}</p>`}
+      ${view ? `<div class="kv"><span class="lbl">Built from</span><div class="steps">${t.reads.map(chip).join("")}</div></div>` :
+      `<div class="kv"><span class="lbl">Key</span><div>${key}</div></div>
+      <div class="kv"><span class="lbl">Points to</span><div class="links">${outs}</div></div>
+      <div class="kv"><span class="lbl">Referenced by</span><div class="links">${ins}</div></div>`}
+      ${t.columns.length ? `<details><summary>All ${t.columns.length} columns</summary><table class="cols">${cols}</table></details>` : ""}
+    </article>`;
+  };
+  $("cards").innerHTML = D.tables.map(cardHtml).join("");
+
+  const areas = ["All", ...D.domains.map((d) => d.name), ...(s.views ? ["Views"] : [])];
+  let area = store.get("schema-area") || "All";
+  if (!areas.includes(area)) area = "All";
+  $("areaFilter").innerHTML = areas.map((a) => `<button type="button" data-a="${esc(a)}">${esc(a)}</button>`).join("");
+  const applyTables = () => {
+    const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll(".card").forEach((c) => {
+      c.hidden = !((area === "All" || c.dataset.domain === area) && (!q || c.dataset.text.includes(q)));
+    });
+    $("areaFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.a === area)));
+  };
+  $("areaFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return;
+    area = b.dataset.a; store.set("schema-area", area); applyTables(); });
+  $("q").addEventListener("input", applyTables);
+  applyTables();
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-go]"); if (!a) return;
+    e.preventDefault();
+    area = "All"; $("q").value = ""; applyTables();
+    const el = $("t-" + encodeURIComponent(a.dataset.go)); if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400);
+  });
+
+  let lab = "All";
+  const labs = ["All", "declared", "inferred", "guess"].filter((l) => l === "All" || D.relationships.some((r) => r.confidence === l));
+  $("labelFilter").innerHTML = labs.map((l) => `<button type="button" data-l="${l}">${l === "All" ? "All" : l[0].toUpperCase() + l.slice(1)}</button>`).join("");
+  const conns = () => {
+    $("connList").innerHTML = D.relationships.filter((r) => lab === "All" || r.confidence === lab).map((r) => `<div class="conn">
+      <p class="say">${esc(r.sentence)}</p>
+      <div class="tech"><code>${esc(r.from)}.${esc(r.from_columns.join(", "))} → ${esc(r.to)}.${esc(r.to_columns.join(", "))}</code>
+        ${badge(r)}<span class="badge b-soft">${card(r)}</span><span class="badge b-soft">${r.optional ? "optional" : "required"}</span>
+        ${r.role ? `<span class="badge b-soft">role: ${esc(r.role)}</span>` : ""}${r.self ? '<span class="badge b-soft">points to its own table</span>' : ""}
+        ${r.type_mismatch ? `<span class="badge b-guess">type mismatch: ${esc(r.type_mismatch)}</span>` : ""}</div>
+      <code class="mono" style="color:var(--fg2)">ON ${esc(r.join)}</code></div>`).join("");
+    $("labelFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.l === lab)));
+  };
+  $("labelFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { lab = b.dataset.l; conns(); } });
+  conns();
+  $("m2m").innerHTML = D.manyToMany.length ? `<div class="kv"><span class="lbl">Many-to-many, through a link table</span></div>` +
+    D.manyToMany.map((m) => `<div>${chip(m.between[0])} ↔ ${chip(m.between[1])} through ${chip(m.via)}</div>`).join("") : "";
+
+  const chainOf = (name, seen = new Set()) => {
+    const t = tbl[name]; if (!t || t.kind === "table" || seen.has(name)) return esc(name);
+    seen.add(name);
+    return `${esc(name)} ← (${t.reads.map((r) => chainOf(r, seen)).join(", ")})`;
+  };
+  const views = D.tables.filter((t) => t.kind !== "table");
+  $("viewList").innerHTML = views.map((v) => `<div class="vcard"><div class="top" style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline">
+      <h3>${esc(v.name)}</h3><span class="badge b-soft">${esc(v.kind)}</span></div>
+      <p class="what">${esc(v.answers)}</p>
+      <div class="kv"><span class="lbl">Built from</span><div class="steps">${v.reads.map(chip).join("")}</div></div>
+      ${v.joins.length ? `<div class="kv"><span class="lbl">Joined on</span>${v.joins.map((j) => `<code>${esc(j[0])} = ${esc(j[1])}</code>`).join("<br>")}</div>` : ""}
+      <p class="chain"><b>Lineage:</b> <code>${chainOf(v.name)}</code></p></div>`).join("") || `<p class="empty">No views in this schema.</p>`;
+
+  $("pathList").innerHTML = D.joinPaths.map((p, i) => `<div class="pcard"><h3>${esc(p.question)}</h3>
+      <div class="steps">${p.path.map((n, k) => (k ? `<span class="sep">→</span>` : "") + chip(n)).join("")}</div>
+      <div class="steps">${p.hops.map((h) => `<span class="badge b-${rel[h.rel].confidence}">${esc(h.rel)} · ${esc(h.label)}</span>`).join("")}</div>
+      <pre class="sql" id="sql${i}">${esc(p.sql)}</pre><button class="copy" type="button" data-copy="sql${i}">Copy SQL</button></div>`).join("");
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy]"); if (!b) return;
+    try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); b.textContent = "Copied"; }
+    catch { b.textContent = "Select and copy"; }
+    setTimeout(() => (b.textContent = "Copy SQL"), 1400);
+  });
+
+  const finds = D.findings.map((f) => `<div class="find"><div class="k">${esc(f.kind)}</div><div><div class="w">${esc(f.where)}</div><div class="d">${esc(f.detail)}</div></div></div>`);
+  const notes = D.notes.map((n) => `<div class="find"><div class="k">NOTE</div><div><div class="d">${esc(n)}</div></div></div>`);
+  $("findList").innerHTML = [...finds, ...notes].join("") || `<p class="empty">Nothing to fix.</p>`;
+  $("foot").textContent = `${D.title} · ${D.source.engine} · ${s.tables} tables, ${s.views} views, ${s.links} connections`;
+})();
+</script>

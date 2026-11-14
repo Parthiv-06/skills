@@ -1,0 +1,207 @@
+{
+ "title": "acme.analytics dataset",
+ "summary": "Product analytics for Acme: who the users are, what they do in the product (sessions and day-sharded click events), what they buy, and which marketing campaigns touched them. Seven tables hang off users as the central hub, and three reporting views roll events and purchases up into daily actives and revenue per user and per country.",
+ "domains": [
+  {
+   "name": "People",
+   "about": "The users themselves, including who referred whom.",
+   "tables": [
+    "users"
+   ]
+  },
+  {
+   "name": "Behaviour",
+   "about": "Visits to the product and the individual events inside them.",
+   "tables": [
+    "sessions",
+    "events_*"
+   ]
+  },
+  {
+   "name": "Commerce",
+   "about": "The item catalogue and the purchases made against it.",
+   "tables": [
+    "items",
+    "purchases"
+   ]
+  },
+  {
+   "name": "Marketing",
+   "about": "Campaigns and which users each one touched.",
+   "tables": [
+    "campaigns",
+    "user_campaigns"
+   ]
+  },
+  {
+   "name": "Reporting views",
+   "about": "Saved queries that roll the tables up into metrics; they store no data of their own.",
+   "tables": [
+    "v_daily_active",
+    "v_user_revenue",
+    "v_country_revenue"
+   ]
+  }
+ ],
+ "tables": {
+  "users": {
+   "what": "One person with an Acme account. The hub of the dataset: sessions, events, purchases and campaign touches all point back here by user_id.",
+   "grain": "One row per user (user_id).",
+   "columns": {
+    "user_id": "The user's identifier. Every other table's user_id appears to refer to this column.",
+    "signup_date": "Calendar date the account was created.",
+    "country": "Country of the user; nullable, and the grouping key of v_country_revenue.",
+    "referrer_user_id": "The user_id of the user who referred this one, if any. Points back into users itself (self-reference); NULL for users who were not referred."
+   }
+  },
+  "sessions": {
+   "what": "One visit to the product on one device.",
+   "grain": "One row per session (session_id).",
+   "columns": {
+    "session_id": "Session identifier; events_*.session_id appears to refer to it.",
+    "user_id": "The user the session belongs to. Nullable, so sessions can exist before or without a known user.",
+    "started_at": "When the session began.",
+    "device": "Device type of the session (free text, values not documented)."
+   }
+  },
+  "events_*": {
+   "what": "One tracked action (a page view, click, add to cart and so on, named in event_name). Physically split into one table per day, events_20261101 to events_20261103, which BigQuery queries together through the wildcard events_*.",
+   "grain": "One row per event (event_id), one shard per day.",
+   "columns": {
+    "event_id": "Event identifier. Uniqueness is assumed across all shards, not only within a day; nothing enforces it.",
+    "session_id": "The session the event happened in (nullable).",
+    "user_id": "The user who did it (nullable). Stored directly on the event as well as via the session, so the two can disagree.",
+    "event_name": "What kind of action this was (values not documented).",
+    "event_ts": "When it happened. v_daily_active turns this into a day with DATE(event_ts), which is UTC.",
+    "item_id": "The item the event is about, when it is about one (nullable)."
+   }
+  },
+  "items": {
+   "what": "One product in the catalogue that can be viewed and bought.",
+   "grain": "One row per item (item_id).",
+   "columns": {
+    "item_id": "Declared primary key (NOT ENFORCED, so BigQuery does not stop duplicates).",
+    "item_name": "Display name.",
+    "category": "Product category; the natural grouping for revenue by category."
+   }
+  },
+  "purchases": {
+   "what": "One purchase of one item by one user, with its price.",
+   "grain": "One row per purchase (purchase_id).",
+   "columns": {
+    "purchase_id": "Declared primary key (NOT ENFORCED).",
+    "user_id": "Who bought; appears to refer to users.user_id but is not declared. Nullable.",
+    "item_id": "What was bought; the only declared FOREIGN KEY in the dataset (to items.item_id, NOT ENFORCED). Nullable.",
+    "amount": "Price paid, in the currency of the same row.",
+    "currency": "Currency of amount. Amounts in different currencies cannot be summed as-is.",
+    "purchased_at": "When the purchase happened. There is no session_id or event_id here, so a purchase cannot be tied to a session except by user and time."
+   }
+  },
+  "campaigns": {
+   "what": "One marketing campaign on one channel.",
+   "grain": "One row per campaign (campaign_id).",
+   "columns": {
+    "campaign_id": "Campaign identifier, an INT64 number. Note the type: user_campaigns stores it as STRING.",
+    "name": "Campaign name.",
+    "channel": "Marketing channel (values not documented)."
+   }
+  },
+  "user_campaigns": {
+   "what": "A bridge table recording that a campaign touched a user, and when first. It turns users and campaigns into a many-to-many relationship.",
+   "grain": "One row per user + campaign pair (no key declared).",
+   "columns": {
+    "user_id": "The user touched; appears to refer to users.user_id. NOT NULL.",
+    "campaign_id": "The campaign; stored as STRING although campaigns.campaign_id is INT64, so joining needs a cast. NOT NULL.",
+    "first_touch_ts": "When the campaign first reached this user."
+   }
+  },
+  "v_daily_active": {
+   "what": "Daily active users. Columns: day (DATE(event_ts)) and dau (COUNT(DISTINCT user_id)). Reads every events_* shard and groups by day. Events with no user_id do not count, and there is no _TABLE_SUFFIX filter, so every query scans all shards."
+  },
+  "v_user_revenue": {
+   "what": "Lifetime revenue per user. Columns: user_id, country, revenue (SUM(purchases.amount)). Starts from users and LEFT JOINs purchases on purchases.user_id = users.user_id, so every user appears, and users who never bought get revenue NULL, not 0. Amounts are summed regardless of currency."
+  },
+  "v_country_revenue": {
+   "what": "Revenue and user count per country. Columns: country, revenue (SUM of v_user_revenue.revenue), users (COUNT(*)). Built only on v_user_revenue, so it inherits its rules: users counts everyone including non-buyers, users with no country fall into one NULL row, and currencies are mixed."
+  }
+ },
+ "relationships": {
+  "R1": "Each event appears to be about at most one item (item_id is nullable, so many events are about none); an item can appear in many events, or none. Matched by name only, not declared.",
+  "R2": "Each event appears to belong to at most one session (session_id is nullable); a session can contain many events, or none. Matched by name only, not declared.",
+  "R3": "Each event appears to be done by at most one user (user_id is nullable); a user can have many events, or none. Not declared, and it can disagree with the user found through the event's session.",
+  "R4": "Each purchase is for at most one item (declared FOREIGN KEY, NOT ENFORCED; item_id is nullable); an item can be bought in many purchases, or none.",
+  "R5": "Each purchase appears to be made by at most one user (user_id is nullable); a user can make many purchases, or none. Not declared, but v_user_revenue relies on exactly this join.",
+  "R6": "Each session appears to belong to at most one user (user_id is nullable, so anonymous sessions are possible); a user can have many sessions, or none. Matched by name only, not declared.",
+  "R7": "Each user_campaigns row appears to name exactly one campaign; a campaign can have many such rows, or none. This is a guess: it is not declared and the types differ (STRING here, INT64 in campaigns), so the join needs SAFE_CAST(user_campaigns.campaign_id AS INT64) = campaigns.campaign_id.",
+  "R8": "Each user_campaigns row appears to name exactly one user (user_id is NOT NULL); a user can have many campaign touches, or none. Matched by name only, not declared.",
+  "R9": "Each user appears to have been referred by at most one other user (referrer_user_id is nullable); a user can refer many users, or none. A self-reference inferred from the name, not declared."
+ },
+ "views": {
+  "v_daily_active": {
+   "answers": "How many distinct identified users were active on each day?"
+  },
+  "v_user_revenue": {
+   "answers": "How much has each user spent in total, and in which country are they?"
+  },
+  "v_country_revenue": {
+   "answers": "How much revenue, and how many users, does each country have?"
+  }
+ },
+ "joinPaths": [
+  {
+   "question": "Which item categories bring in the most revenue?",
+   "path": [
+    "purchases",
+    "items"
+   ],
+   "rels": [
+    "R4"
+   ]
+  },
+  {
+   "question": "Which signup cohorts and countries buy, and how much?",
+   "path": [
+    "users",
+    "purchases"
+   ],
+   "rels": [
+    "R5"
+   ]
+  },
+  {
+   "question": "Which devices do users use, and what do they do in each session?",
+   "path": [
+    "events_*",
+    "sessions",
+    "users"
+   ],
+   "rels": [
+    "R2",
+    "R6"
+   ]
+  },
+  {
+   "question": "Which items are viewed or clicked most, by category?",
+   "path": [
+    "events_*",
+    "items"
+   ],
+   "rels": [
+    "R1"
+   ]
+  }
+ ],
+ "notes": [
+  "Only two keys and one foreign key are actually declared in the DDL: items.item_id and purchases.purchase_id as PRIMARY KEY, and purchases.item_id -> items.item_id as FOREIGN KEY, all NOT ENFORCED. BigQuery uses them for query optimisation only; it never rejects duplicates or orphans. Every other key and link on this page is inferred from column names.",
+  "Keys: items.item_id and purchases.purchase_id are declared primary keys. users.user_id, sessions.session_id, events_*.event_id and campaigns.campaign_id are inferred keys (NOT NULL and named like the table), so their uniqueness is assumed, not guaranteed. user_campaigns has no key at all; (user_id, campaign_id) is the natural one to declare.",
+  "None of the inferred links has been checked against data: there was no live BigQuery access. Each one carries a verify_sql in analysis.json (LEFT JOIN, count matched vs total) that should be dry-run for bytes first, then run, before relying on the link.",
+  "Campaign join: BigQuery will not compare a STRING column with an INT64 column, so a plain user_campaigns.campaign_id = campaigns.campaign_id raises a 'No matching signature' error. Use SAFE_CAST(uc.campaign_id AS INT64) = c.campaign_id; any campaign_id that is not a number becomes NULL and silently drops out. That is why no join path through campaigns is offered above: the generated SQL there would not run.",
+  "Referrals (R9) join users to itself, so the query needs two aliases, which is why it is not listed as a join path: FROM users AS u JOIN users AS ref ON u.referrer_user_id = ref.user_id gives each referred user with their referrer.",
+  "Events reach a user two ways: directly (events_*.user_id, R3) and through their session (events_*.session_id -> sessions.user_id, R2 then R6). Nothing guarantees the two agree, and either can be NULL. Pick one deliberately; v_daily_active uses the direct events_*.user_id.",
+  "events_* is one logical table stored as 3 daily shards (20261101 to 20261103). Filter with _TABLE_SUFFIX BETWEEN '20261101' AND '20261103' to limit what is scanned; v_daily_active has no such filter and reads every shard on every query.",
+  "Revenue views add up purchases.amount without looking at purchases.currency, so if more than one currency exists, v_user_revenue and v_country_revenue mix them. Group or convert by currency first.",
+  "v_user_revenue is one row per user only if users.user_id is truly unique; since that key is not declared, a duplicated user_id would double that user's revenue in both revenue views.",
+  "Purchases carry no session_id or event_id, so there is no key path from a session or event to the purchase it led to; attribution would have to match on user_id and time, which is an assumption, not a connection in this schema.",
+  "View lineage: v_daily_active reads events_*; v_user_revenue reads users LEFT JOIN purchases (the same join as R5); v_country_revenue reads only v_user_revenue. Changing v_user_revenue changes v_country_revenue too."
+ ]
+}

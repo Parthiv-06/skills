@@ -1,0 +1,647 @@
+{
+ "source": {
+  "engine": "bigquery",
+  "name": "analytics.sql"
+ },
+ "indexes_known": false,
+ "tables": [
+  {
+   "name": "users",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "signup_date",
+     "type": "DATE",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "referrer_user_id",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "user_id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "inferred",
+   "junction": false,
+   "grain_draft": "one row per user",
+   "fk_columns": [
+    "referrer_user_id"
+   ]
+  },
+  {
+   "name": "sessions",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "session_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "started_at",
+     "type": "TIMESTAMP",
+     "nullable": true
+    },
+    {
+     "name": "device",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "session_id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "inferred",
+   "junction": false,
+   "grain_draft": "one row per session",
+   "fk_columns": [
+    "user_id"
+   ]
+  },
+  {
+   "name": "events_*",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "event_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "session_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "event_name",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "event_ts",
+     "type": "TIMESTAMP",
+     "nullable": true
+    },
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "event_id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "shards": {
+    "count": 3,
+    "first": "20261101",
+    "last": "20261103"
+   },
+   "pk_source": "inferred",
+   "junction": false,
+   "grain_draft": "one row per event; one physical table per day (3 shards)",
+   "fk_columns": [
+    "item_id",
+    "session_id",
+    "user_id"
+   ]
+  },
+  {
+   "name": "items",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "item_name",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "item_id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "item_id"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per item",
+   "fk_columns": []
+  },
+  {
+   "name": "purchases",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "purchase_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "NUMERIC",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "purchased_at",
+     "type": "TIMESTAMP",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "purchase_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "item_id"
+     ],
+     "ref_table": "items",
+     "ref_columns": [
+      "item_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "purchase_id"
+    ]
+   ],
+   "sql": null,
+   "pk_source": "declared",
+   "junction": false,
+   "grain_draft": "one row per purchase",
+   "fk_columns": [
+    "item_id",
+    "user_id"
+   ]
+  },
+  {
+   "name": "campaigns",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "campaign_id",
+     "type": "INT64",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "campaign_id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "inferred",
+   "junction": false,
+   "grain_draft": "one row per campaign",
+   "fk_columns": []
+  },
+  {
+   "name": "user_campaigns",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "campaign_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "first_touch_ts",
+     "type": "TIMESTAMP",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "pk_source": "none",
+   "junction": true,
+   "grain_draft": "one row per user + campaign pair (no declared key; declare one so duplicates can't creep in)",
+   "fk_columns": [
+    "campaign_id",
+    "user_id"
+   ]
+  },
+  {
+   "name": "v_daily_active",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT DATE(event_ts) AS day, COUNT(DISTINCT user_id) AS dau\nFROM `acme.analytics.events_*`\nGROUP BY day",
+   "pk_source": "none",
+   "junction": false,
+   "grain_draft": "derived (a view): see what it reads",
+   "reads": [
+    "events_*"
+   ],
+   "joins": [],
+   "fk_columns": []
+  },
+  {
+   "name": "v_user_revenue",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT u.user_id, u.country, SUM(p.amount) AS revenue\nFROM `acme.analytics.users` AS u\nLEFT JOIN `acme.analytics.purchases` AS p ON p.user_id = u.user_id\nGROUP BY u.user_id, u.country",
+   "pk_source": "none",
+   "junction": false,
+   "grain_draft": "derived (a view): see what it reads",
+   "reads": [
+    "users",
+    "purchases"
+   ],
+   "joins": [
+    [
+     "purchases.user_id",
+     "users.user_id"
+    ]
+   ],
+   "fk_columns": []
+  },
+  {
+   "name": "v_country_revenue",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT r.country, SUM(r.revenue) AS revenue, COUNT(*) AS users\nFROM `acme.analytics.v_user_revenue` r\nGROUP BY r.country",
+   "pk_source": "none",
+   "junction": false,
+   "grain_draft": "derived (a view): see what it reads",
+   "reads": [
+    "v_user_revenue"
+   ],
+   "joins": [],
+   "fk_columns": []
+  }
+ ],
+ "relationships": [
+  {
+   "from": "events_*",
+   "from_columns": [
+    "item_id"
+   ],
+   "to": "items",
+   "to_columns": [
+    "item_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R1",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "events_*.item_id = items.item_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.item_id) AS matched FROM events_* c LEFT JOIN items p ON c.item_id = p.item_id WHERE c.item_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  },
+  {
+   "from": "events_*",
+   "from_columns": [
+    "session_id"
+   ],
+   "to": "sessions",
+   "to_columns": [
+    "session_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R2",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "events_*.session_id = sessions.session_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.session_id) AS matched FROM events_* c LEFT JOIN sessions p ON c.session_id = p.session_id WHERE c.session_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  },
+  {
+   "from": "events_*",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R3",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "events_*.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM events_* c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  },
+  {
+   "from": "purchases",
+   "from_columns": [
+    "item_id"
+   ],
+   "to": "items",
+   "to_columns": [
+    "item_id"
+   ],
+   "source": "declared",
+   "id": "R4",
+   "role": null,
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "purchases.item_id = items.item_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.item_id) AS matched FROM purchases c LEFT JOIN items p ON c.item_id = p.item_id WHERE c.item_id IS NOT NULL",
+   "match": null,
+   "confidence": "declared",
+   "label": "declared"
+  },
+  {
+   "from": "purchases",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R5",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "purchases.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM purchases c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  },
+  {
+   "from": "sessions",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R6",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "sessions.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM sessions c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  },
+  {
+   "from": "user_campaigns",
+   "from_columns": [
+    "campaign_id"
+   ],
+   "to": "campaigns",
+   "to_columns": [
+    "campaign_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R7",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": "STRING vs INT64",
+   "join": "SAFE_CAST(user_campaigns.campaign_id AS INT64) = campaigns.campaign_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.campaign_id) AS matched FROM user_campaigns c LEFT JOIN campaigns p ON c.campaign_id = p.campaign_id WHERE c.campaign_id IS NOT NULL",
+   "match": null,
+   "confidence": "guess",
+   "label": "guess"
+  },
+  {
+   "from": "user_campaigns",
+   "from_columns": [
+    "user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": null,
+   "id": "R8",
+   "self": false,
+   "cardinality": "N:1",
+   "optional": false,
+   "type_mismatch": null,
+   "join": "user_campaigns.user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM user_campaigns c LEFT JOIN users p ON c.user_id = p.user_id WHERE c.user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  },
+  {
+   "from": "users",
+   "from_columns": [
+    "referrer_user_id"
+   ],
+   "to": "users",
+   "to_columns": [
+    "user_id"
+   ],
+   "source": "inferred",
+   "role": "referrer",
+   "id": "R9",
+   "self": true,
+   "cardinality": "N:1",
+   "optional": true,
+   "type_mismatch": null,
+   "join": "users.referrer_user_id = users.user_id",
+   "verify_sql": "SELECT COUNT(*) AS total, COUNT(p.user_id) AS matched FROM users c LEFT JOIN users p ON c.referrer_user_id = p.user_id WHERE c.referrer_user_id IS NOT NULL",
+   "match": null,
+   "confidence": "inferred",
+   "label": "inferred"
+  }
+ ],
+ "many_to_many": [
+  {
+   "via": "user_campaigns",
+   "between": [
+    "campaigns",
+    "users"
+   ],
+   "relationships": [
+    "R7",
+    "R8"
+   ]
+  }
+ ],
+ "lineage": [
+  {
+   "view": "v_daily_active",
+   "reads": [
+    "events_*"
+   ],
+   "joins": []
+  },
+  {
+   "view": "v_user_revenue",
+   "reads": [
+    "users",
+    "purchases"
+   ],
+   "joins": [
+    [
+     "purchases.user_id",
+     "users.user_id"
+    ]
+   ]
+  },
+  {
+   "view": "v_country_revenue",
+   "reads": [
+    "v_user_revenue"
+   ],
+   "joins": []
+  }
+ ],
+ "findings": [
+  {
+   "kind": "INFERRED-PK",
+   "where": "users",
+   "detail": "no declared key; user_id looks like it"
+  },
+  {
+   "kind": "INFERRED-PK",
+   "where": "sessions",
+   "detail": "no declared key; session_id looks like it"
+  },
+  {
+   "kind": "INFERRED-PK",
+   "where": "events_*",
+   "detail": "no declared key; event_id looks like it"
+  },
+  {
+   "kind": "INFERRED-PK",
+   "where": "campaigns",
+   "detail": "no declared key; campaign_id looks like it"
+  },
+  {
+   "kind": "NO-PK",
+   "where": "user_campaigns",
+   "detail": "no declared or obvious key, so rows can't be told apart"
+  },
+  {
+   "kind": "TYPE-MISMATCH",
+   "where": "user_campaigns.campaign_id",
+   "detail": "STRING here, INT64 in campaigns.campaign_id; the join needs a CAST and may silently match nothing"
+  },
+  {
+   "kind": "UNDECLARED-FK",
+   "where": "8 links",
+   "detail": "work only by naming convention; declare them (BigQuery: NOT ENFORCED) so tools and people can trust them"
+  }
+ ]
+}

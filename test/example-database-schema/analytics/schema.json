@@ -1,0 +1,288 @@
+{
+ "source": {
+  "engine": "bigquery",
+  "name": "analytics.sql"
+ },
+ "tables": [
+  {
+   "name": "users",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "signup_date",
+     "type": "DATE",
+     "nullable": true
+    },
+    {
+     "name": "country",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "referrer_user_id",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null
+  },
+  {
+   "name": "sessions",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "session_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "started_at",
+     "type": "TIMESTAMP",
+     "nullable": true
+    },
+    {
+     "name": "device",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null
+  },
+  {
+   "name": "events_*",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "event_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "session_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "event_name",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "event_ts",
+     "type": "TIMESTAMP",
+     "nullable": true
+    },
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null,
+   "shards": {
+    "count": 3,
+    "first": "20261101",
+    "last": "20261103"
+   }
+  },
+  {
+   "name": "items",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "item_name",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "category",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "item_id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "item_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "purchases",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "purchase_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "item_id",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "amount",
+     "type": "NUMERIC",
+     "nullable": true
+    },
+    {
+     "name": "currency",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "purchased_at",
+     "type": "TIMESTAMP",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "purchase_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "item_id"
+     ],
+     "ref_table": "items",
+     "ref_columns": [
+      "item_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "purchase_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "campaigns",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "campaign_id",
+     "type": "INT64",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "STRING",
+     "nullable": true
+    },
+    {
+     "name": "channel",
+     "type": "STRING",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null
+  },
+  {
+   "name": "user_campaigns",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "user_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "campaign_id",
+     "type": "STRING",
+     "nullable": false
+    },
+    {
+     "name": "first_touch_ts",
+     "type": "TIMESTAMP",
+     "nullable": true
+    }
+   ],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": null
+  },
+  {
+   "name": "v_daily_active",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT DATE(event_ts) AS day, COUNT(DISTINCT user_id) AS dau\nFROM `acme.analytics.events_*`\nGROUP BY day"
+  },
+  {
+   "name": "v_user_revenue",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT u.user_id, u.country, SUM(p.amount) AS revenue\nFROM `acme.analytics.users` AS u\nLEFT JOIN `acme.analytics.purchases` AS p ON p.user_id = u.user_id\nGROUP BY u.user_id, u.country"
+  },
+  {
+   "name": "v_country_revenue",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT r.country, SUM(r.revenue) AS revenue, COUNT(*) AS users\nFROM `acme.analytics.v_user_revenue` r\nGROUP BY r.country"
+  }
+ ],
+ "indexes_known": false
+}

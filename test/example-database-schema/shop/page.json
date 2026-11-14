@@ -1,0 +1,246 @@
+{
+ "title": "Shop database",
+ "summary": "A small online shop: customers with saved addresses buy products from a tagged, nested category catalog, and each order carries its line items, a payment, and the shipments staff send out. Every one of the 14 connections is a declared foreign key; one table, audit_log, sits apart and refers to other rows only by name and id.",
+ "domains": [
+  {
+   "name": "Customers",
+   "about": "Who buys, and where they want things billed and delivered.",
+   "tables": [
+    "customers",
+    "addresses"
+   ]
+  },
+  {
+   "name": "Catalog",
+   "about": "What is for sale, how it is grouped into a category tree, and how it is tagged.",
+   "tables": [
+    "categories",
+    "products",
+    "tags",
+    "product_tags"
+   ]
+  },
+  {
+   "name": "Orders",
+   "about": "What each customer bought, at what price, and how they paid.",
+   "tables": [
+    "orders",
+    "order_items",
+    "payments"
+   ]
+  },
+  {
+   "name": "Fulfilment",
+   "about": "Shipping orders out and the staff (with their reporting line) who handle it.",
+   "tables": [
+    "shipments",
+    "employees"
+   ]
+  },
+  {
+   "name": "Audit",
+   "about": "A change history that refers to rows in other tables by name, not by key.",
+   "tables": [
+    "audit_log"
+   ]
+  }
+ ],
+ "tables": {
+  "customers": {
+   "what": "A person with a shop account.",
+   "grain": "One row per customer (customer_id).",
+   "columns": {
+    "email": "Unique across customers: a second natural key.",
+    "created_at": "Date the account was created (ISO text)."
+   }
+  },
+  "addresses": {
+   "what": "A postal address saved by a customer; one customer can save several.",
+   "grain": "One row per address (address_id).",
+   "columns": {
+    "customer_id": "Owner of the address; required.",
+    "country": "Two-letter country code, e.g. US, IN."
+   }
+  },
+  "categories": {
+   "what": "A product category; categories nest inside a parent category to form a tree.",
+   "grain": "One row per category (category_id).",
+   "columns": {
+    "parent_category_id": "The enclosing category; empty for a top-level category such as Kitchen."
+   }
+  },
+  "products": {
+   "what": "An item the shop sells, with its current list price.",
+   "grain": "One row per product (product_id).",
+   "columns": {
+    "sku": "Unique stock code: a second natural key.",
+    "category_id": "The one category the product is filed under (can be a leaf or a parent).",
+    "price_cents": "Current list price in cents. Order lines keep their own copy of the price paid."
+   }
+  },
+  "tags": {
+   "what": "A free-form label such as gift or bestseller.",
+   "grain": "One row per tag (tag_id).",
+   "columns": {
+    "label": "Unique tag text."
+   }
+  },
+  "product_tags": {
+   "what": "A junction row saying one product carries one tag.",
+   "grain": "One row per product + tag combination.",
+   "columns": {
+    "product_id": "Part of the key and a foreign key to products.",
+    "tag_id": "Part of the key and a foreign key to tags."
+   }
+  },
+  "orders": {
+   "what": "One checkout by a customer, with where to bill and where to ship.",
+   "grain": "One row per order (order_id).",
+   "columns": {
+    "customer_id": "Who placed the order; required.",
+    "billing_address_id": "Optional: empty when no separate billing address was given.",
+    "shipping_address_id": "Required delivery address.",
+    "status": "Observed values: paid, shipped.",
+    "placed_at": "Order date (ISO text)."
+   }
+  },
+  "order_items": {
+   "what": "One line on an order: a product, how many, and the unit price charged.",
+   "grain": "One row per order + line_no combination.",
+   "columns": {
+    "order_id": "Part of the key and a foreign key to orders.",
+    "line_no": "Line position within the order (1, 2, ...); only unique inside one order.",
+    "unit_price_cents": "Price per unit at the time of purchase, which can differ from today's products.price_cents."
+   }
+  },
+  "payments": {
+   "what": "The payment taken for an order. order_id is both its primary key and its foreign key, so an order has at most one payment.",
+   "grain": "One row per order (order_id).",
+   "columns": {
+    "order_id": "Primary key and foreign key to orders at the same time.",
+    "amount_cents": "Amount paid in cents; in the current data it equals the order total from v_order_totals.",
+    "method": "Observed values: card, upi."
+   }
+  },
+  "employees": {
+   "what": "A staff member; each can report to a manager who is also an employee.",
+   "grain": "One row per employee (employee_id).",
+   "columns": {
+    "manager_id": "The employee this person reports to; empty for the top of the hierarchy."
+   }
+  },
+  "shipments": {
+   "what": "A parcel sent for an order by a carrier, optionally recorded against the employee who handled it. An order can be split over several shipments.",
+   "grain": "One row per shipment (shipment_id).",
+   "columns": {
+    "order_id": "The order this parcel belongs to; required.",
+    "handled_by": "Employee who handled it; optional.",
+    "shipped_at": "Empty until the parcel actually leaves."
+   }
+  },
+  "audit_log": {
+   "what": "A record of an action (create, update, ...) performed on some row elsewhere in the database.",
+   "grain": "One row per logged event (id).",
+   "columns": {
+    "entity": "Name of the table the event is about, e.g. orders or products.",
+    "entity_id": "Key of that row in the table named by entity. Not a foreign key: its target changes row by row.",
+    "at": "When it happened (ISO text)."
+   }
+  },
+  "v_order_totals": {
+   "what": "Each order's value, summed from its lines (quantity times unit price). Reads orders joined to order_items.",
+   "columns": {
+    "total_cents": "SUM(quantity * unit_price_cents) over the order's lines."
+   }
+  },
+  "v_customer_ltv": {
+   "what": "Each customer's lifetime spend: customers LEFT JOINed to v_order_totals on customer_id, so customers with no orders still appear with 0.",
+   "columns": {
+    "lifetime_cents": "COALESCE(SUM(total_cents), 0)."
+   }
+  }
+ },
+ "relationships": {
+  "R1": "Each address belongs to exactly one customer; a customer can have many addresses, or none.",
+  "R2": "Each category sits under at most one parent category (none for a top-level category); a category can have many child categories, or none.",
+  "R3": "Each employee reports to at most one manager, who is another employee (none for the top of the hierarchy); a manager can have many direct reports, or none.",
+  "R4": "Each order line belongs to exactly one order; an order can have many lines, or none.",
+  "R5": "Each order line is for exactly one product; a product can appear on many order lines, or none.",
+  "R6": "Each order is billed to at most one address (billing is optional); an address can be the billing address of many orders, or none.",
+  "R7": "Every order was placed by exactly one customer; a customer can have many orders, or none.",
+  "R8": "Each order ships to exactly one address (required); an address can be the shipping address of many orders, or none.",
+  "R9": "Each payment is for exactly one order; because payments.order_id is also its primary key, an order has at most one payment, or none yet.",
+  "R10": "Each product-tag row names exactly one product; a product can carry many tags, or none.",
+  "R11": "Each product-tag row names exactly one tag; a tag can be on many products, or none.",
+  "R12": "Each product is filed under exactly one category; a category can hold many products, or none.",
+  "R13": "Each shipment was handled by at most one employee (optional); an employee can handle many shipments, or none.",
+  "R14": "Each shipment belongs to exactly one order; an order can have many shipments (split delivery), or none yet."
+ },
+ "views": {
+  "v_order_totals": {
+   "answers": "What was each order worth, based on its lines?"
+  },
+  "v_customer_ltv": {
+   "answers": "How much has each customer spent in total, including customers who never ordered?"
+  }
+ },
+ "joinPaths": [
+  {
+   "question": "Where was each order shipped, and who placed it?",
+   "path": [
+    "customers",
+    "orders",
+    "addresses"
+   ],
+   "rels": [
+    "R7",
+    "R8"
+   ]
+  },
+  {
+   "question": "Which products (and categories) did a customer buy?",
+   "path": [
+    "customers",
+    "orders",
+    "order_items",
+    "products",
+    "categories"
+   ]
+  },
+  {
+   "question": "Which tags do the products on an order carry?",
+   "path": [
+    "orders",
+    "order_items",
+    "products",
+    "product_tags",
+    "tags"
+   ]
+  },
+  {
+   "question": "Which employee handled each order's shipments? (Join employees again on manager_id to find their manager.)",
+   "path": [
+    "orders",
+    "shipments",
+    "employees"
+   ]
+  },
+  {
+   "question": "Does each payment match the order's line total?",
+   "path": [
+    "payments",
+    "orders",
+    "order_items"
+   ]
+  }
+ ],
+ "notes": [
+  "orders reaches addresses two ways: billing_address_id (R6, optional) and shipping_address_id (R8, required). Always name which one you join on; joining on both at once returns only orders billed and shipped to the same address.",
+  "Nothing in the schema forces an order's billing or shipping address to belong to the same customer who placed it: R6 and R8 point at addresses, and R1 points from addresses to customers, but no constraint ties the two routes together.",
+  "Two tables point at themselves to form a hierarchy: categories (R2) and employees (R3). Walking a full tree needs a recursive query (WITH RECURSIVE), not a single join.",
+  "products and tags are many-to-many through product_tags, whose composite key (product_id, tag_id) stops the same tag being attached twice.",
+  "SQLite enforces these foreign keys only when PRAGMA foreign_keys = ON is set per connection; it was off when this file was read. PRAGMA foreign_key_check currently reports no broken links.",
+  "audit_log.entity_id is polymorphic: to join it, filter on entity first (e.g. WHERE entity = 'orders' then join orders ON order_id = entity_id). Observed entity values: orders, products.",
+  "v_customer_ltv is built on v_order_totals, so it depends on orders, order_items and customers. It counts every order regardless of status or payment."
+ ]
+}

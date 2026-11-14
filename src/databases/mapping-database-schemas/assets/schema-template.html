@@ -1,0 +1,333 @@
+<title>{{TITLE}}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Apple product-page rhythm on a white page only: 980px reading grid, #f5f5f7 tiles, words not diagrams. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --tile: #f5f5f7; --tile2: #fbfbfd;
+  --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7; --line2: #e8e8ed;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800; --green: #1d7d3a;
+  --glass: rgba(255, 255, 255, .72);
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em;
+  -webkit-font-smoothing: antialiased; }
+h1, h2, h3, h4, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono { font-family: var(--mono); font-size: .86em; letter-spacing: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(64px, 9vw, 120px); padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(26px, 4vw, 44px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; color: var(--flame); }
+.h2 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.sub { font-size: clamp(19px, 2vw, 23px); line-height: 1.35; font-weight: 500; color: var(--fg2); max-width: 46ch; }
+.head { display: grid; gap: 14px; }
+
+/* Nav */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 20px; font-size: 12px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+@media (max-width: 760px) { .nav-links { display: none; } }
+
+/* Hero */
+.hero { text-align: center; padding-block: clamp(56px, 9vw, 112px) clamp(48px, 7vw, 84px); }
+.hero .inner { justify-items: center; gap: 20px; }
+.hero h1 { font-size: clamp(46px, 8.6vw, 92px); line-height: 1.03; font-weight: 700; letter-spacing: -.045em; max-width: 14ch; overflow-wrap: anywhere; }
+.hero .lede { font-size: clamp(20px, 2.4vw, 27px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; max-width: 34ch; color: var(--fg); }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px clamp(26px, 5.5vw, 64px); margin-top: clamp(20px, 3vw, 36px);
+  padding-top: clamp(22px, 3.5vw, 36px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: clamp(34px, 4.6vw, 52px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat span { font-size: 14px; color: var(--fg2); }
+.meta { font-size: 14px; color: var(--fg3); }
+
+/* Shared bits */
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 980px; padding: 3px 11px; font-size: 13px;
+  background: var(--bg); border: 1px solid var(--line2); color: var(--fg); cursor: pointer; white-space: nowrap; }
+.chip:hover { border-color: var(--fg3); text-decoration: none; }
+.badge { display: inline-block; border-radius: 980px; padding: 2px 9px; font-size: 12px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.b-declared { background: var(--fg); color: #fff; }
+.b-inferred { background: #e8f2fe; color: #0058b0; }
+.b-guess { background: #fdf0e8; color: var(--flame); }
+.b-soft { background: var(--tile); color: var(--fg2); font-weight: 500; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile); max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 15px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search { flex: 1 1 260px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 11px 16px; background: var(--bg); font-size: 16px; }
+.search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+pre.sql { margin: 0; background: var(--tile2); border: 1px solid var(--line2); border-radius: 14px; padding: 14px 16px; overflow-x: auto;
+  font: 13.5px/1.55 var(--mono); letter-spacing: 0; color: var(--fg); white-space: pre; }
+.copy { border: 1px solid var(--line); background: var(--bg); color: var(--fg2); border-radius: 980px; padding: 4px 12px; font-size: 13px; cursor: pointer; justify-self: start; }
+.copy:hover { color: var(--fg); border-color: var(--fg3); }
+
+/* Areas */
+.areas { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 18px; }
+.area { background: var(--tile); border-radius: var(--r-lg); padding: clamp(24px, 3vw, 34px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.area h3 { font-size: clamp(22px, 2.2vw, 27px); font-weight: 700; letter-spacing: -.028em; line-height: 1.15; }
+.area p { color: var(--fg2); }
+.area .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Table cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.card { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 80px; }
+.card.flash { box-shadow: 0 0 0 3px var(--accent); }
+.card .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.card h3 { font: 600 clamp(21px, 2vw, 24px)/1.2 var(--mono); letter-spacing: -.02em; overflow-wrap: anywhere; margin-right: auto; }
+.card .what { font-size: 17px; }
+.grain { font-size: 15px; color: var(--fg2); }
+.grain b { color: var(--fg); font-weight: 600; }
+.kv { display: grid; gap: 8px; font-size: 15px; }
+.kv .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--fg3); }
+.links { display: grid; gap: 6px; }
+.link { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 14px; }
+.link .arrow { color: var(--fg3); }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-size: 14px; color: var(--link); list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " \203A"; }
+details[open] summary::after { content: " \2039"; }
+.cols { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+.cols td { padding: 7px 8px 7px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+.cols td:first-child { font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+.cols .ty { color: var(--fg3); font-family: var(--mono); font-size: 12px; white-space: nowrap; }
+.cols .nt { color: var(--fg2); }
+.empty { color: var(--fg3); font-size: 15px; }
+
+/* Connections */
+.conns { display: grid; gap: 14px; }
+.conn { background: var(--tile); border-radius: var(--r-md); padding: 20px 24px; display: grid; gap: 10px; min-width: 0; }
+.conn .say { font-size: clamp(18px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.02em; line-height: 1.32; }
+.conn .tech { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font-size: 14px; color: var(--fg2); }
+.conn .tech code { color: var(--fg); overflow-wrap: anywhere; }
+.m2m { display: grid; gap: 10px; }
+.m2m div { font-size: 17px; }
+
+/* Views and paths */
+.vlist, .plist { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.vcard, .pcard { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; }
+.vcard h3 { font: 600 21px/1.2 var(--mono); overflow-wrap: anywhere; }
+.chain { font-size: 15px; color: var(--fg2); }
+.chain code { color: var(--fg); }
+.pcard h3 { font-size: clamp(20px, 2vw, 24px); font-weight: 700; letter-spacing: -.025em; line-height: 1.2; }
+.steps { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.steps .sep { color: var(--fg3); font-size: 14px; }
+
+/* Findings */
+.finds { display: grid; gap: 0; border-top: 1px solid var(--line); }
+.find { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr); gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .find { grid-template-columns: minmax(0, 1fr); } }
+.find .k { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--flame); padding-top: 3px; }
+.find .w { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.find .d { color: var(--fg2); font-size: 15px; }
+footer { padding: 40px 16px 64px; text-align: center; font-size: 13px; color: var(--fg3); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<nav class="nav"><div class="nav-in">
+  <div class="nav-title" id="navTitle"></div>
+  <div class="nav-links">
+    <a href="#areas">Areas</a><a href="#tables">Tables</a><a href="#connections">Connections</a>
+    <a href="#views">Views</a><a href="#paths">Join paths</a><a href="#findings">Findings</a>
+  </div>
+</div></nav>
+
+<header class="band hero"><div class="inner">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p class="lede" id="summary"></p>
+  <div class="stats" id="stats"></div>
+  <p class="meta">The diagram lives in the matching .excalidraw file. This page explains it in words.</p>
+</div></header>
+
+<section class="band" id="areas"><div class="inner">
+  <div class="head"><div class="eyebrow">The big picture</div><h2 class="h2">Areas. <span class="quiet">What lives where.</span></h2></div>
+  <div class="areas" id="areaList"></div>
+</div></section>
+
+<section class="band" id="tables"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every table</div><h2 class="h2">Tables. <span class="quiet">What one row means, and what it points to.</span></h2></div>
+  <div class="tools">
+    <input class="search" id="q" type="search" placeholder="Search tables and columns" aria-label="Search tables and columns">
+    <div class="seg" id="areaFilter" role="group" aria-label="Filter by area"></div>
+  </div>
+  <div class="cards" id="cards"></div>
+</div></section>
+
+<section class="band" id="connections"><div class="inner">
+  <div class="head"><div class="eyebrow">Every key, in words</div><h2 class="h2">Connections. <span class="quiet">Read both directions.</span></h2>
+    <p class="sub">Each foreign key below says how the two tables relate, how sure we are, and the exact join.</p></div>
+  <div class="seg" id="labelFilter" role="group" aria-label="Filter by certainty"></div>
+  <div class="conns" id="connList"></div>
+  <div class="m2m" id="m2m"></div>
+</div></section>
+
+<section class="band" id="views"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Saved queries</div><h2 class="h2">Views. <span class="quiet">What each one answers, and what it is built from.</span></h2></div>
+  <div class="vlist" id="viewList"></div>
+</div></section>
+
+<section class="band" id="paths"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Ready to use</div><h2 class="h2">Join paths. <span class="quiet">Common questions, the route, the SQL.</span></h2></div>
+  <div class="plist" id="pathList"></div>
+</div></section>
+
+<section class="band" id="findings"><div class="inner">
+  <div class="head"><div class="eyebrow">Worth fixing</div><h2 class="h2">Findings.</h2></div>
+  <div class="finds" id="findList"></div>
+</div></section>
+
+<footer id="foot"></footer>
+
+<script id="schema-data" type="application/json">{{SCHEMA_JSON}}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("schema-data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const rel = Object.fromEntries(D.relationships.map((r) => [r.id, r]));
+  const tbl = Object.fromEntries(D.tables.map((t) => [t.name, t]));
+  const badge = (r) => `<span class="badge b-${r.confidence}">${esc(r.label)}</span>`;
+  const card = (r) => r.cardinality === "1:1" ? "one-to-one" : "many-to-one";
+  const chip = (name) => `<a class="chip mono" href="#t-${encodeURIComponent(name)}" data-go="${esc(name)}">${esc(name)}</a>`;
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+                  set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+
+  $("navTitle").textContent = D.title;
+  $("title").textContent = D.title;
+  $("summary").textContent = D.summary;
+  $("eyebrow").textContent = `${D.source.engine} · ${D.source.name}`;
+  const s = D.stats;
+  $("stats").innerHTML = [[s.tables, "tables"], [s.views, "views"], [s.links, "connections"],
+    [s.declared, "declared in the database"], [s.inferred + s.guess, "inferred from names"]]
+    .map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  $("areaList").innerHTML = D.domains.map((d) => `<div class="area"><h3>${esc(d.name)}</h3><p>${esc(d.about)}</p>
+    <div class="chips">${d.tables.map(chip).join("")}</div></div>`).join("");
+
+  const linkLine = (r, dir) => {
+    const other = dir === "out" ? r.to : r.from;
+    const cols = dir === "out" ? r.from_columns.join(", ") : r.from_columns.map((c) => `${r.from}.${c}`).join(", ");
+    return `<div class="link"><span class="arrow">${dir === "out" ? "→" : "←"}</span>${chip(other)}
+      <span>via <code>${esc(cols)}</code></span><span class="badge b-soft">${card(r)}${r.optional ? ", optional" : ""}</span>${badge(r)}</div>`;
+  };
+  const cardHtml = (t) => {
+    const view = t.kind !== "table";
+    const tags = [view ? `<span class="badge b-soft">${esc(t.kind)}</span>` : "",
+      t.junction ? `<span class="badge b-soft">link table</span>` : "",
+      t.shards ? `<span class="badge b-soft">${t.shards.count} daily shards, ${esc(t.shards.first)} to ${esc(t.shards.last)}</span>` : "",
+      `<span class="badge b-soft">${esc(t.domain)}</span>`].join("");
+    const key = t.pk.length ? `<code>${esc(t.pk.join(" + "))}</code> <span class="badge ${t.pkSource === "declared" ? "b-declared" : "b-inferred"}">${t.pkSource === "declared" ? "declared" : "inferred"}</span>` : `<span class="badge b-guess">no key</span>`;
+    const outs = t.out.map((id) => linkLine(rel[id], "out")).join("") || `<div class="empty">Points to nothing.</div>`;
+    const ins = t.in.map((id) => linkLine(rel[id], "in")).join("") || `<div class="empty">Nothing points here.</div>`;
+    const cols = t.columns.map((c) => `<tr><td>${esc(c.name)}</td><td class="ty">${esc(c.type)}${c.nullable ? "" : " · not null"}</td>
+      <td>${c.pk ? '<span class="badge b-declared">PK</span> ' : ""}${c.fk ? '<span class="badge b-soft">FK</span>' : ""}</td><td class="nt">${esc(c.note)}</td></tr>`).join("");
+    return `<article class="card" id="t-${encodeURIComponent(t.name)}" data-name="${esc(t.name)}" data-domain="${esc(t.domain)}"
+      data-text="${esc((t.name + " " + t.columns.map((c) => c.name).join(" ") + " " + t.what).toLowerCase())}">
+      <div class="top"><h3>${esc(t.name)}</h3>${tags}</div>
+      <p class="what">${esc(t.what)}</p>
+      ${view ? `<p class="grain"><b>Answers:</b> ${esc(t.answers)}</p>` : `<p class="grain"><b>Grain:</b> ${esc(t.grain)}</p>`}
+      ${view ? `<div class="kv"><span class="lbl">Built from</span><div class="steps">${t.reads.map(chip).join("")}</div></div>` :
+      `<div class="kv"><span class="lbl">Key</span><div>${key}</div></div>
+      <div class="kv"><span class="lbl">Points to</span><div class="links">${outs}</div></div>
+      <div class="kv"><span class="lbl">Referenced by</span><div class="links">${ins}</div></div>`}
+      ${t.columns.length ? `<details><summary>All ${t.columns.length} columns</summary><table class="cols">${cols}</table></details>` : ""}
+    </article>`;
+  };
+  $("cards").innerHTML = D.tables.map(cardHtml).join("");
+
+  const areas = ["All", ...D.domains.map((d) => d.name), ...(s.views ? ["Views"] : [])];
+  let area = store.get("schema-area") || "All";
+  if (!areas.includes(area)) area = "All";
+  $("areaFilter").innerHTML = areas.map((a) => `<button type="button" data-a="${esc(a)}">${esc(a)}</button>`).join("");
+  const applyTables = () => {
+    const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll(".card").forEach((c) => {
+      c.hidden = !((area === "All" || c.dataset.domain === area) && (!q || c.dataset.text.includes(q)));
+    });
+    $("areaFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.a === area)));
+  };
+  $("areaFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return;
+    area = b.dataset.a; store.set("schema-area", area); applyTables(); });
+  $("q").addEventListener("input", applyTables);
+  applyTables();
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("[data-go]"); if (!a) return;
+    e.preventDefault();
+    area = "All"; $("q").value = ""; applyTables();
+    const el = $("t-" + encodeURIComponent(a.dataset.go)); if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400);
+  });
+
+  let lab = "All";
+  const labs = ["All", "declared", "inferred", "guess"].filter((l) => l === "All" || D.relationships.some((r) => r.confidence === l));
+  $("labelFilter").innerHTML = labs.map((l) => `<button type="button" data-l="${l}">${l === "All" ? "All" : l[0].toUpperCase() + l.slice(1)}</button>`).join("");
+  const conns = () => {
+    $("connList").innerHTML = D.relationships.filter((r) => lab === "All" || r.confidence === lab).map((r) => `<div class="conn">
+      <p class="say">${esc(r.sentence)}</p>
+      <div class="tech"><code>${esc(r.from)}.${esc(r.from_columns.join(", "))} → ${esc(r.to)}.${esc(r.to_columns.join(", "))}</code>
+        ${badge(r)}<span class="badge b-soft">${card(r)}</span><span class="badge b-soft">${r.optional ? "optional" : "required"}</span>
+        ${r.role ? `<span class="badge b-soft">role: ${esc(r.role)}</span>` : ""}${r.self ? '<span class="badge b-soft">points to its own table</span>' : ""}
+        ${r.type_mismatch ? `<span class="badge b-guess">type mismatch: ${esc(r.type_mismatch)}</span>` : ""}</div>
+      <code class="mono" style="color:var(--fg2)">ON ${esc(r.join)}</code></div>`).join("");
+    $("labelFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.l === lab)));
+  };
+  $("labelFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) { lab = b.dataset.l; conns(); } });
+  conns();
+  $("m2m").innerHTML = D.manyToMany.length ? `<div class="kv"><span class="lbl">Many-to-many, through a link table</span></div>` +
+    D.manyToMany.map((m) => `<div>${chip(m.between[0])} ↔ ${chip(m.between[1])} through ${chip(m.via)}</div>`).join("") : "";
+
+  const chainOf = (name, seen = new Set()) => {
+    const t = tbl[name]; if (!t || t.kind === "table" || seen.has(name)) return esc(name);
+    seen.add(name);
+    return `${esc(name)} ← (${t.reads.map((r) => chainOf(r, seen)).join(", ")})`;
+  };
+  const views = D.tables.filter((t) => t.kind !== "table");
+  $("viewList").innerHTML = views.map((v) => `<div class="vcard"><div class="top" style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline">
+      <h3>${esc(v.name)}</h3><span class="badge b-soft">${esc(v.kind)}</span></div>
+      <p class="what">${esc(v.answers)}</p>
+      <div class="kv"><span class="lbl">Built from</span><div class="steps">${v.reads.map(chip).join("")}</div></div>
+      ${v.joins.length ? `<div class="kv"><span class="lbl">Joined on</span>${v.joins.map((j) => `<code>${esc(j[0])} = ${esc(j[1])}</code>`).join("<br>")}</div>` : ""}
+      <p class="chain"><b>Lineage:</b> <code>${chainOf(v.name)}</code></p></div>`).join("") || `<p class="empty">No views in this schema.</p>`;
+
+  $("pathList").innerHTML = D.joinPaths.map((p, i) => `<div class="pcard"><h3>${esc(p.question)}</h3>
+      <div class="steps">${p.path.map((n, k) => (k ? `<span class="sep">→</span>` : "") + chip(n)).join("")}</div>
+      <div class="steps">${p.hops.map((h) => `<span class="badge b-${rel[h.rel].confidence}">${esc(h.rel)} · ${esc(h.label)}</span>`).join("")}</div>
+      <pre class="sql" id="sql${i}">${esc(p.sql)}</pre><button class="copy" type="button" data-copy="sql${i}">Copy SQL</button></div>`).join("");
+  document.addEventListener("click", async (e) => {
+    const b = e.target.closest("[data-copy]"); if (!b) return;
+    try { await navigator.clipboard.writeText($(b.dataset.copy).textContent); b.textContent = "Copied"; }
+    catch { b.textContent = "Select and copy"; }
+    setTimeout(() => (b.textContent = "Copy SQL"), 1400);
+  });
+
+  const finds = D.findings.map((f) => `<div class="find"><div class="k">${esc(f.kind)}</div><div><div class="w">${esc(f.where)}</div><div class="d">${esc(f.detail)}</div></div></div>`);
+  const notes = D.notes.map((n) => `<div class="find"><div class="k">NOTE</div><div><div class="d">${esc(n)}</div></div></div>`);
+  $("findList").innerHTML = [...finds, ...notes].join("") || `<p class="empty">Nothing to fix.</p>`;
+  $("foot").textContent = `${D.title} · ${D.source.engine} · ${s.tables} tables, ${s.views} views, ${s.links} connections`;
+})();
+</script>

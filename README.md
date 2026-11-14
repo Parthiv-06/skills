@@ -11,6 +11,8 @@ Agent skills for [Claude Code](https://claude.com/claude-code).
 | [compressing-agent-prompts](src/agents/compressing-agent-prompts/SKILL.md) | Reviewing an agent's system prompt (subagent, SKILL.md, CLAUDE.md, tool description): scores how much of it is needed, flags duplicates, filler, conflicts, and vague rules, and compresses it without changing what the agent does, checked by a static gate and a behavioral test. |
 | [auditing-agent-token-usage](src/agents/auditing-agent-token-usage/SKILL.md) | Finding out why an LLM agent uses far more tokens than its task needs. Predicts the cost from the code, measures real usage through a logging proxy, explains every gap as an issue with file:line evidence and a fix, and shows it all on an Apple-style report page. |
 | [researching-existing-solutions](src/engineering/researching-existing-solutions/SKILL.md) | Before writing Python code or adding a dependency: finds existing open-source packages, pulls live health, license, and vulnerability data, tests the top pick in a throwaway environment, and recommends one. |
+| [packaging-code](src/engineering/packaging-code/SKILL.md) | Python code that keeps growing by copy-paste. While a feature is being built, it says what should be shared or which declared package to use, before another copy gets written. On request, it reviews the repo for code worth extracting into a package and for packages that are misused, unused, or carry nothing. |
+| [mapping-database-schemas](src/databases/mapping-database-schemas/SKILL.md) | Understanding a database or dataset (BigQuery, Postgres, SQLite, SQL DDL): maps every primary and foreign key, labels each link declared, inferred, or guess, and traces what each view is built from. Produces two files: an Apple-style page that explains everything in words, and a precise Excalidraw diagram drawn from the exact key columns. |
 | [writing-two-line-comments](src/engineering/writing-two-line-comments/SKILL.md) | Any time code is written or edited, in any language: every comment is at most 2 lines (what it is for, then what to watch), every file gets a header, and a checker plus an optional hook enforce it. |
 
 ## Install
@@ -25,7 +27,9 @@ ln -s "$(pwd)/skills/src/general/demoing-features" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/agents/compressing-agent-prompts" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/agents/auditing-agent-token-usage" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/engineering/researching-existing-solutions" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/engineering/packaging-code" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/engineering/writing-two-line-comments" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/databases/mapping-database-schemas" ~/.claude/skills/
 ```
 
 Claude Code picks up the skills in new sessions and uses them automatically. Try:
@@ -35,7 +39,9 @@ Claude Code picks up the skills in new sessions and uses them automatically. Try
 - "How good is the prompt in `.claude/agents/reviewer.md`? Compress it without changing what it does"
 - "Our support agent costs way too much per ticket. Find out where the tokens go"
 - "I need to generate PDF invoices in Python. Research what open-source packages I can use"
-- Any coding task: the comment rule applies on its own
+- "This codebase is getting too big. What could be made into packages, and are we using any packages wrongly?"
+- "Map our BigQuery dataset `acme.analytics`: how does everything connect?" or "Explain the schema in `shop.db`"
+- Any coding task: the comment and packaging checks apply on their own
 
 ## Usage
 
@@ -116,6 +122,46 @@ python3 src/engineering/researching-existing-solutions/scripts/pkg_facts.py tena
 
 It prints a dated table (latest release, releases per year, downloads, stars, last push, OpenSSF Scorecard, license, dependencies, known vulnerabilities, already in the project) and flags ARCHIVED, STALE, VULNS, COPYLEFT, SOURCE-AVAILABLE, and more. Licenses are cross-checked across deps.dev, PyPI, and GitHub, so an AGPL package can't hide behind a "non-standard" label. The top pick is then tested in a throwaway virtualenv, never in the project. The answer is a short chat report with the verdict first.
 
+### packaging-code
+
+Python only. It works at two points:
+
+1. **While building a feature:** before writing a helper, it checks whether the job is already done somewhere. If a declared dependency covers it, it uses that dependency, even when it isn't installed on this machine. If another service has the code, it moves it to a shared home instead of importing one service from another. It says which it chose in one line before coding, and moves existing code only after you say yes.
+2. **When asked for a review:** it puts every candidate through four checks: two or more users, a narrow interface hiding real work, no reach-back into app code, and one reason to change. It then reports a verdict, what to extract (with interfaces and lines saved), what to fix, and what to leave alone and why.
+
+Both start with a scanner. It needs only the standard library and takes under a second:
+
+```bash
+python3 src/engineering/packaging-code/scripts/scan_packages.py path/to/repo
+```
+
+It lists duplicate functions. EXACT means copies identical apart from variable names. NEAR means the same shape with small differences, and it names them, such as `ROUND_HALF_UP vs ROUND_HALF_EVEN`, because those differences are often why the copies must stay separate. It also flags:
+
+- **Dependencies:** UNUSED, UNDECLARED, MISPLACED, HEAVY, OVERLAP
+- **Code:** BLOCKING (blocking calls in async code), NO-TIMEOUT, PRIVATE, PATCH (monkeypatching), RETRY-LOOP, VENDORED
+- **Structure:** HOLLOW (packages carrying nothing), LEAKY, CYCLE, UNREFERENCED
+
+`--help` explains each flag.
+
+### mapping-database-schemas
+
+Four Python scripts that use only the standard library. Facts come from the scripts and the agent writes the words:
+
+| Script | Does |
+|---|---|
+| `extract_schema.py` | Reads a SQLite file or DDL files (pg_dump, mysqldump, BigQuery console exports) into one `schema.json`. For live BigQuery and Postgres, it prints a metadata query that reads INFORMATION_SCHEMA only, so no table data is scanned. Collapses day-sharded tables (`events_20261101`, ...) into `events_*` |
+| `analyze_schema.py` | Finds every key and link. Labels each one declared, inferred (name and type match), or guess (type mismatch, or under 95% of values match in a data check). Works out cardinality, optional or required, roles (billing vs shipping address), self-references, many-to-many link tables, and view lineage. Also flags missing keys, polymorphic columns, unindexed foreign keys, and type mismatches |
+| `build_schema_page.py` | Builds the explanation page from the analysis plus `page.json`, the agent's plain-language text. It refuses to build if any table, view, or link is unexplained, if an inferred link is described as certain, or if a join path uses a link that doesn't exist |
+| `make_er_excalidraw.py` | Draws the diagram. Each foreign-key row has its own arrow to the exact key row, labeled N, 1, or 0..1. Lines are solid when declared, dashed when inferred, and dotted for a guess. A layout search keeps crossings low, and no box overlaps another and no arrow runs through a box. It prints that self-check after every run. Above 15 tables it draws an overview plus one diagram per area |
+
+```bash
+cd src/databases/mapping-database-schemas/scripts
+python3 extract_schema.py sqlite shop.db > schema.json
+python3 analyze_schema.py schema.json analysis.json --sqlite shop.db
+python3 build_schema_page.py analysis.json page.json schema.html
+python3 make_er_excalidraw.py analysis.json page.json schema.excalidraw
+```
+
 ### writing-two-line-comments
 
 Every comment is at most 2 lines, each under 100 characters: line 1 says what it is for, line 2 says what to watch. Every code file gets a 2-line header; functions get a comment only when a teammate would have to read the body to call them safely. Editing a file brings all its comments within the rule.
@@ -139,6 +185,12 @@ It reports BLOCK, LONG, NO-HEADER, CODE (commented-out code), HISTORY (change-lo
 - [test/example-url-shortener](test/example-url-shortener/) shows the architecture and demo skills on a URL shortener: the [design write-up](test/example-url-shortener/README.md), the [diagram](test/example-url-shortener/architecture.excalidraw) and its [spec](test/example-url-shortener/spec.json), and the [demo pack](test/example-url-shortener/demo.html) for a sales and marketing audience, built from [demo.json](test/example-url-shortener/demo.json).
 - [test/example-attachment-button](test/example-attachment-button/) shows the demo skill on a public product feature, "Why is there an attachment button in Claude?": the [demo pack](test/example-attachment-button/demo.html) and its [demo.json](test/example-attachment-button/demo.json), with sources checked against Claude's help pages.
 - [test/example-prompt-compression](test/example-prompt-compression/) shows a customer-support agent prompt cut by 60% (~604 → ~244 tokens): the [original](test/example-prompt-compression/support-agent.md), the [compressed prompt](test/example-prompt-compression/support-agent.compressed.md), the [report](test/example-prompt-compression/support-agent.compression.md), and the [behavioral tests](test/example-prompt-compression/tests.md).
+- [test/example-packaging](test/example-packaging/) shows the packaging skill on a small three-service repo with planted problems: the [repo](test/example-packaging/shopco/), the [scanner output](test/example-packaging/scan.md), and the [review](test/example-packaging/review.md). The review finds 2 helpers to extract and 9 misuses, and leaves alone two rounding functions that look like copies but must stay different.
+- [test/example-database-schema](test/example-database-schema/) shows the database skill on two schemas:
+  - [shop/](test/example-database-schema/shop/): a SQLite shop with 14 declared foreign keys, a link table, two tables that point to themselves, two links from orders to addresses, a one-to-one, and a view built on another view.
+  - [analytics/](test/example-database-schema/analytics/): a BigQuery dataset with almost no declared keys, daily-sharded events, and a type mismatch.
+
+  Each folder has the input, `schema.html`, `schema.excalidraw`, and the intermediate JSON files. Both were produced by agents following the skill; without it, the same task took about 6 to 10 times longer and used 2 to 3 times the tokens.
 - [test/example-token-audit](test/example-token-audit/) shows a token audit of a bug-triage agent with six planted problems: 168,068 tokens per task measured against 2,103 for the fixed version (80× less). See the [report page](test/example-token-audit/report.html), the [audit JSON](test/example-token-audit/token-audit.json), and the [agent](test/example-token-audit/wasteful_agent.py).
 
 ## Repo layout
@@ -166,12 +218,22 @@ src/engineering/
   researching-existing-solutions/
     SKILL.md
     scripts/pkg_facts.py
+  packaging-code/
+    SKILL.md
+    scripts/scan_packages.py
   writing-two-line-comments/
     SKILL.md
     scripts/check_comments.py
+src/databases/
+  mapping-database-schemas/
+    SKILL.md
+    scripts/                   # extract_schema, analyze_schema, build_schema_page, make_er_excalidraw
+    assets/schema-template.html
 test/
   example-url-shortener/       # architecture + demo skills
+  example-database-schema/     # database skill (SQLite + BigQuery)
   example-attachment-button/   # demo skill on a public product feature
+  example-packaging/           # packaging skill
   example-prompt-compression/  # prompt compression skill
   example-token-audit/         # token audit skill
 ```
