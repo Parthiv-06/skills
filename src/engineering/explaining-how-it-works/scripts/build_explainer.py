@@ -6,6 +6,7 @@ import os
 import re
 import sys
 
+sys.dont_write_bytecode = True  # never leave __pycache__ in the skill folder or the user's repo
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from check_plain import check_plain, plain_texts  # noqa: E402
 from diagrams import SpecError, render, step_key  # noqa: E402

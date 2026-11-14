@@ -31,7 +31,7 @@ Use the same kind for the same thing in every view.
 | `queue` | Queue, topic, or stream | Box with end bars, «queue» |
 | `cache` | Redis, Memcached, or an in-process cache | Box, «cache» |
 | `storage` | Files, object storage, logs on disk | Document with a folded corner |
-| `external` | Anything you don't run: SaaS, third-party API, another team's system | Dashed box, «external» |
+| `external` | A third-party service or another team's system that the path calls: SaaS, payment or email APIs, a model API. Not code the path itself launches | Dashed box, «external» |
 | `scheduler` | Cron or another timer that starts work | Box, «cron» |
 | `state`, `start`, `end` | State view | Rounded box, filled dot, ringed dot |
 | `entity` | Data view; put key fields in `fields` | Box with a field list |
@@ -51,7 +51,8 @@ Use the same kind for the same thing in every view.
   - Columns follow first use; rows follow order within a column.
   - Set `col` and `row` on elements to get a grid where flows run straight. Use them for any view with more than a single row.
   - Zones may span several columns but must not overlap; the script refuses overlapping zones.
-- Arrow ends are spread along each side automatically. Boxes in the same row get straight arrows; everything else gets right-angle elbows.
+- Arrow ends are spread along each side automatically. Boxes in the same row get straight arrows; everything else gets right-angle elbows. Fan-outs from one side are nested so they don't cross.
+- Two arrows between the same boxes (a call and its reply) are drawn side by side, with their labels on opposite sides of the lines. For a request and its reply, one arrow labeled with both is usually clearer; the sequence view shows the reply.
 - If the script warns that an arrow passes through a box, move that box with `row` or `col`.
 
 ## Box view spec

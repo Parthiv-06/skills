@@ -4,8 +4,7 @@ The `explaining-how-it-works` skill applied to real code in this repo. The quest
 
 | File | What it is |
 |---|---|
-| `explainer.json` | The explainer: seven plain steps, nine traced hops with file:line, one external service card, failure modes, debug notes |
-| `diagrams/*.json` | The containers and sequence specs, also embedded in `explainer.json` |
+| `explainer.json` | The explainer: seven plain steps, nine traced hops with file:line, one external service card, failure modes, debug notes, and the four diagram specs |
 | `out/index.html` | The page. Open it in a browser |
 | `out/diagrams/*.svg` | The four views: context, containers, components, sequence |
 | `out/diagrams/*.excalidraw` | The same views, editable at excalidraw.com (☰ → Open) |

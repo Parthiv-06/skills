@@ -90,6 +90,33 @@ class DiagramTest(unittest.TestCase):
         self.assertEqual(len(ends), len(set(ends)), "two arrows leave the same point")
 
 
+    def test_fan_out_and_pairs_do_not_cross_or_stack(self):
+        spec = {"view": "containers", "title": "t", "caption": "c",
+                "elements": [{"id": "a", "kind": "service", "name": "A", "col": 0, "row": 0},
+                             {"id": "b", "kind": "service", "name": "B", "col": 1, "row": 0},
+                             {"id": "c", "kind": "service", "name": "C", "col": 2, "row": 1},
+                             {"id": "d", "kind": "service", "name": "D", "col": 2, "row": 2},
+                             {"id": "e", "kind": "service", "name": "E", "col": 2, "row": 3}],
+                "links": [{"from": "a", "to": "b", "label": "call"}, {"from": "b", "to": "a", "label": "reply"},
+                          {"from": "b", "to": "c", "label": "x"}, {"from": "b", "to": "d", "label": "y"},
+                          {"from": "b", "to": "e", "label": "z"}]}
+        prims, _ = diagrams.layout(spec)
+        arrows = [p for p in prims if p["t"] == "arrow" and p.get("src")]
+        segs = [[(p, q) for p, q in zip(a["points"], a["points"][1:])] for a in arrows]
+
+        def cross(s, t):  # a vertical and a horizontal segment strictly crossing
+            (a, b), (c, d) = s, t
+            if a[0] == b[0] and c[1] == d[1]:
+                return min(c[0], d[0]) < a[0] < max(c[0], d[0]) and min(a[1], b[1]) < c[1] < max(a[1], b[1])
+            return False
+        for i in range(len(segs)):
+            for j in range(len(segs)):
+                if i != j:
+                    self.assertFalse(any(cross(s, t) for s in segs[i] for t in segs[j]), f"arrows {i} and {j} cross")
+        spots = {diagrams.label_anchor(a["points"], a.get("lane"))[:2] for a in arrows[:2]}
+        self.assertEqual(len(spots), 2, "paired arrows share a label spot")
+
+
 class PlainTest(unittest.TestCase):
     def test_flags_jargon_and_allows_defined_terms(self):
         probs = check_plain(["The webhook hits our API endpoint."])

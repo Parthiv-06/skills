@@ -37,7 +37,7 @@ Both parts share one step numbering. Plain step 3 points to trace steps 3a–3c,
    - every write is listed
 
    Read the code at every hop. A name that suggests behavior is not evidence.
-3. **Optional runtime check.** If the order of hops is unclear (events, races, async), propose running the flow or its tests with temporary logs. Run it only after the user agrees, and remove the logs afterwards. Mark confirmed rows `observed`.
+3. **Optional runtime check.** If the order of hops is unclear (events, races, async), propose running the flow or its tests with temporary logs. Run it only after the user agrees, and remove the logs afterwards. Mark confirmed rows `observed`. If there is no one to ask (you are a subagent or running unattended), skip it: rows stay `verified`, and the unclear ordering goes in `open`.
 4. **Choose the views.**
    - Context and Sequence are always drawn.
    - Add Containers, Components, State, Data, or Deployment when the question needs them (table in `references/diagram-style.md`).
@@ -47,10 +47,12 @@ Both parts share one step numbering. Plain step 3 points to trace steps 3a–3c,
    - Diagram specs follow `references/diagram-style.md`. Give elements `col` and `row` so the flow reads left to right with straight arrows.
 6. **Build:** `python3 scripts/build_explainer.py explainer.json <out_dir>`.
    - It refuses to build until everything checks out: plain English, step links, one card per external system, every diagram's layout.
-   - Fix every problem it lists, then look at each SVG in `<out_dir>/diagrams/`. If two boxes or labels crowd each other, adjust `col` and `row` and rebuild.
+   - Fix every problem it lists, then look at each SVG in `<out_dir>/diagrams/`. Open them in a browser, or render them to PNG (`qlmanage -t -s 1600 -o <dir> <file>.svg` on macOS, or headless Chrome `--screenshot`) and view the image. If two boxes or labels crowd each other, adjust `col` and `row` and rebuild.
 7. **Publish** `<out_dir>/index.html` with the Artifact tool if available (icon `book`); otherwise give the path. In chat, give the answer sentence, the plain steps as one line each, and the link. The `.excalidraw` files in `<out_dir>/diagrams/` open in excalidraw.com for editing.
 
-Save to `explainers/<subject-slug>/` in the working directory unless the user names a place.
+Save to `explainers/<subject-slug>/` in the working directory, unless the user names a place or asks you not to change the repo. In that case, use a scratch or temp folder and say where.
+
+If the path calls no third-party or other-team service, leave `external` empty and say so in the context view's caption. Don't invent one. Code the path itself launches (a child process, a plugin, the program under test) is a `service`, not `external`.
 
 ## Explainer JSON
 

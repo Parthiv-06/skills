@@ -291,8 +291,14 @@ def layout_boxes(spec):
 
     links = spec.get("links") or []
     routes = route_all(links, pos)
-    for l, pts in zip(links, routes):
-        prims.append(P("arrow", points=pts, dashed=bool(l.get("async")), head="arrow",
+    pairs, lanes = {}, []
+    for l in links:
+        pk = frozenset((l["from"], l["to"]))
+        pairs[pk] = pairs.get(pk, 0) + 1
+        lanes.append(pairs[pk] - 1)
+    for l, pts, lane in zip(links, routes, lanes):
+        shared = pairs[frozenset((l["from"], l["to"]))] > 1
+        prims.append(P("arrow", points=pts, dashed=bool(l.get("async")), head="arrow", lane=lane if shared else None,
                        src=l["from"], dst=l["to"], label=l.get("label"), step=l.get("step")))
 
     warn = []
@@ -348,7 +354,19 @@ def route_all(links, pos):
             edge = {"left": x, "right": x + w, "top": y, "bottom": y + h}[side]
             port[(i, which)] = (edge, v) if horiz else (v, edge)
 
-    routes, turns = [], {}
+    # Elbows leaving one side toward the same vertical direction never cross if the port nearest
+    # their targets turns first: going down, the lowest port turns closest to the box.
+    fans = {}
+    for i, l in enumerate(links):
+        (sx, sy), (ex, ey) = port[(i, 0)], port[(i, 1)]
+        if sides[i][0] in ("left", "right") and abs(sy - ey) >= 1:
+            fans.setdefault((l["from"], sides[i][0], ey > sy), []).append((sy, i))
+    turn_k = {}
+    for (_, _, down), items in fans.items():
+        for k, (_, i) in enumerate(sorted(items, reverse=down)):
+            turn_k[i] = k
+
+    routes = []
     for i, l in enumerate(links):
         (sx, sy), (ex, ey) = port[(i, 0)], port[(i, 1)]
         if sides[i][0] in ("left", "right"):
@@ -356,9 +374,7 @@ def route_all(links, pos):
                 routes.append([(sx, sy), (ex, ey)])
                 continue
             d = 1 if ex > sx else -1
-            k = turns.get((l["from"], sides[i][0]), 0)
-            turns[(l["from"], sides[i][0])] = k + 1
-            mid = sx + d * (TURN + 14 * k)
+            mid = sx + d * (TURN + 14 * turn_k[i])
             routes.append([(sx, sy), (mid, sy), (mid, ey), (ex, ey)])
         else:
             if abs(sx - ex) < 1:
@@ -510,17 +526,21 @@ def step_badge(pts):
     return x1 + (x2 - x1) / L * d, y1 + (y2 - y1) / L * d
 
 
-def label_anchor(pts):
-    """Center of an arrow's label; on horizontal arrows it sits above the line, clear of the step badge."""
+def label_anchor(pts, lane=None):
+    """Where an arrow's label goes, as (x, y, mode); mode is above, below, center, left or right of x.
+    Lane 1 of two arrows between the same boxes takes the other side of its line, so labels never stack."""
     if len(pts) == 4:
         (x2, y2), (x3, y3) = pts[2], pts[3]
         if abs(y2 - y3) < 1:  # elbow ending in a long horizontal run: label it there
-            return (x2 + x3) / 2, y3 - 13, True
-        return (pts[1][0] + pts[2][0]) / 2, (pts[1][1] + pts[2][1]) / 2, False
+            return (x2 + x3) / 2, y3 + (13 if lane == 1 else -13), "below" if lane == 1 else "above"
+        return (pts[1][0] + pts[2][0]) / 2, (pts[1][1] + pts[2][1]) / 2, "center"
     (x1, y1), (x2, y2) = pts[0], pts[-1]
     if abs(y1 - y2) < 1:
-        return (x1 + x2) / 2 + 10, y1 - 13, True
-    return (x1 + x2) / 2, (y1 + y2) / 2, False
+        return (x1 + x2) / 2 + 10, y1 + (13 if lane == 1 else -13), "below" if lane == 1 else "above"
+    mx, my = (x1 + x2) / 2, (y1 + y2) / 2
+    if lane is None:
+        return mx, my, "center"
+    return (mx + 10, my, "right") if lane == 1 else (mx - 10, my, "left")
 
 
 def to_svg(prims, title=""):
@@ -557,10 +577,12 @@ def to_svg(prims, title=""):
             mk = "ao" if p.get("head") == "open" else "ah"
             out.append(f'<polyline points="{pts}" fill="none" stroke="{INK}" stroke-width="1.5"{dash} marker-end="url(#{mk})"/>')
             if p.get("label"):
-                lx, ly, _ = label_anchor(p["points"])
+                lx, ly, mode = label_anchor(p["points"], p.get("lane"))
                 w = text_w(p["label"], 12.5) + 12
-                late.append(f'<rect x="{lx - w / 2:.1f}" y="{ly - 10:.1f}" width="{w:.1f}" height="20" fill="{WHITE}"/>'
-                            f'<text x="{lx:.1f}" y="{ly + 4.5:.1f}" font-size="12.5" text-anchor="middle" fill="{INK}">{esc(p["label"])}</text>')
+                bx = lx - w if mode == "left" else lx if mode == "right" else lx - w / 2
+                late.append(f'<rect x="{bx:.1f}" y="{ly - 10:.1f}" width="{w:.1f}" height="20" fill="{WHITE}"/>'
+                            f'<text x="{bx + w / 2:.1f}" y="{ly + 4.5:.1f}" font-size="12.5" text-anchor="middle" '
+                            f'fill="{INK}">{esc(p["label"])}</text>')
             if p.get("step"):
                 late.append(svg_badge(*step_badge(p["points"]), p["step"]))
         elif t == "badge":
@@ -683,12 +705,13 @@ def to_excalidraw(prims):
             grp = [arrow["id"] + "_g"]  # label and badge are free elements grouped with the arrow, so they move together
             arrow["groupIds"] = grp
             if p.get("label"):
-                lx, ly, above = label_anchor(p["points"])
+                lx, ly, mode = label_anchor(p["points"], p.get("lane"))
                 tw = text_w(p["label"], 13)
-                if not above:
-                    base("rectangle", lx - tw / 2 - 5, ly - 10, tw + 10, 20, strokeColor="transparent",
+                tx = lx - tw - 6 if mode == "left" else lx + 6 if mode == "right" else lx - tw / 2
+                if mode not in ("above", "below"):
+                    base("rectangle", tx - 5, ly - 10, tw + 10, 20, strokeColor="transparent",
                          backgroundColor=WHITE, groupIds=grp)
-                text(lx - tw / 2, ly - 8, p["label"], 13, align="center")["groupIds"] = grp
+                text(tx, ly - 8, p["label"], 13, align="center")["groupIds"] = grp
             if p.get("step"):
                 exc_badge(*step_badge(p["points"]), p["step"], grp)
         elif t == "badge":

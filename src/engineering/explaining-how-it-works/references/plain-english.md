@@ -11,7 +11,7 @@ Write it for someone smart who has never seen code: a new teammate in sales, a f
   - `tech`: the trace steps it covers. Every trace step belongs to exactly one plain step.
 - **`analogy`:** optional, and only if it is accurate. A misleading analogy is worse than none.
 - **`worth`:** 2–4 limits or surprises a non-engineer should know: delays, what happens on failure, privacy, cost.
-- **`terms`:** a word you truly cannot avoid goes here with a plain definition. Keep it to 0–3 words.
+- **`terms`:** a word you truly cannot avoid goes here with a plain definition. Keep it to 0–3 words. When the subject itself is a technical idea (tokens, an API, a cache), defining it here is expected, not a failure.
 
 ## Ways to say it plainly
 | Instead of | Say |
