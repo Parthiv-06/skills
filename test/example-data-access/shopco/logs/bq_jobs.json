@@ -1,0 +1,6 @@
+[
+ {"principal": "nightly-reports@acme.iam.gserviceaccount.com", "statement_type": null, "reads": "[]", "writes": "acme.shop.sales_lines", "jobs": "30", "last_seen": "2026-11-13 02:00:11 UTC"},
+ {"principal": "nightly-reports@acme.iam.gserviceaccount.com", "statement_type": "CREATE_TABLE_AS_SELECT", "reads": "[\"acme.shop.sales_lines\"]", "writes": "acme.shop.daily_sales", "jobs": "30", "last_seen": "2026-11-13 02:00:19 UTC"},
+ {"principal": "looker@acme.iam.gserviceaccount.com", "statement_type": "SELECT", "reads": "[\"acme.shop.daily_sales\"]", "writes": null, "jobs": "412", "last_seen": "2026-11-13 17:41:02 UTC"},
+ {"principal": "priya@acme.com", "statement_type": "SELECT", "reads": "[\"acme.shop.daily_sales\",\"acme.shop.sales_lines\"]", "writes": null, "jobs": "9", "last_seen": "2026-11-12 11:05:40 UTC"}
+]

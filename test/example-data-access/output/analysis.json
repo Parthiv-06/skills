@@ -1,0 +1,1254 @@
+{
+ "root": "test/example-data-access/shopco",
+ "participants": [
+  {
+   "name": "checkout-api",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "app"
+   },
+   "bigquery": [],
+   "external": false
+  },
+  {
+   "name": "admin-api",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "admin"
+   },
+   "bigquery": [],
+   "external": false
+  },
+  {
+   "name": "fulfilment-worker",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "worker"
+   },
+   "bigquery": [],
+   "external": false
+  },
+  {
+   "name": "nightly-reports",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "reports"
+   },
+   "bigquery": [
+    "acme.shop"
+   ],
+   "external": false
+  },
+  {
+   "name": "migrations",
+   "kind": "migrations",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "same as the other services",
+    "db": "shopdb",
+    "role": null
+   },
+   "bigquery": [],
+   "external": false
+  },
+  {
+   "name": "crm_sync",
+   "kind": "db role",
+   "root": null,
+   "db": null,
+   "bigquery": [],
+   "external": true,
+   "principal": "crm_sync"
+  },
+  {
+   "name": "looker",
+   "kind": "service account",
+   "root": null,
+   "db": null,
+   "bigquery": [],
+   "external": true,
+   "principal": "looker@acme.iam.gserviceaccount.com"
+  },
+  {
+   "name": "priya@acme.com",
+   "kind": "person",
+   "root": null,
+   "db": null,
+   "bigquery": [],
+   "external": true,
+   "principal": "priya@acme.com"
+  }
+ ],
+ "tables": [
+  {
+   "id": "acme.shop.daily_sales",
+   "database": "acme.shop",
+   "name": "daily_sales",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "looker",
+    "priya@acme.com"
+   ],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "acme.shop.sales_lines",
+   "database": "acme.shop",
+   "name": "sales_lines",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "nightly-reports",
+    "priya@acme.com"
+   ],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.addresses",
+   "database": "shopdb",
+   "name": "addresses",
+   "writers": [],
+   "readers": [
+    "checkout-api",
+    "fulfilment-worker"
+   ],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.audit_log",
+   "database": "shopdb",
+   "name": "audit_log",
+   "writers": [
+    "fulfilment-worker"
+   ],
+   "readers": [],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.customers",
+   "database": "shopdb",
+   "name": "customers",
+   "writers": [
+    "crm_sync"
+   ],
+   "readers": [
+    "admin-api",
+    "checkout-api"
+   ],
+   "ddl": [
+    "migrations"
+   ],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.order_items",
+   "database": "shopdb",
+   "name": "order_items",
+   "writers": [
+    "checkout-api"
+   ],
+   "readers": [
+    "admin-api",
+    "nightly-reports"
+   ],
+   "ddl": [
+    "migrations"
+   ],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.orders",
+   "database": "shopdb",
+   "name": "orders",
+   "writers": [
+    "checkout-api",
+    "fulfilment-worker"
+   ],
+   "readers": [
+    "admin-api",
+    "checkout-api",
+    "fulfilment-worker",
+    "nightly-reports"
+   ],
+   "ddl": [
+    "migrations"
+   ],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.payments",
+   "database": "shopdb",
+   "name": "payments",
+   "writers": [
+    "checkout-api"
+   ],
+   "readers": [],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.products",
+   "database": "shopdb",
+   "name": "products",
+   "writers": [
+    "admin-api"
+   ],
+   "readers": [
+    "checkout-api",
+    "nightly-reports"
+   ],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.shipments",
+   "database": "shopdb",
+   "name": "shipments",
+   "writers": [
+    "fulfilment-worker"
+   ],
+   "readers": [
+    "fulfilment-worker"
+   ],
+   "ddl": [],
+   "kind": "table"
+  },
+  {
+   "id": "shopdb.v_customer_ltv",
+   "database": "shopdb",
+   "name": "v_customer_ltv",
+   "writers": [],
+   "readers": [
+    "admin-api"
+   ],
+   "ddl": [],
+   "kind": "view"
+  },
+  {
+   "id": "shopdb.v_order_totals",
+   "database": "shopdb",
+   "name": "v_order_totals",
+   "writers": [],
+   "readers": [
+    "admin-api"
+   ],
+   "ddl": [],
+   "kind": "view"
+  }
+ ],
+ "links": [
+  {
+   "participant": "looker",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 412,
+    "last_seen": "2026-11-13 17:41:02 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L1"
+  },
+  {
+   "participant": "priya@acme.com",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 9,
+    "last_seen": "2026-11-12 11:05:40 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L2"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "write",
+   "ops": [
+    "CREATE AS"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 24,
+     "op": "CREATE AS",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": "2026-11-13 02:00:19 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "CREATE AS"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L3"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 24,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": "2026-11-13 02:00:19 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L4"
+  },
+  {
+   "participant": "priya@acme.com",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 9,
+    "last_seen": "2026-11-12 11:05:40 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L5"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "write",
+   "ops": [
+    "LOAD"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 23,
+     "op": "LOAD",
+     "how": "bigquery load_table_from_dataframe()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": "2026-11-13 02:00:11 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "LOAD"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L6"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "addresses",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/checkout_api/checkout.py",
+     "line": 16,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 8100,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L7"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "addresses",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 8,
+     "op": "SELECT",
+     "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 1440,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L8"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "audit_log",
+   "kind": "write",
+   "ops": [
+    "INSERT",
+    "DELETE"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 24,
+     "op": "INSERT",
+     "how": "SQL string",
+     "via": null
+    },
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 31,
+     "op": "DELETE",
+     "how": "f-string; table='audit_log' passed at services/fulfilment_worker/worker.py:37",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 7601,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT",
+     "DELETE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L9"
+  },
+  {
+   "participant": "migrations",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "ddl",
+   "ops": [
+    "CREATE TABLE"
+   ],
+   "code": [
+    {
+     "file": "migrations/versions/001_init.py",
+     "line": 11,
+     "op": "CREATE TABLE",
+     "how": "alembic op.create_table()",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L10"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": null,
+   "via_view": "v_customer_ltv",
+   "label": "via view v_customer_ltv",
+   "id": "L11"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/checkout_api/checkout.py",
+     "line": 15,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 8100,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L12"
+  },
+  {
+   "participant": "crm_sync",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "write",
+   "ops": [
+    "UPDATE",
+    "UPSERT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 2330,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "UPDATE",
+     "UPSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L13"
+  },
+  {
+   "participant": "migrations",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "ddl",
+   "ops": [
+    "CREATE TABLE"
+   ],
+   "code": [
+    {
+     "file": "migrations/versions/001_init.py",
+     "line": 14,
+     "op": "CREATE TABLE",
+     "how": "alembic op.create_table()",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L14"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": null,
+   "via_view": "v_customer_ltv",
+   "label": "via view v_customer_ltv",
+   "id": "L15"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 9,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L16"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "write",
+   "ops": [
+    "INSERT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 11,
+     "op": "INSERT",
+     "how": "session.add(new object)",
+     "via": "called from services/checkout_api/checkout.py:17"
+    }
+   ],
+   "logs": {
+    "count": 19400,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L17"
+  },
+  {
+   "participant": "migrations",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "ddl",
+   "ops": [
+    "ADD COLUMN",
+    "CREATE INDEX",
+    "CREATE TABLE"
+   ],
+   "code": [
+    {
+     "file": "migrations/versions/002_order_status.py",
+     "line": 11,
+     "op": "ADD COLUMN",
+     "how": "alembic op.add_column()",
+     "via": null
+    },
+    {
+     "file": "migrations/versions/002_order_status.py",
+     "line": 12,
+     "op": "CREATE INDEX",
+     "how": "alembic op.create_index()",
+     "via": null
+    },
+    {
+     "file": "migrations/versions/001_init.py",
+     "line": 13,
+     "op": "CREATE TABLE",
+     "how": "alembic op.create_table()",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L18"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 16,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": "called from services/admin_api/app.py:10"
+    }
+   ],
+   "logs": {
+    "count": 640,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L19"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 20,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": "called from services/checkout_api/checkout.py:23"
+    }
+   ],
+   "logs": {
+    "count": 7900,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L20"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 8,
+     "op": "SELECT",
+     "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+     "via": null
+    },
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 24,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 9040,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L21"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 9,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L22"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "ops": [
+    "INSERT",
+    "UPDATE"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 8,
+     "op": "INSERT",
+     "how": "session.add(order)",
+     "via": "called from services/checkout_api/checkout.py:17"
+    },
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 21,
+     "op": "UPDATE",
+     "how": "changes a loaded order",
+     "via": "called from services/checkout_api/checkout.py:23"
+    }
+   ],
+   "logs": {
+    "count": 16000,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT",
+     "UPDATE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L23"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "ops": [
+    "UPDATE"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 22,
+     "op": "UPDATE",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 7600,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "UPDATE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L24"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "payments",
+   "kind": "write",
+   "ops": [
+    "INSERT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 22,
+     "op": "INSERT",
+     "how": "session.add(new object)",
+     "via": "called from services/checkout_api/checkout.py:23"
+    }
+   ],
+   "logs": {
+    "count": 7900,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L25"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/checkout_api/checkout.py",
+     "line": 10,
+     "op": "SELECT",
+     "how": "select(Product)",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 51200,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L26"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 18,
+     "op": "SELECT",
+     "how": "pandas read_sql()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L27"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "write",
+   "ops": [
+    "UPDATE"
+   ],
+   "code": [
+    {
+     "file": "services/admin_api/app.py",
+     "line": 14,
+     "op": "UPDATE",
+     "how": "sqlalchemy update()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 35,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "UPDATE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L28"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "shipments",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 8,
+     "op": "SELECT",
+     "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 1440,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L29"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "shipments",
+   "kind": "write",
+   "ops": [
+    "INSERT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 21,
+     "op": "INSERT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 7600,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L30"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "v_customer_ltv",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/admin_api/app.py",
+     "line": 19,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L31"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "v_order_totals",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": null,
+   "via_view": "v_customer_ltv",
+   "label": "via view v_customer_ltv",
+   "id": "L32"
+  }
+ ],
+ "flows": [
+  {
+   "table": "acme.shop.daily_sales",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "looker",
+    "priya@acme.com"
+   ]
+  },
+  {
+   "table": "acme.shop.sales_lines",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "priya@acme.com"
+   ]
+  },
+  {
+   "table": "shopdb.customers",
+   "writers": [
+    "crm_sync"
+   ],
+   "readers": [
+    "admin-api",
+    "checkout-api"
+   ]
+  },
+  {
+   "table": "shopdb.order_items",
+   "writers": [
+    "checkout-api"
+   ],
+   "readers": [
+    "admin-api",
+    "nightly-reports"
+   ]
+  },
+  {
+   "table": "shopdb.orders",
+   "writers": [
+    "checkout-api",
+    "fulfilment-worker"
+   ],
+   "readers": [
+    "admin-api",
+    "nightly-reports"
+   ]
+  },
+  {
+   "table": "shopdb.products",
+   "writers": [
+    "admin-api"
+   ],
+   "readers": [
+    "checkout-api",
+    "nightly-reports"
+   ]
+  }
+ ],
+ "unresolved": [
+  {
+   "service": "fulfilment-worker",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 31,
+   "op": "DELETE",
+   "sql": "DELETE FROM {} WHERE at < now() - interval '{} days'",
+   "resolved_by": "services/fulfilment_worker/worker.py:37"
+  }
+ ],
+ "logs_given": true,
+ "schemas": [
+  "shopdb"
+ ],
+ "findings": [
+  {
+   "kind": "NO-WRITER",
+   "where": "shopdb.addresses",
+   "detail": "read by checkout-api, fulfilment-worker but nothing here writes it: rows come from another repo, a manual load, or a seed"
+  },
+  {
+   "kind": "WRITE-ONLY",
+   "where": "shopdb.audit_log",
+   "detail": "written by fulfilment-worker and read by nothing seen"
+  },
+  {
+   "kind": "OUTSIDE-WRITER",
+   "where": "shopdb.customers",
+   "detail": "only written from outside this repo by crm_sync"
+  },
+  {
+   "kind": "MULTI-WRITER",
+   "where": "shopdb.orders",
+   "detail": "written by checkout-api, fulfilment-worker; one owner per table keeps its rules in one place"
+  },
+  {
+   "kind": "WRITE-ONLY",
+   "where": "shopdb.payments",
+   "detail": "written by checkout-api and read by nothing seen"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.categories",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.tags",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.product_tags",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.employees",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "CODE-ONLY",
+   "where": "admin-api -> shopdb.v_customer_ltv",
+   "detail": "read in code but not in the logs: a dead path, or too rare to show"
+  }
+ ]
+}

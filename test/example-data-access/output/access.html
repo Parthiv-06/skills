@@ -1,0 +1,1578 @@
+<title>shopco: who reads and writes what</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Apple product-page rhythm on a white page only: 980px reading grid, #f5f5f7 tiles, words not diagrams. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --tile: #f5f5f7; --tile2: #fbfbfd;
+  --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7; --line2: #e8e8ed;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800;
+  --glass: rgba(255, 255, 255, .72);
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+code, .mono { font-family: var(--mono); font-size: .86em; letter-spacing: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(64px, 9vw, 120px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(26px, 4vw, 44px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; color: var(--flame); }
+.h2 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.sub { font-size: clamp(19px, 2vw, 23px); line-height: 1.35; font-weight: 500; color: var(--fg2); max-width: 46ch; }
+.head { display: grid; gap: 14px; }
+
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 20px; font-size: 12px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+@media (max-width: 760px) { .nav-links { display: none; } }
+
+.hero { text-align: center; padding-block: clamp(56px, 9vw, 112px) clamp(48px, 7vw, 84px); }
+.hero .inner { justify-items: center; gap: 20px; }
+.hero h1 { font-size: clamp(46px, 8.6vw, 92px); line-height: 1.03; font-weight: 700; letter-spacing: -.045em; max-width: 14ch; overflow-wrap: anywhere; }
+.hero .lede { font-size: clamp(20px, 2.4vw, 27px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; max-width: 34ch; }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px clamp(26px, 5.5vw, 64px); margin-top: clamp(20px, 3vw, 36px);
+  padding-top: clamp(22px, 3.5vw, 36px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: clamp(34px, 4.6vw, 52px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat span { font-size: 14px; color: var(--fg2); }
+.meta { font-size: 14px; color: var(--fg3); }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 980px; padding: 3px 11px; font-size: 13px;
+  background: var(--bg); border: 1px solid var(--line2); color: var(--fg); cursor: pointer; white-space: nowrap; font-family: var(--mono); letter-spacing: 0; }
+.chip:hover { border-color: var(--fg3); }
+.badge { display: inline-block; border-radius: 980px; padding: 2px 9px; font-size: 12px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.b-both { background: var(--fg); color: #fff; }
+.b-code { background: #e8f2fe; color: #0058b0; }
+.b-logs { background: #fdf0e8; color: var(--flame); }
+.b-view, .b-soft { background: var(--tile); color: var(--fg2); font-weight: 500; }
+.b-w { background: #eef7ee; color: #1d6b31; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile); max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 15px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search { flex: 1 1 260px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 11px 16px; background: var(--bg); font-size: 16px; }
+.search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.card { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 80px; }
+.card.flash { box-shadow: 0 0 0 3px var(--accent); }
+.card .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.card h3 { font: 600 clamp(20px, 2vw, 24px)/1.2 var(--mono); letter-spacing: -.02em; overflow-wrap: anywhere; margin-right: auto; }
+.card .what { font-size: 17px; }
+.kv { display: grid; gap: 8px; font-size: 15px; }
+.kv .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--fg3); }
+.rows { display: grid; gap: 6px; }
+.row { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 14px; color: var(--fg2); }
+.empty { color: var(--fg3); font-size: 15px; }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-size: 14px; color: var(--link); list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " \203A"; }
+details[open] summary::after { content: " \2039"; }
+.ev { margin-top: 10px; display: grid; gap: 6px; font-size: 13px; color: var(--fg2); }
+.ev code { color: var(--fg); overflow-wrap: anywhere; }
+
+.matrix-wrap { overflow-x: auto; border: 1px solid var(--line2); border-radius: var(--r-md); }
+table.matrix { border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 100%; }
+.matrix th, .matrix td { padding: 9px 12px; border-bottom: 1px solid var(--line2); text-align: center; white-space: nowrap; }
+.matrix thead th { position: sticky; top: 0; background: var(--tile2); font: 500 12px/1.3 var(--mono); color: var(--fg2); vertical-align: bottom; }
+.matrix thead th.db { text-align: left; color: var(--fg3); font-family: var(--sans); font-weight: 600; }
+.matrix th.who { position: sticky; left: 0; background: var(--bg); text-align: left; font: 600 13px var(--mono); z-index: 1; }
+.matrix thead th.who { z-index: 2; background: var(--tile2); }
+.cell { display: inline-block; min-width: 34px; border-radius: 8px; padding: 3px 7px; font-weight: 700; font-family: var(--mono); font-size: 12px; }
+.c-W { background: var(--fg); color: #fff; }
+.c-R { background: #e8f2fe; color: #0058b0; }
+.c-RW { background: linear-gradient(90deg, var(--fg) 50%, #cfe3fb 50%); color: #fff; }
+.c-S { background: var(--tile); color: var(--fg3); }
+.c-logs { outline: 2px dotted var(--flame); outline-offset: 1px; }
+.c-view { opacity: .55; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--fg2); align-items: center; }
+
+.flows { display: grid; gap: 14px; }
+.flow { background: var(--tile); border-radius: var(--r-md); padding: 20px 24px; display: grid; gap: 10px; }
+.flow .say { font-size: clamp(18px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.02em; line-height: 1.32; }
+.flow .path { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; color: var(--fg3); }
+
+.finds { display: grid; border-top: 1px solid var(--line); }
+.find { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr); gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .find { grid-template-columns: minmax(0, 1fr); } }
+.find .k { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--flame); padding-top: 3px; }
+.find .w { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.find .d { color: var(--fg2); font-size: 15px; }
+table.evidence { width: 100%; border-collapse: collapse; font-size: 13px; }
+.evidence td, .evidence th { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+.evidence th { font-size: 12px; color: var(--fg3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.evidence td.m { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+footer { padding: 40px 16px 64px; text-align: center; font-size: 13px; color: var(--fg3); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<nav class="nav"><div class="nav-in">
+  <div class="nav-title" id="navTitle"></div>
+  <div class="nav-links"><a href="#services">Services</a><a href="#tables">Tables</a><a href="#matrix">Matrix</a>
+    <a href="#flows">Flows</a><a href="#findings">Findings</a><a href="#evidence">Evidence</a></div>
+</div></nav>
+
+<header class="band hero"><div class="inner">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p class="lede" id="summary"></p>
+  <div class="stats" id="stats"></div>
+  <p class="meta">The diagram lives in the matching .excalidraw file. This page explains it in words.</p>
+</div></header>
+
+<section class="band" id="services"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every service</div><h2 class="h2">Services. <span class="quiet">What each one writes and reads.</span></h2></div>
+  <div class="cards" id="svcCards"></div>
+  <div class="head" id="outsideHead" hidden><h3 class="h2" style="font-size:clamp(26px,3.4vw,38px)">Outside this repo. <span class="quiet">Seen only in the logs.</span></h3></div>
+  <div class="cards" id="extCards"></div>
+</div></section>
+
+<section class="band" id="tables"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every table touched</div><h2 class="h2">Tables. <span class="quiet">Who writes it, who reads it.</span></h2></div>
+  <div class="tools"><input class="search" id="q" type="search" placeholder="Search tables" aria-label="Search tables">
+    <div class="seg" id="dbFilter" role="group" aria-label="Filter by database"></div></div>
+  <div class="cards" id="tblCards"></div>
+</div></section>
+
+<section class="band" id="matrix"><div class="inner wide">
+  <div class="head"><div class="eyebrow">At a glance</div><h2 class="h2">Read and write matrix.</h2></div>
+  <div class="legend"><span><span class="cell c-W">W</span> writes</span><span><span class="cell c-R">R</span> reads</span>
+    <span><span class="cell c-RW">RW</span> both</span><span><span class="cell c-S">S</span> changes the schema</span>
+    <span><span class="cell c-R c-logs">R</span> seen only in logs</span><span><span class="cell c-R c-view">R</span> through a view</span></div>
+  <div class="matrix-wrap"><table class="matrix" id="mx"></table></div>
+</div></section>
+
+<section class="band" id="flows"><div class="inner">
+  <div class="head"><div class="eyebrow">Hidden dependencies</div><h2 class="h2">Data flows. <span class="quiet">One writes, another reads.</span></h2>
+    <p class="sub">Each of these is a contract nobody wrote down: change the writer and the readers feel it.</p></div>
+  <div class="flows" id="flowList"></div>
+</div></section>
+
+<section class="band" id="findings"><div class="inner">
+  <div class="head"><div class="eyebrow">Worth fixing</div><h2 class="h2">Findings.</h2></div>
+  <div class="finds" id="findList"></div>
+</div></section>
+
+<section class="band" id="evidence"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Proof for every line</div><h2 class="h2">Evidence.</h2></div>
+  <input class="search" id="eq" type="search" placeholder="Filter evidence by service, table, or file" aria-label="Filter evidence">
+  <div class="matrix-wrap" style="border:0"><table class="evidence" id="evTable"></table></div>
+</div></section>
+
+<footer id="foot"></footer>
+
+<script id="access-data" type="application/json">{
+ "root": "test/example-data-access/shopco",
+ "participants": [
+  {
+   "name": "checkout-api",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "app"
+   },
+   "bigquery": [],
+   "external": false,
+   "what": "The web shop's checkout. Prices a cart from products, looks up the customer and shipping address, creates the order and its lines, then marks the order paid and records the card payment (Postgres role app)."
+  },
+  {
+   "name": "admin-api",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "admin"
+   },
+   "bigquery": [],
+   "external": false,
+   "what": "Staff back-office API. Looks up single orders, changes product prices, and lists the top customers by lifetime spend through the v_customer_ltv view (Postgres role admin)."
+  },
+  {
+   "name": "fulfilment-worker",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "worker"
+   },
+   "bigquery": [],
+   "external": false,
+   "what": "Background worker that finds paid orders with no shipment, records a shipment, marks the order shipped, writes an audit entry, and purges audit entries older than 90 days (Postgres role worker)."
+  },
+  {
+   "name": "nightly-reports",
+   "kind": "service",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "reports"
+   },
+   "bigquery": [
+    "acme.shop"
+   ],
+   "external": false,
+   "what": "Nightly job that reads the last day's order lines and the product list from shopdb, appends them to acme.shop.sales_lines in BigQuery, and rebuilds acme.shop.daily_sales from it (Postgres role reports, BigQuery service account nightly-reports@)."
+  },
+  {
+   "name": "migrations",
+   "kind": "migrations",
+   "root": "test/example-data-access/shopco",
+   "db": {
+    "engine": "same as the other services",
+    "db": "shopdb",
+    "role": null
+   },
+   "bigquery": [],
+   "external": false,
+   "what": "Alembic schema migrations. They only create customers, orders, and order_items and add orders.status with an index; they never read or write rows."
+  },
+  {
+   "name": "crm_sync",
+   "kind": "db role",
+   "root": null,
+   "db": null,
+   "bigquery": [],
+   "external": true,
+   "principal": "crm_sync",
+   "what": "A Postgres role from outside this repo, likely a CRM sync, that inserts customers and keeps their email addresses up to date. It is the only writer of customers."
+  },
+  {
+   "name": "looker",
+   "kind": "service account",
+   "root": null,
+   "db": null,
+   "bigquery": [],
+   "external": true,
+   "principal": "looker@acme.iam.gserviceaccount.com",
+   "what": "The Looker service account, likely the company dashboards. It queries acme.shop.daily_sales about 14 times a day."
+  },
+  {
+   "name": "priya@acme.com",
+   "kind": "person",
+   "root": null,
+   "db": null,
+   "bigquery": [],
+   "external": true,
+   "principal": "priya@acme.com",
+   "what": "A person (likely an analyst) running ad-hoc BigQuery queries on daily_sales and sales_lines."
+  }
+ ],
+ "tables": [
+  {
+   "id": "acme.shop.daily_sales",
+   "database": "acme.shop",
+   "name": "daily_sales",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "looker",
+    "priya@acme.com"
+   ],
+   "ddl": [],
+   "kind": "table",
+   "what": "Revenue in cents per day, rebuilt from sales_lines every night."
+  },
+  {
+   "id": "acme.shop.sales_lines",
+   "database": "acme.shop",
+   "name": "sales_lines",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "nightly-reports",
+    "priya@acme.com"
+   ],
+   "ddl": [],
+   "kind": "table",
+   "what": "Warehouse copy of order lines joined with product details, appended once a night."
+  },
+  {
+   "id": "shopdb.addresses",
+   "database": "shopdb",
+   "name": "addresses",
+   "writers": [],
+   "readers": [
+    "checkout-api",
+    "fulfilment-worker"
+   ],
+   "ddl": [],
+   "kind": "table",
+   "what": "One postal address belonging to a customer, used for shipping and billing."
+  },
+  {
+   "id": "shopdb.audit_log",
+   "database": "shopdb",
+   "name": "audit_log",
+   "writers": [
+    "fulfilment-worker"
+   ],
+   "readers": [],
+   "ddl": [],
+   "kind": "table",
+   "what": "One audit event: which entity (by type and id) had which action, and when."
+  },
+  {
+   "id": "shopdb.customers",
+   "database": "shopdb",
+   "name": "customers",
+   "writers": [
+    "crm_sync"
+   ],
+   "readers": [
+    "admin-api",
+    "checkout-api"
+   ],
+   "ddl": [
+    "migrations"
+   ],
+   "kind": "table",
+   "what": "One shopper: email, name, and when they signed up."
+  },
+  {
+   "id": "shopdb.order_items",
+   "database": "shopdb",
+   "name": "order_items",
+   "writers": [
+    "checkout-api"
+   ],
+   "readers": [
+    "admin-api",
+    "nightly-reports"
+   ],
+   "ddl": [
+    "migrations"
+   ],
+   "kind": "table",
+   "what": "One line of an order: which product, how many, and the unit price."
+  },
+  {
+   "id": "shopdb.orders",
+   "database": "shopdb",
+   "name": "orders",
+   "writers": [
+    "checkout-api",
+    "fulfilment-worker"
+   ],
+   "readers": [
+    "admin-api",
+    "checkout-api",
+    "fulfilment-worker",
+    "nightly-reports"
+   ],
+   "ddl": [
+    "migrations"
+   ],
+   "kind": "table",
+   "what": "One checkout by a customer, with its shipping address, status (new, paid, shipped), and when it was placed."
+  },
+  {
+   "id": "shopdb.payments",
+   "database": "shopdb",
+   "name": "payments",
+   "writers": [
+    "checkout-api"
+   ],
+   "readers": [],
+   "ddl": [],
+   "kind": "table",
+   "what": "The payment for one order: amount, method, and when it was paid."
+  },
+  {
+   "id": "shopdb.products",
+   "database": "shopdb",
+   "name": "products",
+   "writers": [
+    "admin-api"
+   ],
+   "readers": [
+    "checkout-api",
+    "nightly-reports"
+   ],
+   "ddl": [],
+   "kind": "table",
+   "what": "One item for sale, with its SKU, category, and current price in cents."
+  },
+  {
+   "id": "shopdb.shipments",
+   "database": "shopdb",
+   "name": "shipments",
+   "writers": [
+    "fulfilment-worker"
+   ],
+   "readers": [
+    "fulfilment-worker"
+   ],
+   "ddl": [],
+   "kind": "table",
+   "what": "One shipment of an order: the carrier and when it was shipped."
+  },
+  {
+   "id": "shopdb.v_customer_ltv",
+   "database": "shopdb",
+   "name": "v_customer_ltv",
+   "writers": [],
+   "readers": [
+    "admin-api"
+   ],
+   "ddl": [],
+   "kind": "view",
+   "what": "View: each customer's lifetime spend, built from customers and v_order_totals."
+  },
+  {
+   "id": "shopdb.v_order_totals",
+   "database": "shopdb",
+   "name": "v_order_totals",
+   "writers": [],
+   "readers": [
+    "admin-api"
+   ],
+   "ddl": [],
+   "kind": "view",
+   "what": "View: each order's total value, summed from its order lines."
+  }
+ ],
+ "links": [
+  {
+   "participant": "looker",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 412,
+    "last_seen": "2026-11-13 17:41:02 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L1"
+  },
+  {
+   "participant": "priya@acme.com",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 9,
+    "last_seen": "2026-11-12 11:05:40 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L2"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "write",
+   "ops": [
+    "CREATE AS"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 24,
+     "op": "CREATE AS",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": "2026-11-13 02:00:19 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "CREATE AS"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L3"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 24,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": "2026-11-13 02:00:19 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L4"
+  },
+  {
+   "participant": "priya@acme.com",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 9,
+    "last_seen": "2026-11-12 11:05:40 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L5"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "write",
+   "ops": [
+    "LOAD"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 23,
+     "op": "LOAD",
+     "how": "bigquery load_table_from_dataframe()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": "2026-11-13 02:00:11 UTC",
+    "source": "bigquery jobs",
+    "ops": [
+     "LOAD"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L6"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "addresses",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/checkout_api/checkout.py",
+     "line": 16,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 8100,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L7"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "addresses",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 8,
+     "op": "SELECT",
+     "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 1440,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L8"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "audit_log",
+   "kind": "write",
+   "ops": [
+    "INSERT",
+    "DELETE"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 24,
+     "op": "INSERT",
+     "how": "SQL string",
+     "via": null
+    },
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 31,
+     "op": "DELETE",
+     "how": "f-string; table='audit_log' passed at services/fulfilment_worker/worker.py:37",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 7601,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT",
+     "DELETE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L9"
+  },
+  {
+   "participant": "migrations",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "ddl",
+   "ops": [
+    "CREATE TABLE"
+   ],
+   "code": [
+    {
+     "file": "migrations/versions/001_init.py",
+     "line": 11,
+     "op": "CREATE TABLE",
+     "how": "alembic op.create_table()",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L10"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": null,
+   "via_view": "v_customer_ltv",
+   "label": "via view v_customer_ltv",
+   "id": "L11"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/checkout_api/checkout.py",
+     "line": 15,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 8100,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L12"
+  },
+  {
+   "participant": "crm_sync",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "write",
+   "ops": [
+    "UPDATE",
+    "UPSERT"
+   ],
+   "code": [],
+   "logs": {
+    "count": 2330,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "UPDATE",
+     "UPSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "logs only",
+   "id": "L13"
+  },
+  {
+   "participant": "migrations",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "ddl",
+   "ops": [
+    "CREATE TABLE"
+   ],
+   "code": [
+    {
+     "file": "migrations/versions/001_init.py",
+     "line": 14,
+     "op": "CREATE TABLE",
+     "how": "alembic op.create_table()",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L14"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": null,
+   "via_view": "v_customer_ltv",
+   "label": "via view v_customer_ltv",
+   "id": "L15"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 9,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L16"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "write",
+   "ops": [
+    "INSERT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 11,
+     "op": "INSERT",
+     "how": "session.add(new object)",
+     "via": "called from services/checkout_api/checkout.py:17"
+    }
+   ],
+   "logs": {
+    "count": 19400,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L17"
+  },
+  {
+   "participant": "migrations",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "ddl",
+   "ops": [
+    "ADD COLUMN",
+    "CREATE INDEX",
+    "CREATE TABLE"
+   ],
+   "code": [
+    {
+     "file": "migrations/versions/002_order_status.py",
+     "line": 11,
+     "op": "ADD COLUMN",
+     "how": "alembic op.add_column()",
+     "via": null
+    },
+    {
+     "file": "migrations/versions/002_order_status.py",
+     "line": 12,
+     "op": "CREATE INDEX",
+     "how": "alembic op.create_index()",
+     "via": null
+    },
+    {
+     "file": "migrations/versions/001_init.py",
+     "line": 13,
+     "op": "CREATE TABLE",
+     "how": "alembic op.create_table()",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L18"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 16,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": "called from services/admin_api/app.py:10"
+    }
+   ],
+   "logs": {
+    "count": 640,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L19"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 20,
+     "op": "SELECT",
+     "how": "session.get()",
+     "via": "called from services/checkout_api/checkout.py:23"
+    }
+   ],
+   "logs": {
+    "count": 7900,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L20"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 8,
+     "op": "SELECT",
+     "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+     "via": null
+    },
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 24,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 9040,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L21"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 9,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L22"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "ops": [
+    "INSERT",
+    "UPDATE"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 8,
+     "op": "INSERT",
+     "how": "session.add(order)",
+     "via": "called from services/checkout_api/checkout.py:17"
+    },
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 21,
+     "op": "UPDATE",
+     "how": "changes a loaded order",
+     "via": "called from services/checkout_api/checkout.py:23"
+    }
+   ],
+   "logs": {
+    "count": 16000,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT",
+     "UPDATE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L23"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "ops": [
+    "UPDATE"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 22,
+     "op": "UPDATE",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 7600,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "UPDATE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L24"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "payments",
+   "kind": "write",
+   "ops": [
+    "INSERT"
+   ],
+   "code": [
+    {
+     "file": "libs/shopdb/orders_repo.py",
+     "line": 22,
+     "op": "INSERT",
+     "how": "session.add(new object)",
+     "via": "called from services/checkout_api/checkout.py:23"
+    }
+   ],
+   "logs": {
+    "count": 7900,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L25"
+  },
+  {
+   "participant": "checkout-api",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/checkout_api/checkout.py",
+     "line": 10,
+     "op": "SELECT",
+     "how": "select(Product)",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 51200,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L26"
+  },
+  {
+   "participant": "nightly-reports",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "jobs/nightly_reports/report.py",
+     "line": 18,
+     "op": "SELECT",
+     "how": "pandas read_sql()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 30,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L27"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "write",
+   "ops": [
+    "UPDATE"
+   ],
+   "code": [
+    {
+     "file": "services/admin_api/app.py",
+     "line": 14,
+     "op": "UPDATE",
+     "how": "sqlalchemy update()",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 35,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "UPDATE"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L28"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "shipments",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 8,
+     "op": "SELECT",
+     "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 1440,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "SELECT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L29"
+  },
+  {
+   "participant": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "shipments",
+   "kind": "write",
+   "ops": [
+    "INSERT"
+   ],
+   "code": [
+    {
+     "file": "services/fulfilment_worker/worker.py",
+     "line": 21,
+     "op": "INSERT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": {
+    "count": 7600,
+    "last_seen": null,
+    "source": "pg_stat_statements",
+    "ops": [
+     "INSERT"
+    ]
+   },
+   "via_view": null,
+   "label": "code + logs",
+   "id": "L30"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "v_customer_ltv",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [
+    {
+     "file": "services/admin_api/app.py",
+     "line": 19,
+     "op": "SELECT",
+     "how": "SQL string",
+     "via": null
+    }
+   ],
+   "logs": null,
+   "via_view": null,
+   "label": "code only",
+   "id": "L31"
+  },
+  {
+   "participant": "admin-api",
+   "database": "shopdb",
+   "table": "v_order_totals",
+   "kind": "read",
+   "ops": [
+    "SELECT"
+   ],
+   "code": [],
+   "logs": null,
+   "via_view": "v_customer_ltv",
+   "label": "via view v_customer_ltv",
+   "id": "L32"
+  }
+ ],
+ "flows": [
+  {
+   "table": "acme.shop.daily_sales",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "looker",
+    "priya@acme.com"
+   ],
+   "sentence": "nightly-reports replaces it every night with CREATE OR REPLACE; looker (412 queries in 30 days) and priya@acme.com read it, so a failed or late run, or a duplicated load into sales_lines, shows up directly on the dashboards."
+  },
+  {
+   "table": "acme.shop.sales_lines",
+   "writers": [
+    "nightly-reports"
+   ],
+   "readers": [
+    "priya@acme.com"
+   ],
+   "sentence": "nightly-reports appends to it every night and reads it back to rebuild daily_sales; priya@acme.com queries it directly, so a change to the columns nightly-reports loads (it copies whatever products and order_items contain) changes what her queries return."
+  },
+  {
+   "table": "shopdb.customers",
+   "writers": [
+    "crm_sync"
+   ],
+   "readers": [
+    "admin-api",
+    "checkout-api"
+   ],
+   "sentence": "crm_sync, outside this repo, is the only writer; checkout-api reads customers at checkout and admin-api reads them through v_customer_ltv, so if crm_sync stops or changes emails, both services see it without any change here."
+  },
+  {
+   "table": "shopdb.order_items",
+   "writers": [
+    "checkout-api"
+   ],
+   "readers": [
+    "admin-api",
+    "nightly-reports"
+   ],
+   "sentence": "checkout-api writes every order line; admin-api reads them through v_customer_ltv for top customers and nightly-reports copies them into BigQuery, so if checkout stops filling a column (unit_price_cents today relies on something outside this repo) both lifetime spend and warehouse revenue go wrong."
+  },
+  {
+   "table": "shopdb.orders",
+   "writers": [
+    "checkout-api",
+    "fulfilment-worker"
+   ],
+   "readers": [
+    "admin-api",
+    "nightly-reports"
+   ],
+   "sentence": "checkout-api creates orders and sets them to paid, and fulfilment-worker sets them to shipped; admin-api reads them for order lookups and nightly-reports reads them for the sales copy, so a new status value or a change to how either writer sets status changes what both readers see."
+  },
+  {
+   "table": "shopdb.products",
+   "writers": [
+    "admin-api"
+   ],
+   "readers": [
+    "checkout-api",
+    "nightly-reports"
+   ],
+   "sentence": "admin-api changes prices; checkout-api prices every cart from them and nightly-reports copies the product list into each night's sales lines, so a price edit takes effect at checkout immediately and shows up in the next night's warehouse load."
+  }
+ ],
+ "unresolved": [
+  {
+   "service": "fulfilment-worker",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 31,
+   "op": "DELETE",
+   "sql": "DELETE FROM {} WHERE at < now() - interval '{} days'",
+   "resolved_by": "services/fulfilment_worker/worker.py:37"
+  }
+ ],
+ "logs_given": true,
+ "schemas": [
+  "shopdb"
+ ],
+ "findings": [
+  {
+   "kind": "NO-WRITER",
+   "where": "shopdb.addresses",
+   "detail": "read by checkout-api, fulfilment-worker but nothing here writes it: rows come from another repo, a manual load, or a seed"
+  },
+  {
+   "kind": "WRITE-ONLY",
+   "where": "shopdb.audit_log",
+   "detail": "written by fulfilment-worker and read by nothing seen"
+  },
+  {
+   "kind": "OUTSIDE-WRITER",
+   "where": "shopdb.customers",
+   "detail": "only written from outside this repo by crm_sync"
+  },
+  {
+   "kind": "MULTI-WRITER",
+   "where": "shopdb.orders",
+   "detail": "written by checkout-api, fulfilment-worker; one owner per table keeps its rules in one place"
+  },
+  {
+   "kind": "WRITE-ONLY",
+   "where": "shopdb.payments",
+   "detail": "written by checkout-api and read by nothing seen"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.categories",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.tags",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.product_tags",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "UNTOUCHED",
+   "where": "shopdb.employees",
+   "detail": "no service reads or writes it"
+  },
+  {
+   "kind": "CODE-ONLY",
+   "where": "admin-api -> shopdb.v_customer_ltv",
+   "detail": "read in code but not in the logs: a dead path, or too rare to show"
+  }
+ ],
+ "title": "shopco: who reads and writes what",
+ "summary": "Four services (checkout-api, admin-api, fulfilment-worker, nightly-reports) plus the Alembic migrations work against the Postgres database shopdb, and nightly-reports also copies sales into the BigQuery dataset acme.shop that Looker reads. The thing to worry about most: the revenue Looker shows is built from order_items.unit_price_cents and orders.placed_at, and no code in this repo ever writes either column.",
+ "notes": [
+  "Revenue depends on columns nobody here writes. nightly-reports reads order_items.unit_price_cents and filters on orders.placed_at (jobs/nightly_reports/report.py:10-12), and daily_sales sums quantity * unit_price_cents. checkout-api never sets either one: the ORM models have no such columns (libs/shopdb/models.py:30-43), and the logged INSERTs list only customer_id, shipping_address_id, status and order_id, line_no, product_id, quantity. db/schema.sql declares both columns NOT NULL with no default, so the live database must fill them some other way (a default or trigger that is not in this repo), or schema.sql does not match production. Confirm this before trusting daily_sales. payments.method and payments.paid_at are in the same position.",
+  "sales_lines may double-count or skip days. nightly-reports loads with load_table_from_dataframe and no job config (report.py:23), and BigQuery load jobs append by default. The extract window is 'now() - 1 day' at run time, so a rerun appends the same lines again and a late run leaves a gap. daily_sales is then rebuilt from all of sales_lines, so either problem reaches Looker. This is likely, not confirmed, because the logs show counts, not rows.",
+  "db/schema.sql and the migrations disagree. schema.sql is SQLite-flavoured (PRAGMA foreign_keys) and describes 12 tables and 2 views; the Alembic migrations create only customers, orders, and order_items, and 002 adds orders.status as nullable while schema.sql has it NOT NULL. Nothing in this repo creates addresses, products, payments, shipments, or audit_log, so their real shape is owned elsewhere.",
+  "No writer for addresses here. checkout-api and fulfilment-worker both read shopdb.addresses, but nothing in this repo or the Postgres logs writes it. Its rows come from another system, a manual load, or a seed. Also, checkout-api's place_order looks up the customer and the address separately and never checks that the address belongs to that customer (services/checkout_api/checkout.py:14-17).",
+  "Price changes are not audited. admin-api updates products.price_cents directly (services/admin_api/app.py:14) without writing to audit_log, though the sample data in schema.sql has a 'products update' audit row. Only fulfilment-worker writes audit_log, and nothing seen reads it.",
+  "payments is written but never read. checkout-api writes a payment row for every paid order, and nothing in the repo or the logs reads it (v_customer_ltv computes spend from order lines, not payments). There is a commented-out 'DELETE FROM payments' in services/fulfilment_worker/worker.py:26. It is not live, but it should not be re-enabled casually.",
+  "One dynamic SQL statement was resolved, not guessed. fulfilment-worker's purge() builds 'DELETE FROM {table}' with an f-string (worker.py:31). Its only call site passes the literal 'audit_log' (worker.py:37), and the Postgres logs show exactly that DELETE. The f-string pattern would allow arbitrary SQL if a future caller passed user input.",
+  "admin-api's top-customers query (v_customer_ltv, services/admin_api/app.py:19) does not appear in the exported Postgres stats. That means it was not seen in the log window, not that it is dead. Its reads of customers, order_items, and v_order_totals are shown as 'via view'.",
+  "The Postgres log window is unclear. pg_stat_statements counts since the last stats reset, and the export has no timestamps. nightly-reports' 30 calls suggest about 30 days, but fulfilment-worker's pending-orders scan has only 1,440 calls, which is one day if it really runs every minute as its docstring says. The audit purge, which runs on the same path, shows only 1 call. Check the worker's schedule and whether the purge is failing. The BigQuery export covers 30 nightly runs.",
+  "Excluded on purpose: tests/test_checkout.py writes to customers, orders, and payments, but against a throwaway SQLite fixture, so those writes are not counted. The libs/shopdb repository is credited only to the services that actually call it: admin-api only reads orders through get_order and never creates them.",
+  "Untouched by anything seen: categories, tags, product_tags, and employees (shipments.handled_by points at employees but fulfilment-worker never sets it)."
+ ],
+ "logsGiven": true
+}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("access-data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  const cls = (l) => l === "code + logs" ? "b-both" : l === "code only" ? "b-code" : l === "logs only" ? "b-logs" : "b-view";
+  const badge = (l) => `<span class="badge ${cls(l)}">${esc(l)}</span>`;
+  const tchip = (id) => `<a class="chip" href="#t-${encodeURIComponent(id)}" data-go="t-${esc(id)}">${esc(id)}</a>`;
+  const pchip = (n) => `<a class="chip" href="#p-${encodeURIComponent(n)}" data-go="p-${esc(n)}">${esc(n)}</a>`;
+  const tid = (l) => `${l.database}.${l.table}`;
+  const P = D.participants, inside = P.filter((p) => !p.external), outside = P.filter((p) => p.external);
+
+  $("navTitle").textContent = D.title; $("title").textContent = D.title; $("summary").textContent = D.summary;
+  $("eyebrow").textContent = D.logsGiven ? "From code and query logs" : "From code (no logs given)";
+  const confirmed = D.links.filter((l) => l.label === "code + logs").length;
+  $("stats").innerHTML = [[inside.length, "services"], [outside.length, "outside readers and writers"], [D.tables.length, "tables touched"],
+    [D.links.filter((l) => l.kind === "write").length, "write links"], [D.links.filter((l) => l.kind === "read").length, "read links"],
+    ...(D.logsGiven ? [[confirmed, "confirmed by logs"]] : [])].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  const evLine = (l) => [...l.code.map((c) => `<div><code>${esc(c.file)}:${c.line}</code> ${esc(c.op)} · ${esc(c.how)}${c.via ? " · " + esc(c.via) : ""}</div>`),
+    l.logs ? `<div>${esc(l.logs.source)}: ${l.logs.count.toLocaleString()} ${esc(l.logs.ops.join("/"))}${l.logs.last_seen ? ", last " + esc(l.logs.last_seen) : ""}</div>` : "",
+    l.via_view ? `<div>reads view <code>${esc(l.via_view)}</code>, which reads this table</div>` : ""].join("");
+  const linkRow = (l, chip) => `<div class="row">${chip}<span>${esc(l.ops.join(", "))}</span>${badge(l.label)}</div>`;
+  const pCard = (p) => {
+    const mine = D.links.filter((l) => l.participant === p.name);
+    const part = (kind, label) => {
+      const ls = mine.filter((l) => l.kind === kind);
+      return ls.length ? `<div class="kv"><span class="lbl">${label}</span><div class="rows">${ls.map((l) => linkRow(l, tchip(tid(l)))).join("")}</div></div>` : "";
+    };
+    const db = p.db ? `${p.db.db}${p.db.role ? " as " + p.db.role : ""}` : "";
+    const tags = [p.external ? `<span class="badge b-logs">${esc(p.kind)}</span>` : `<span class="badge b-soft">${esc(p.kind)}</span>`,
+      db ? `<span class="badge b-soft">${esc(db)}</span>` : "", ...(p.bigquery || []).map((b) => `<span class="badge b-soft">${esc(b)}</span>`)].join("");
+    return `<article class="card" id="p-${esc(p.name)}"><div class="top"><h3>${esc(p.name)}</h3>${tags}</div>
+      <p class="what">${esc(p.what)}</p>${p.root ? `<p class="meta"><code>${esc(p.root)}/</code></p>` : ""}
+      ${part("write", "Writes")}${part("read", "Reads")}${part("ddl", "Changes the schema of")}
+      ${mine.length ? "" : `<p class="empty">No table access found.</p>`}
+      <details><summary>Evidence for ${mine.length} links</summary><div class="ev">${mine.map((l) => `<div><b>${esc(l.kind)} ${esc(tid(l))}</b>${evLine(l)}</div>`).join("")}</div></details></article>`;
+  };
+  $("svcCards").innerHTML = inside.map(pCard).join("");
+  $("extCards").innerHTML = outside.map(pCard).join("");
+  $("outsideHead").hidden = !outside.length;
+
+  const tCard = (t) => {
+    const ls = D.links.filter((l) => tid(l) === t.id);
+    const part = (kind, label) => { const x = ls.filter((l) => l.kind === kind);
+      return `<div class="kv"><span class="lbl">${label}</span><div class="rows">${x.map((l) => linkRow(l, pchip(l.participant))).join("") || `<span class="empty">Nobody seen.</span>`}</div></div>`; };
+    const writersInside = t.writers.filter((w) => inside.some((p) => p.name === w));
+    return `<article class="card" id="t-${esc(t.id)}" data-db="${esc(t.database)}" data-text="${esc(t.id.toLowerCase())}">
+      <div class="top"><h3>${esc(t.name)}</h3><span class="badge b-soft">${esc(t.database)}</span>${t.kind !== "table" ? `<span class="badge b-soft">${esc(t.kind)}</span>` : ""}</div>
+      <p class="what">${esc(t.what)}</p>
+      ${writersInside.length === 1 ? `<p class="meta">Owner: <b>${esc(writersInside[0])}</b> (its only writer in this repo)</p>` : ""}
+      ${part("write", "Written by")}${part("read", "Read by")}${ls.some((l) => l.kind === "ddl") ? part("ddl", "Schema changed by") : ""}</article>`;
+  };
+  $("tblCards").innerHTML = D.tables.map(tCard).join("");
+  const dbs = ["All", ...new Set(D.tables.map((t) => t.database))];
+  let db = store.get("access-db") || "All"; if (!dbs.includes(db)) db = "All";
+  $("dbFilter").innerHTML = dbs.map((d) => `<button type="button" data-d="${esc(d)}">${esc(d)}</button>`).join("");
+  const applyT = () => { const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll("#tblCards .card").forEach((c) => { c.hidden = !((db === "All" || c.dataset.db === db) && (!q || c.dataset.text.includes(q))); });
+    $("dbFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.d === db))); };
+  $("dbFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; db = b.dataset.d; store.set("access-db", db); applyT(); });
+  $("q").addEventListener("input", applyT); applyT();
+
+  const cols = D.tables;
+  const groups = [...new Set(cols.map((t) => t.database))].map((g) => [g, cols.filter((t) => t.database === g).length]);
+  const cell = (p, t) => {
+    const ls = D.links.filter((l) => l.participant === p.name && tid(l) === t.id);
+    if (!ls.length) return "";
+    const w = ls.some((l) => l.kind === "write"), r = ls.some((l) => l.kind === "read"), s = ls.some((l) => l.kind === "ddl");
+    const v = w && r ? "RW" : w ? "W" : r ? "R" : s ? "S" : "";
+    const extra = ls.every((l) => l.label === "logs only") ? " c-logs" : ls.every((l) => l.label.startsWith("via view")) ? " c-view" : "";
+    const tip = ls.map((l) => `${l.kind} ${l.ops.join("/")} (${l.label})`).join("; ");
+    return `<span class="cell c-${v}${extra}" title="${esc(tip)}">${v}</span>`;
+  };
+  $("mx").innerHTML = `<thead><tr><th class="who"></th>${groups.map(([g, n]) => `<th class="db" colspan="${n}">${esc(g)}</th>`).join("")}</tr>
+    <tr><th class="who">service</th>${cols.map((t) => `<th>${esc(t.name)}</th>`).join("")}</tr></thead>
+    <tbody>${P.map((p) => `<tr><th class="who">${esc(p.name)}</th>${cols.map((t) => `<td>${cell(p, t)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+
+  $("flowList").innerHTML = D.flows.map((f) => `<div class="flow"><p class="say">${esc(f.sentence)}</p>
+    <div class="path">${f.writers.map(pchip).join("")}<span>→</span>${tchip(f.table)}<span>→</span>${f.readers.map(pchip).join("")}</div></div>`).join("") || `<p class="empty">No table is written by one participant and read by another.</p>`;
+
+  $("findList").innerHTML = [...D.findings.map((f) => `<div class="find"><div class="k">${esc(f.kind)}</div><div><div class="w">${esc(f.where)}</div><div class="d">${esc(f.detail)}</div></div></div>`),
+    ...D.notes.map((n) => `<div class="find"><div class="k">NOTE</div><div><div class="d">${esc(n)}</div></div></div>`)].join("") || `<p class="empty">Nothing to fix.</p>`;
+
+  const evRows = D.links.map((l) => `<tr data-s="${esc((l.participant + " " + tid(l) + " " + l.code.map((c) => c.file).join(" ")).toLowerCase())}">
+    <td class="m">${esc(l.participant)}</td><td>${esc(l.kind)}</td><td class="m">${esc(tid(l))}</td><td>${esc(l.ops.join(", "))}</td><td>${badge(l.label)}</td><td class="m">${evLine(l)}</td></tr>`);
+  $("evTable").innerHTML = `<thead><tr><th>Who</th><th>Does</th><th>Table</th><th>How</th><th>Seen in</th><th>Evidence</th></tr></thead><tbody>${evRows.join("")}</tbody>`;
+  $("eq").addEventListener("input", () => { const q = $("eq").value.trim().toLowerCase();
+    document.querySelectorAll("#evTable tbody tr").forEach((r) => { r.hidden = q && !r.dataset.s.includes(q); }); });
+
+  document.addEventListener("click", (e) => { const a = e.target.closest("[data-go]"); if (!a) return; e.preventDefault();
+    db = "All"; $("q").value = ""; applyT(); const el = document.getElementById(a.dataset.go); if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400); });
+  $("foot").textContent = `${D.title} · ${inside.length} services · ${D.tables.length} tables · ${D.links.length} links`;
+})();
+</script>

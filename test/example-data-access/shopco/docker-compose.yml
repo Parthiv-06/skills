@@ -1,0 +1,22 @@
+# Local stack: four Python services against one Postgres database (shopdb).
+# nightly-reports also writes to the BigQuery warehouse dataset acme.shop.
+services:
+  checkout-api:
+    build: ./services/checkout_api
+    environment:
+      DATABASE_URL: postgresql://app@db:5432/shopdb
+  admin-api:
+    build: ./services/admin_api
+    environment:
+      DATABASE_URL: postgresql://admin@db:5432/shopdb
+  fulfilment-worker:
+    build: ./services/fulfilment_worker
+    environment:
+      DATABASE_URL: postgresql://worker@db:5432/shopdb
+  nightly-reports:
+    build: ./jobs/nightly_reports
+    environment:
+      DATABASE_URL: postgresql://reports@db:5432/shopdb
+      BQ_DATASET: acme.shop
+  db:
+    image: postgres:16

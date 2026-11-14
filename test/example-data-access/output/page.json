@@ -1,0 +1,51 @@
+{
+ "title": "shopco: who reads and writes what",
+ "summary": "Four services (checkout-api, admin-api, fulfilment-worker, nightly-reports) plus the Alembic migrations work against the Postgres database shopdb, and nightly-reports also copies sales into the BigQuery dataset acme.shop that Looker reads. The thing to worry about most: the revenue Looker shows is built from order_items.unit_price_cents and orders.placed_at, and no code in this repo ever writes either column.",
+ "services": {
+  "checkout-api": {"what": "The web shop's checkout. Prices a cart from products, looks up the customer and shipping address, creates the order and its lines, then marks the order paid and records the card payment (Postgres role app)."},
+  "admin-api": {"what": "Staff back-office API. Looks up single orders, changes product prices, and lists the top customers by lifetime spend through the v_customer_ltv view (Postgres role admin)."},
+  "fulfilment-worker": {"what": "Background worker that finds paid orders with no shipment, records a shipment, marks the order shipped, writes an audit entry, and purges audit entries older than 90 days (Postgres role worker)."},
+  "nightly-reports": {"what": "Nightly job that reads the last day's order lines and the product list from shopdb, appends them to acme.shop.sales_lines in BigQuery, and rebuilds acme.shop.daily_sales from it (Postgres role reports, BigQuery service account nightly-reports@)."},
+  "migrations": {"what": "Alembic schema migrations. They only create customers, orders, and order_items and add orders.status with an index; they never read or write rows."}
+ },
+ "outside": {
+  "crm_sync": {"what": "A Postgres role from outside this repo, likely a CRM sync, that inserts customers and keeps their email addresses up to date. It is the only writer of customers."},
+  "looker": {"what": "The Looker service account, likely the company dashboards. It queries acme.shop.daily_sales about 14 times a day."},
+  "priya@acme.com": {"what": "A person (likely an analyst) running ad-hoc BigQuery queries on daily_sales and sales_lines."}
+ },
+ "tables": {
+  "shopdb.customers": {"what": "One shopper: email, name, and when they signed up."},
+  "shopdb.addresses": {"what": "One postal address belonging to a customer, used for shipping and billing."},
+  "shopdb.products": {"what": "One item for sale, with its SKU, category, and current price in cents."},
+  "shopdb.orders": {"what": "One checkout by a customer, with its shipping address, status (new, paid, shipped), and when it was placed."},
+  "shopdb.order_items": {"what": "One line of an order: which product, how many, and the unit price."},
+  "shopdb.payments": {"what": "The payment for one order: amount, method, and when it was paid."},
+  "shopdb.shipments": {"what": "One shipment of an order: the carrier and when it was shipped."},
+  "shopdb.audit_log": {"what": "One audit event: which entity (by type and id) had which action, and when."},
+  "shopdb.v_order_totals": {"what": "View: each order's total value, summed from its order lines."},
+  "shopdb.v_customer_ltv": {"what": "View: each customer's lifetime spend, built from customers and v_order_totals."},
+  "acme.shop.sales_lines": {"what": "Warehouse copy of order lines joined with product details, appended once a night."},
+  "acme.shop.daily_sales": {"what": "Revenue in cents per day, rebuilt from sales_lines every night."}
+ },
+ "flows": {
+  "shopdb.orders": "checkout-api creates orders and sets them to paid, and fulfilment-worker sets them to shipped; admin-api reads them for order lookups and nightly-reports reads them for the sales copy, so a new status value or a change to how either writer sets status changes what both readers see.",
+  "shopdb.order_items": "checkout-api writes every order line; admin-api reads them through v_customer_ltv for top customers and nightly-reports copies them into BigQuery, so if checkout stops filling a column (unit_price_cents today relies on something outside this repo) both lifetime spend and warehouse revenue go wrong.",
+  "shopdb.products": "admin-api changes prices; checkout-api prices every cart from them and nightly-reports copies the product list into each night's sales lines, so a price edit takes effect at checkout immediately and shows up in the next night's warehouse load.",
+  "shopdb.customers": "crm_sync, outside this repo, is the only writer; checkout-api reads customers at checkout and admin-api reads them through v_customer_ltv, so if crm_sync stops or changes emails, both services see it without any change here.",
+  "acme.shop.sales_lines": "nightly-reports appends to it every night and reads it back to rebuild daily_sales; priya@acme.com queries it directly, so a change to the columns nightly-reports loads (it copies whatever products and order_items contain) changes what her queries return.",
+  "acme.shop.daily_sales": "nightly-reports replaces it every night with CREATE OR REPLACE; looker (412 queries in 30 days) and priya@acme.com read it, so a failed or late run, or a duplicated load into sales_lines, shows up directly on the dashboards."
+ },
+ "notes": [
+  "Revenue depends on columns nobody here writes. nightly-reports reads order_items.unit_price_cents and filters on orders.placed_at (jobs/nightly_reports/report.py:10-12), and daily_sales sums quantity * unit_price_cents. checkout-api never sets either one: the ORM models have no such columns (libs/shopdb/models.py:30-43), and the logged INSERTs list only customer_id, shipping_address_id, status and order_id, line_no, product_id, quantity. db/schema.sql declares both columns NOT NULL with no default, so the live database must fill them some other way (a default or trigger that is not in this repo), or schema.sql does not match production. Confirm this before trusting daily_sales. payments.method and payments.paid_at are in the same position.",
+  "sales_lines may double-count or skip days. nightly-reports loads with load_table_from_dataframe and no job config (report.py:23), and BigQuery load jobs append by default. The extract window is 'now() - 1 day' at run time, so a rerun appends the same lines again and a late run leaves a gap. daily_sales is then rebuilt from all of sales_lines, so either problem reaches Looker. This is likely, not confirmed, because the logs show counts, not rows.",
+  "db/schema.sql and the migrations disagree. schema.sql is SQLite-flavoured (PRAGMA foreign_keys) and describes 12 tables and 2 views; the Alembic migrations create only customers, orders, and order_items, and 002 adds orders.status as nullable while schema.sql has it NOT NULL. Nothing in this repo creates addresses, products, payments, shipments, or audit_log, so their real shape is owned elsewhere.",
+  "No writer for addresses here. checkout-api and fulfilment-worker both read shopdb.addresses, but nothing in this repo or the Postgres logs writes it. Its rows come from another system, a manual load, or a seed. Also, checkout-api's place_order looks up the customer and the address separately and never checks that the address belongs to that customer (services/checkout_api/checkout.py:14-17).",
+  "Price changes are not audited. admin-api updates products.price_cents directly (services/admin_api/app.py:14) without writing to audit_log, though the sample data in schema.sql has a 'products update' audit row. Only fulfilment-worker writes audit_log, and nothing seen reads it.",
+  "payments is written but never read. checkout-api writes a payment row for every paid order, and nothing in the repo or the logs reads it (v_customer_ltv computes spend from order lines, not payments). There is a commented-out 'DELETE FROM payments' in services/fulfilment_worker/worker.py:26. It is not live, but it should not be re-enabled casually.",
+  "One dynamic SQL statement was resolved, not guessed. fulfilment-worker's purge() builds 'DELETE FROM {table}' with an f-string (worker.py:31). Its only call site passes the literal 'audit_log' (worker.py:37), and the Postgres logs show exactly that DELETE. The f-string pattern would allow arbitrary SQL if a future caller passed user input.",
+  "admin-api's top-customers query (v_customer_ltv, services/admin_api/app.py:19) does not appear in the exported Postgres stats. That means it was not seen in the log window, not that it is dead. Its reads of customers, order_items, and v_order_totals are shown as 'via view'.",
+  "The Postgres log window is unclear. pg_stat_statements counts since the last stats reset, and the export has no timestamps. nightly-reports' 30 calls suggest about 30 days, but fulfilment-worker's pending-orders scan has only 1,440 calls, which is one day if it really runs every minute as its docstring says. The audit purge, which runs on the same path, shows only 1 call. Check the worker's schedule and whether the purge is failing. The BigQuery export covers 30 nightly runs.",
+  "Excluded on purpose: tests/test_checkout.py writes to customers, orders, and payments, but against a throwaway SQLite fixture, so those writes are not counted. The libs/shopdb repository is credited only to the services that actually call it: admin-api only reads orders through get_order and never creates them.",
+  "Untouched by anything seen: categories, tags, product_tags, and employees (shipments.handled_by points at employees but fulfilment-worker never sets it)."
+ ]
+}
