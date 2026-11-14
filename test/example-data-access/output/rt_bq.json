@@ -1,0 +1,68 @@
+[
+ {
+  "principal": "nightly-reports@acme.iam.gserviceaccount.com",
+  "principal_kind": "service account",
+  "database": "acme.shop",
+  "table": "sales_lines",
+  "kind": "write",
+  "op": "LOAD",
+  "count": 30,
+  "last_seen": "2026-11-13 02:00:11 UTC",
+  "source": "bigquery jobs"
+ },
+ {
+  "principal": "nightly-reports@acme.iam.gserviceaccount.com",
+  "principal_kind": "service account",
+  "database": "acme.shop",
+  "table": "sales_lines",
+  "kind": "read",
+  "op": "SELECT",
+  "count": 30,
+  "last_seen": "2026-11-13 02:00:19 UTC",
+  "source": "bigquery jobs"
+ },
+ {
+  "principal": "nightly-reports@acme.iam.gserviceaccount.com",
+  "principal_kind": "service account",
+  "database": "acme.shop",
+  "table": "daily_sales",
+  "kind": "write",
+  "op": "CREATE AS",
+  "count": 30,
+  "last_seen": "2026-11-13 02:00:19 UTC",
+  "source": "bigquery jobs"
+ },
+ {
+  "principal": "looker@acme.iam.gserviceaccount.com",
+  "principal_kind": "service account",
+  "database": "acme.shop",
+  "table": "daily_sales",
+  "kind": "read",
+  "op": "SELECT",
+  "count": 412,
+  "last_seen": "2026-11-13 17:41:02 UTC",
+  "source": "bigquery jobs"
+ },
+ {
+  "principal": "priya@acme.com",
+  "principal_kind": "person",
+  "database": "acme.shop",
+  "table": "daily_sales",
+  "kind": "read",
+  "op": "SELECT",
+  "count": 9,
+  "last_seen": "2026-11-12 11:05:40 UTC",
+  "source": "bigquery jobs"
+ },
+ {
+  "principal": "priya@acme.com",
+  "principal_kind": "person",
+  "database": "acme.shop",
+  "table": "sales_lines",
+  "kind": "read",
+  "op": "SELECT",
+  "count": 9,
+  "last_seen": "2026-11-12 11:05:40 UTC",
+  "source": "bigquery jobs"
+ }
+]

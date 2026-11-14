@@ -13,7 +13,9 @@ Agent skills for [Claude Code](https://claude.com/claude-code).
 | [researching-existing-solutions](src/engineering/researching-existing-solutions/SKILL.md) | Before writing Python code or adding a dependency: finds existing open-source packages, pulls live health, license, and vulnerability data, tests the top pick in a throwaway environment, and recommends one. |
 | [packaging-code](src/engineering/packaging-code/SKILL.md) | Python code that keeps growing by copy-paste. While a feature is being built, it says what should be shared or which declared package to use, before another copy gets written. On request, it reviews the repo for code worth extracting into a package and for packages that are misused, unused, or carry nothing. |
 | [mapping-database-schemas](src/databases/mapping-database-schemas/SKILL.md) | Understanding a database or dataset (BigQuery, Postgres, SQLite, SQL DDL): maps every primary and foreign key, labels each link declared, inferred, or guess, and traces what each view is built from. Produces two files: an Apple-style page that explains everything in words, and a precise Excalidraw diagram drawn from the exact key columns. |
+| [mapping-data-access](src/databases/mapping-data-access/SKILL.md) | Which service reads and writes which table, in a Python codebase. Scans the code (following calls into shared libraries), adds query logs from Postgres or BigQuery when you have them, and labels every link code + logs, code only, or logs only. Produces an Apple-style page and an Excalidraw diagram of services, tables, and the direction data moves. |
 | [writing-two-line-comments](src/engineering/writing-two-line-comments/SKILL.md) | Any time code is written or edited, in any language: every comment is at most 2 lines (what it is for, then what to watch), every file gets a header, and a checker plus an optional hook enforce it. |
+| [explaining-how-it-works](src/engineering/explaining-how-it-works/SKILL.md) | Explaining how a feature, a flow from A to B, or an external integration works in existing code. Traces every hop with file:line evidence, then explains it twice: in plain English (jargon is blocked) and in depth, with professional architecture diagrams at several levels (context, containers, components, sequence, and more). Produces an Apple-style page plus editable Excalidraw files. |
 
 ## Install
 
@@ -29,7 +31,9 @@ ln -s "$(pwd)/skills/src/agents/auditing-agent-token-usage" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/engineering/researching-existing-solutions" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/engineering/packaging-code" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/engineering/writing-two-line-comments" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/engineering/explaining-how-it-works" ~/.claude/skills/
 ln -s "$(pwd)/skills/src/databases/mapping-database-schemas" ~/.claude/skills/
+ln -s "$(pwd)/skills/src/databases/mapping-data-access" ~/.claude/skills/
 ```
 
 Claude Code picks up the skills in new sessions and uses them automatically. Try:
@@ -41,6 +45,8 @@ Claude Code picks up the skills in new sessions and uses them automatically. Try
 - "I need to generate PDF invoices in Python. Research what open-source packages I can use"
 - "This codebase is getting too big. What could be made into packages, and are we using any packages wrongly?"
 - "Map our BigQuery dataset `acme.analytics`: how does everything connect?" or "Explain the schema in `shop.db`"
+- "Which of our services read and write which tables? Here are the pg_stat_statements and BigQuery job logs"
+- "Explain how checkout works, from clicking Pay until the receipt email arrives"
 - Any coding task: the comment and packaging checks apply on their own
 
 ## Usage
@@ -162,6 +168,27 @@ python3 build_schema_page.py analysis.json page.json schema.html
 python3 make_er_excalidraw.py analysis.json page.json schema.excalidraw
 ```
 
+### mapping-data-access
+
+Python only. Five scripts that use only the standard library:
+
+| Script | Does |
+|---|---|
+| `scan_access.py` | Finds services (docker-compose, Dockerfiles, Alembic) and each service's database and role. Reads SQL in strings and in loaded `.sql` files, plus SQLAlchemy, Django, pandas, BigQuery client, and Alembic calls. It follows calls into shared libraries, so a repository function counts only for the services that call it. Dynamic SQL is resolved from call sites that pass a constant, or else listed as unresolved |
+| `runtime_access.py` | Prints the read-only query for BigQuery `INFORMATION_SCHEMA.JOBS` or Postgres `pg_stat_statements` and turns the result into evidence with counts |
+| `analyze_access.py` | Merges code and logs. Maps Postgres roles to services through `DATABASE_URL`, and BigQuery service accounts by name; everything else is shown as an outside reader or writer. Expands view reads to their base tables, and finds tables with several writers, writers outside the repo, tables nobody writes, tables written but never read, untouched tables, and links seen only in code or only in logs |
+| `build_access_page.py` | Builds the page: services, outside participants, tables, a read/write matrix, data flows, findings, and the evidence for every link. It refuses to build while anything is unexplained |
+| `make_access_excalidraw.py` | Draws one arrow per service and table, pointing the way data moves. Columns alternate services and each database's tables, so a job that reads one database and writes another sits between them. A layout search keeps crossings low, and it prints a self-check after every run |
+
+```bash
+cd src/databases/mapping-data-access/scripts
+python3 scan_access.py path/to/repo access.json
+python3 runtime_access.py parse postgres stats.json shopdb > rt_pg.json
+python3 analyze_access.py access.json analysis.json --runtime rt_pg.json --schema shopdb=shop.analysis.json
+python3 build_access_page.py analysis.json page.json access.html
+python3 make_access_excalidraw.py analysis.json page.json access.excalidraw
+```
+
 ### writing-two-line-comments
 
 Every comment is at most 2 lines, each under 100 characters: line 1 says what it is for, line 2 says what to watch. Every code file gets a 2-line header; functions get a comment only when a teammate would have to read the body to call them safely. Editing a file brings all its comments within the rule.
@@ -180,6 +207,17 @@ It reports BLOCK, LONG, NO-HEADER, CODE (commented-out code), HISTORY (change-lo
   "command": "python3 /path/to/skills/src/engineering/writing-two-line-comments/scripts/check_comments.py --hook" }] }] }
 ```
 
+### explaining-how-it-works
+
+Turns "how does X work?" into a start → end path and traces it through the code. Every hop is recorded with file:line, every branch is followed to where it ends, and every external service gets a card covering auth, data sent, limits, and what happens when it is down. The result is explained twice. Part 1 is 5–9 plain steps; a gate blocks technical words unless they are defined. Part 2 has the trace, failure modes, security, config, and debugging notes. The same step numbers run through both parts and the diagrams.
+
+Diagrams follow a professional standard: black ink on white, Excalidraw's clean "Architect" lines, a standard shape for each kind of thing, labeled boundaries, the protocol on every arrow, and a legend and level on every view. The views are Context, Containers, Components, Sequence, State, Data, and Deployment; the question decides which are drawn. Layout is automatic, and the script refuses messy diagrams:
+
+```bash
+python3 src/engineering/explaining-how-it-works/scripts/build_explainer.py explainer.json out/   # page + .svg + .excalidraw
+python3 src/engineering/explaining-how-it-works/scripts/diagrams.py spec.json out/name           # one diagram
+```
+
 ## Examples
 
 - [test/example-url-shortener](test/example-url-shortener/) shows the architecture and demo skills on a URL shortener: the [design write-up](test/example-url-shortener/README.md), the [diagram](test/example-url-shortener/architecture.excalidraw) and its [spec](test/example-url-shortener/spec.json), and the [demo pack](test/example-url-shortener/demo.html) for a sales and marketing audience, built from [demo.json](test/example-url-shortener/demo.json).
@@ -191,7 +229,12 @@ It reports BLOCK, LONG, NO-HEADER, CODE (commented-out code), HISTORY (change-lo
   - [analytics/](test/example-database-schema/analytics/): a BigQuery dataset with almost no declared keys, daily-sharded events, and a type mismatch.
 
   Each folder has the input, `schema.html`, `schema.excalidraw`, and the intermediate JSON files. Both were produced by agents following the skill; without it, the same task took about 6 to 10 times longer and used 2 to 3 times the tokens.
+- [test/example-data-access](test/example-data-access/) shows the data access skill on a [Python monorepo](test/example-data-access/shopco/) with four services, a shared repository library, Alembic migrations, and exported Postgres and BigQuery query logs. The [output](test/example-data-access/output/) has the page and the diagram, plus every intermediate JSON file. Things it gets right:
+  - `admin-api` imports the orders repository but only reads through it, so it is not counted as a writer.
+  - A dynamic `DELETE FROM {table}` is resolved to `audit_log` from its call site.
+  - An outside CRM role turns out to be the only writer of `customers`.
 - [test/example-token-audit](test/example-token-audit/) shows a token audit of a bug-triage agent with six planted problems: 168,068 tokens per task measured against 2,103 for the fixed version (80× less). See the [report page](test/example-token-audit/report.html), the [audit JSON](test/example-token-audit/token-audit.json), and the [agent](test/example-token-audit/wasteful_agent.py).
+- [test/example-how-it-works](test/example-how-it-works/) explains how the token audit gets from an agent's API call to the report page, traced through this repo's own code. It has 7 plain steps and 9 hops with file:line, drawn as context, containers, components, and sequence views. See the [page](test/example-how-it-works/out/index.html), the [explainer JSON](test/example-how-it-works/explainer.json), and the [diagrams](test/example-how-it-works/out/diagrams/).
 
 ## Repo layout
 
@@ -224,16 +267,28 @@ src/engineering/
   writing-two-line-comments/
     SKILL.md
     scripts/check_comments.py
+  explaining-how-it-works/
+    SKILL.md
+    references/                # diagram standard, tracing checklist, plain English
+    scripts/                   # diagrams, check_plain, build_explainer
+    assets/explainer-template.html
+    tests/
 src/databases/
   mapping-database-schemas/
     SKILL.md
     scripts/                   # extract_schema, analyze_schema, build_schema_page, make_er_excalidraw
     assets/schema-template.html
+  mapping-data-access/
+    SKILL.md
+    scripts/                   # sqlscan, scan_access, runtime_access, analyze_access, build_access_page, make_access_excalidraw
+    assets/access-template.html
 test/
   example-url-shortener/       # architecture + demo skills
   example-database-schema/     # database skill (SQLite + BigQuery)
+  example-data-access/         # data access skill (monorepo + query logs)
   example-attachment-button/   # demo skill on a public product feature
   example-packaging/           # packaging skill
   example-prompt-compression/  # prompt compression skill
   example-token-audit/         # token audit skill
+  example-how-it-works/        # explaining skill, on this repo's own code
 ```

@@ -1,0 +1,283 @@
+<title>{{TITLE}}</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Apple product-page rhythm on a white page only: 980px reading grid, #f5f5f7 tiles, words not diagrams. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --tile: #f5f5f7; --tile2: #fbfbfd;
+  --fg: #1d1d1f; --fg2: #6e6e73; --fg3: #86868b; --line: #d2d2d7; --line2: #e8e8ed;
+  --accent: #0071e3; --link: #0066cc; --flame: #bf4800;
+  --glass: rgba(255, 255, 255, .72);
+  --grad: linear-gradient(90deg, #0090f7 0%, #ba62fc 38%, #f2416b 72%, #f55600 100%);
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", Inter, Arial, sans-serif;
+  --mono: "SF Mono", ui-monospace, "JetBrains Mono", Menlo, monospace;
+  --w: 980px; --w-wide: 1180px; --r-lg: 28px; --r-md: 18px;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: calc(64px + env(safe-area-inset-top, 0px)); }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 17px/1.47 var(--sans); letter-spacing: -.022em; -webkit-font-smoothing: antialiased; }
+h1, h2, h3, p { margin: 0; }
+h1, h2, h3 { text-wrap: balance; }
+button, input { font: inherit; letter-spacing: inherit; color: inherit; }
+a { color: var(--link); text-decoration: none; }
+code, .mono { font-family: var(--mono); font-size: .86em; letter-spacing: 0; }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 3px; border-radius: 8px; }
+
+.band { padding-block: clamp(64px, 9vw, 120px); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.inner { max-width: var(--w); margin: 0 auto; display: grid; gap: clamp(26px, 4vw, 44px); min-width: 0; }
+.inner.wide { max-width: var(--w-wide); }
+.eyebrow { font-size: clamp(17px, 1.6vw, 21px); font-weight: 600; color: var(--flame); }
+.h2 { font-size: clamp(34px, 5.2vw, 56px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; }
+.h2 .quiet { color: var(--fg3); }
+.sub { font-size: clamp(19px, 2vw, 23px); line-height: 1.35; font-weight: 500; color: var(--fg2); max-width: 46ch; }
+.head { display: grid; gap: 14px; }
+
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--glass);
+  -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.nav-in { max-width: var(--w); margin: 0 auto; height: 52px; display: flex; align-items: center; gap: 20px; }
+.nav-title { font-size: 19px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.nav-links { margin-left: auto; display: flex; gap: 20px; font-size: 12px; }
+.nav-links a { color: var(--fg); opacity: .8; }
+@media (max-width: 760px) { .nav-links { display: none; } }
+
+.hero { text-align: center; padding-block: clamp(56px, 9vw, 112px) clamp(48px, 7vw, 84px); }
+.hero .inner { justify-items: center; gap: 20px; }
+.hero h1 { font-size: clamp(46px, 8.6vw, 92px); line-height: 1.03; font-weight: 700; letter-spacing: -.045em; max-width: 14ch; overflow-wrap: anywhere; }
+.hero .lede { font-size: clamp(20px, 2.4vw, 27px); line-height: 1.3; font-weight: 600; letter-spacing: -.025em; max-width: 34ch; }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px clamp(26px, 5.5vw, 64px); margin-top: clamp(20px, 3vw, 36px);
+  padding-top: clamp(22px, 3.5vw, 36px); border-top: 1px solid var(--line); width: 100%; }
+.stat { display: grid; gap: 2px; }
+.stat b { font-size: clamp(34px, 4.6vw, 52px); font-weight: 700; letter-spacing: -.04em; line-height: 1; font-variant-numeric: tabular-nums;
+  background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.stat span { font-size: 14px; color: var(--fg2); }
+.meta { font-size: 14px; color: var(--fg3); }
+
+.chip { display: inline-flex; align-items: center; gap: 6px; border-radius: 980px; padding: 3px 11px; font-size: 13px;
+  background: var(--bg); border: 1px solid var(--line2); color: var(--fg); cursor: pointer; white-space: nowrap; font-family: var(--mono); letter-spacing: 0; }
+.chip:hover { border-color: var(--fg3); }
+.badge { display: inline-block; border-radius: 980px; padding: 2px 9px; font-size: 12px; font-weight: 600; letter-spacing: 0; white-space: nowrap; }
+.b-both { background: var(--fg); color: #fff; }
+.b-code { background: #e8f2fe; color: #0058b0; }
+.b-logs { background: #fdf0e8; color: var(--flame); }
+.b-view, .b-soft { background: var(--tile); color: var(--fg2); font-weight: 500; }
+.b-w { background: #eef7ee; color: #1d6b31; }
+.seg { display: inline-flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 980px; background: var(--tile); max-width: 100%; }
+.seg button { border: 0; background: none; cursor: pointer; border-radius: 980px; padding: 7px 15px; font-size: 14px; color: var(--fg2); white-space: nowrap; }
+.seg button[aria-pressed="true"] { background: var(--bg); color: var(--fg); box-shadow: 0 1px 4px rgba(0, 0, 0, .12); font-weight: 500; }
+.tools { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+.search { flex: 1 1 260px; min-width: 0; border: 1px solid var(--line); border-radius: 12px; padding: 11px 16px; background: var(--bg); font-size: 16px; }
+.search:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 20px; }
+.card { background: var(--tile); border-radius: var(--r-lg); padding: clamp(22px, 2.8vw, 32px); display: grid; gap: 14px; align-content: start; min-width: 0; scroll-margin-top: 80px; }
+.card.flash { box-shadow: 0 0 0 3px var(--accent); }
+.card .top { display: flex; flex-wrap: wrap; gap: 8px; align-items: baseline; }
+.card h3 { font: 600 clamp(20px, 2vw, 24px)/1.2 var(--mono); letter-spacing: -.02em; overflow-wrap: anywhere; margin-right: auto; }
+.card .what { font-size: 17px; }
+.kv { display: grid; gap: 8px; font-size: 15px; }
+.kv .lbl { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--fg3); }
+.rows { display: grid; gap: 6px; }
+.row { display: flex; flex-wrap: wrap; gap: 6px 8px; align-items: center; font-size: 14px; color: var(--fg2); }
+.empty { color: var(--fg3); font-size: 15px; }
+details { border-top: 1px solid var(--line); padding-top: 12px; }
+summary { cursor: pointer; font-size: 14px; color: var(--link); list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary::after { content: " \203A"; }
+details[open] summary::after { content: " \2039"; }
+.ev { margin-top: 10px; display: grid; gap: 6px; font-size: 13px; color: var(--fg2); }
+.ev code { color: var(--fg); overflow-wrap: anywhere; }
+
+.matrix-wrap { overflow-x: auto; border: 1px solid var(--line2); border-radius: var(--r-md); }
+table.matrix { border-collapse: separate; border-spacing: 0; font-size: 13px; min-width: 100%; }
+.matrix th, .matrix td { padding: 9px 12px; border-bottom: 1px solid var(--line2); text-align: center; white-space: nowrap; }
+.matrix thead th { position: sticky; top: 0; background: var(--tile2); font: 500 12px/1.3 var(--mono); color: var(--fg2); vertical-align: bottom; }
+.matrix thead th.db { text-align: left; color: var(--fg3); font-family: var(--sans); font-weight: 600; }
+.matrix th.who { position: sticky; left: 0; background: var(--bg); text-align: left; font: 600 13px var(--mono); z-index: 1; }
+.matrix thead th.who { z-index: 2; background: var(--tile2); }
+.cell { display: inline-block; min-width: 34px; border-radius: 8px; padding: 3px 7px; font-weight: 700; font-family: var(--mono); font-size: 12px; }
+.c-W { background: var(--fg); color: #fff; }
+.c-R { background: #e8f2fe; color: #0058b0; }
+.c-RW { background: linear-gradient(90deg, var(--fg) 50%, #cfe3fb 50%); color: #fff; }
+.c-S { background: var(--tile); color: var(--fg3); }
+.c-logs { outline: 2px dotted var(--flame); outline-offset: 1px; }
+.c-view { opacity: .55; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--fg2); align-items: center; }
+
+.flows { display: grid; gap: 14px; }
+.flow { background: var(--tile); border-radius: var(--r-md); padding: 20px 24px; display: grid; gap: 10px; }
+.flow .say { font-size: clamp(18px, 1.8vw, 21px); font-weight: 600; letter-spacing: -.02em; line-height: 1.32; }
+.flow .path { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 14px; color: var(--fg3); }
+
+.finds { display: grid; border-top: 1px solid var(--line); }
+.find { display: grid; grid-template-columns: minmax(0, 160px) minmax(0, 1fr); gap: 6px 24px; padding: 16px 0; border-bottom: 1px solid var(--line); }
+@media (max-width: 640px) { .find { grid-template-columns: minmax(0, 1fr); } }
+.find .k { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--flame); padding-top: 3px; }
+.find .w { font-family: var(--mono); font-size: 14px; overflow-wrap: anywhere; }
+.find .d { color: var(--fg2); font-size: 15px; }
+table.evidence { width: 100%; border-collapse: collapse; font-size: 13px; }
+.evidence td, .evidence th { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px solid var(--line2); vertical-align: top; }
+.evidence th { font-size: 12px; color: var(--fg3); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.evidence td.m { font-family: var(--mono); font-size: 12.5px; overflow-wrap: anywhere; }
+footer { padding: 40px 16px 64px; text-align: center; font-size: 13px; color: var(--fg3); }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+</style>
+
+<nav class="nav"><div class="nav-in">
+  <div class="nav-title" id="navTitle"></div>
+  <div class="nav-links"><a href="#services">Services</a><a href="#tables">Tables</a><a href="#matrix">Matrix</a>
+    <a href="#flows">Flows</a><a href="#findings">Findings</a><a href="#evidence">Evidence</a></div>
+</div></nav>
+
+<header class="band hero"><div class="inner">
+  <div class="eyebrow" id="eyebrow"></div>
+  <h1 id="title"></h1>
+  <p class="lede" id="summary"></p>
+  <div class="stats" id="stats"></div>
+  <p class="meta">The diagram lives in the matching .excalidraw file. This page explains it in words.</p>
+</div></header>
+
+<section class="band" id="services"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every service</div><h2 class="h2">Services. <span class="quiet">What each one writes and reads.</span></h2></div>
+  <div class="cards" id="svcCards"></div>
+  <div class="head" id="outsideHead" hidden><h3 class="h2" style="font-size:clamp(26px,3.4vw,38px)">Outside this repo. <span class="quiet">Seen only in the logs.</span></h3></div>
+  <div class="cards" id="extCards"></div>
+</div></section>
+
+<section class="band" id="tables"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Every table touched</div><h2 class="h2">Tables. <span class="quiet">Who writes it, who reads it.</span></h2></div>
+  <div class="tools"><input class="search" id="q" type="search" placeholder="Search tables" aria-label="Search tables">
+    <div class="seg" id="dbFilter" role="group" aria-label="Filter by database"></div></div>
+  <div class="cards" id="tblCards"></div>
+</div></section>
+
+<section class="band" id="matrix"><div class="inner wide">
+  <div class="head"><div class="eyebrow">At a glance</div><h2 class="h2">Read and write matrix.</h2></div>
+  <div class="legend"><span><span class="cell c-W">W</span> writes</span><span><span class="cell c-R">R</span> reads</span>
+    <span><span class="cell c-RW">RW</span> both</span><span><span class="cell c-S">S</span> changes the schema</span>
+    <span><span class="cell c-R c-logs">R</span> seen only in logs</span><span><span class="cell c-R c-view">R</span> through a view</span></div>
+  <div class="matrix-wrap"><table class="matrix" id="mx"></table></div>
+</div></section>
+
+<section class="band" id="flows"><div class="inner">
+  <div class="head"><div class="eyebrow">Hidden dependencies</div><h2 class="h2">Data flows. <span class="quiet">One writes, another reads.</span></h2>
+    <p class="sub">Each of these is a contract nobody wrote down: change the writer and the readers feel it.</p></div>
+  <div class="flows" id="flowList"></div>
+</div></section>
+
+<section class="band" id="findings"><div class="inner">
+  <div class="head"><div class="eyebrow">Worth fixing</div><h2 class="h2">Findings.</h2></div>
+  <div class="finds" id="findList"></div>
+</div></section>
+
+<section class="band" id="evidence"><div class="inner wide">
+  <div class="head"><div class="eyebrow">Proof for every line</div><h2 class="h2">Evidence.</h2></div>
+  <input class="search" id="eq" type="search" placeholder="Filter evidence by service, table, or file" aria-label="Filter evidence">
+  <div class="matrix-wrap" style="border:0"><table class="evidence" id="evTable"></table></div>
+</div></section>
+
+<footer id="foot"></footer>
+
+<script id="access-data" type="application/json">{{ACCESS_JSON}}</script>
+<script>
+(() => {
+  const D = JSON.parse(document.getElementById("access-data").textContent);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const store = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch {} } };
+  const cls = (l) => l === "code + logs" ? "b-both" : l === "code only" ? "b-code" : l === "logs only" ? "b-logs" : "b-view";
+  const badge = (l) => `<span class="badge ${cls(l)}">${esc(l)}</span>`;
+  const tchip = (id) => `<a class="chip" href="#t-${encodeURIComponent(id)}" data-go="t-${esc(id)}">${esc(id)}</a>`;
+  const pchip = (n) => `<a class="chip" href="#p-${encodeURIComponent(n)}" data-go="p-${esc(n)}">${esc(n)}</a>`;
+  const tid = (l) => `${l.database}.${l.table}`;
+  const P = D.participants, inside = P.filter((p) => !p.external), outside = P.filter((p) => p.external);
+
+  $("navTitle").textContent = D.title; $("title").textContent = D.title; $("summary").textContent = D.summary;
+  $("eyebrow").textContent = D.logsGiven ? "From code and query logs" : "From code (no logs given)";
+  const confirmed = D.links.filter((l) => l.label === "code + logs").length;
+  $("stats").innerHTML = [[inside.length, "services"], [outside.length, "outside readers and writers"], [D.tables.length, "tables touched"],
+    [D.links.filter((l) => l.kind === "write").length, "write links"], [D.links.filter((l) => l.kind === "read").length, "read links"],
+    ...(D.logsGiven ? [[confirmed, "confirmed by logs"]] : [])].map(([n, l]) => `<div class="stat"><b>${n}</b><span>${l}</span></div>`).join("");
+
+  const evLine = (l) => [...l.code.map((c) => `<div><code>${esc(c.file)}:${c.line}</code> ${esc(c.op)} · ${esc(c.how)}${c.via ? " · " + esc(c.via) : ""}</div>`),
+    l.logs ? `<div>${esc(l.logs.source)}: ${l.logs.count.toLocaleString()} ${esc(l.logs.ops.join("/"))}${l.logs.last_seen ? ", last " + esc(l.logs.last_seen) : ""}</div>` : "",
+    l.via_view ? `<div>reads view <code>${esc(l.via_view)}</code>, which reads this table</div>` : ""].join("");
+  const linkRow = (l, chip) => `<div class="row">${chip}<span>${esc(l.ops.join(", "))}</span>${badge(l.label)}</div>`;
+  const pCard = (p) => {
+    const mine = D.links.filter((l) => l.participant === p.name);
+    const part = (kind, label) => {
+      const ls = mine.filter((l) => l.kind === kind);
+      return ls.length ? `<div class="kv"><span class="lbl">${label}</span><div class="rows">${ls.map((l) => linkRow(l, tchip(tid(l)))).join("")}</div></div>` : "";
+    };
+    const db = p.db ? `${p.db.db}${p.db.role ? " as " + p.db.role : ""}` : "";
+    const tags = [p.external ? `<span class="badge b-logs">${esc(p.kind)}</span>` : `<span class="badge b-soft">${esc(p.kind)}</span>`,
+      db ? `<span class="badge b-soft">${esc(db)}</span>` : "", ...(p.bigquery || []).map((b) => `<span class="badge b-soft">${esc(b)}</span>`)].join("");
+    return `<article class="card" id="p-${esc(p.name)}"><div class="top"><h3>${esc(p.name)}</h3>${tags}</div>
+      <p class="what">${esc(p.what)}</p>${p.root ? `<p class="meta"><code>${esc(p.root)}/</code></p>` : ""}
+      ${part("write", "Writes")}${part("read", "Reads")}${part("ddl", "Changes the schema of")}
+      ${mine.length ? "" : `<p class="empty">No table access found.</p>`}
+      <details><summary>Evidence for ${mine.length} links</summary><div class="ev">${mine.map((l) => `<div><b>${esc(l.kind)} ${esc(tid(l))}</b>${evLine(l)}</div>`).join("")}</div></details></article>`;
+  };
+  $("svcCards").innerHTML = inside.map(pCard).join("");
+  $("extCards").innerHTML = outside.map(pCard).join("");
+  $("outsideHead").hidden = !outside.length;
+
+  const tCard = (t) => {
+    const ls = D.links.filter((l) => tid(l) === t.id);
+    const part = (kind, label) => { const x = ls.filter((l) => l.kind === kind);
+      return `<div class="kv"><span class="lbl">${label}</span><div class="rows">${x.map((l) => linkRow(l, pchip(l.participant))).join("") || `<span class="empty">Nobody seen.</span>`}</div></div>`; };
+    const writersInside = t.writers.filter((w) => inside.some((p) => p.name === w));
+    return `<article class="card" id="t-${esc(t.id)}" data-db="${esc(t.database)}" data-text="${esc(t.id.toLowerCase())}">
+      <div class="top"><h3>${esc(t.name)}</h3><span class="badge b-soft">${esc(t.database)}</span>${t.kind !== "table" ? `<span class="badge b-soft">${esc(t.kind)}</span>` : ""}</div>
+      <p class="what">${esc(t.what)}</p>
+      ${writersInside.length === 1 ? `<p class="meta">Owner: <b>${esc(writersInside[0])}</b> (its only writer in this repo)</p>` : ""}
+      ${part("write", "Written by")}${part("read", "Read by")}${ls.some((l) => l.kind === "ddl") ? part("ddl", "Schema changed by") : ""}</article>`;
+  };
+  $("tblCards").innerHTML = D.tables.map(tCard).join("");
+  const dbs = ["All", ...new Set(D.tables.map((t) => t.database))];
+  let db = store.get("access-db") || "All"; if (!dbs.includes(db)) db = "All";
+  $("dbFilter").innerHTML = dbs.map((d) => `<button type="button" data-d="${esc(d)}">${esc(d)}</button>`).join("");
+  const applyT = () => { const q = $("q").value.trim().toLowerCase();
+    document.querySelectorAll("#tblCards .card").forEach((c) => { c.hidden = !((db === "All" || c.dataset.db === db) && (!q || c.dataset.text.includes(q))); });
+    $("dbFilter").querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.d === db))); };
+  $("dbFilter").addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; db = b.dataset.d; store.set("access-db", db); applyT(); });
+  $("q").addEventListener("input", applyT); applyT();
+
+  const cols = D.tables;
+  const groups = [...new Set(cols.map((t) => t.database))].map((g) => [g, cols.filter((t) => t.database === g).length]);
+  const cell = (p, t) => {
+    const ls = D.links.filter((l) => l.participant === p.name && tid(l) === t.id);
+    if (!ls.length) return "";
+    const w = ls.some((l) => l.kind === "write"), r = ls.some((l) => l.kind === "read"), s = ls.some((l) => l.kind === "ddl");
+    const v = w && r ? "RW" : w ? "W" : r ? "R" : s ? "S" : "";
+    const extra = ls.every((l) => l.label === "logs only") ? " c-logs" : ls.every((l) => l.label.startsWith("via view")) ? " c-view" : "";
+    const tip = ls.map((l) => `${l.kind} ${l.ops.join("/")} (${l.label})`).join("; ");
+    return `<span class="cell c-${v}${extra}" title="${esc(tip)}">${v}</span>`;
+  };
+  $("mx").innerHTML = `<thead><tr><th class="who"></th>${groups.map(([g, n]) => `<th class="db" colspan="${n}">${esc(g)}</th>`).join("")}</tr>
+    <tr><th class="who">service</th>${cols.map((t) => `<th>${esc(t.name)}</th>`).join("")}</tr></thead>
+    <tbody>${P.map((p) => `<tr><th class="who">${esc(p.name)}</th>${cols.map((t) => `<td>${cell(p, t)}</td>`).join("")}</tr>`).join("")}</tbody>`;
+
+  $("flowList").innerHTML = D.flows.map((f) => `<div class="flow"><p class="say">${esc(f.sentence)}</p>
+    <div class="path">${f.writers.map(pchip).join("")}<span>→</span>${tchip(f.table)}<span>→</span>${f.readers.map(pchip).join("")}</div></div>`).join("") || `<p class="empty">No table is written by one participant and read by another.</p>`;
+
+  $("findList").innerHTML = [...D.findings.map((f) => `<div class="find"><div class="k">${esc(f.kind)}</div><div><div class="w">${esc(f.where)}</div><div class="d">${esc(f.detail)}</div></div></div>`),
+    ...D.notes.map((n) => `<div class="find"><div class="k">NOTE</div><div><div class="d">${esc(n)}</div></div></div>`)].join("") || `<p class="empty">Nothing to fix.</p>`;
+
+  const evRows = D.links.map((l) => `<tr data-s="${esc((l.participant + " " + tid(l) + " " + l.code.map((c) => c.file).join(" ")).toLowerCase())}">
+    <td class="m">${esc(l.participant)}</td><td>${esc(l.kind)}</td><td class="m">${esc(tid(l))}</td><td>${esc(l.ops.join(", "))}</td><td>${badge(l.label)}</td><td class="m">${evLine(l)}</td></tr>`);
+  $("evTable").innerHTML = `<thead><tr><th>Who</th><th>Does</th><th>Table</th><th>How</th><th>Seen in</th><th>Evidence</th></tr></thead><tbody>${evRows.join("")}</tbody>`;
+  $("eq").addEventListener("input", () => { const q = $("eq").value.trim().toLowerCase();
+    document.querySelectorAll("#evTable tbody tr").forEach((r) => { r.hidden = q && !r.dataset.s.includes(q); }); });
+
+  document.addEventListener("click", (e) => { const a = e.target.closest("[data-go]"); if (!a) return; e.preventDefault();
+    db = "All"; $("q").value = ""; applyT(); const el = document.getElementById(a.dataset.go); if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" }); el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1400); });
+  $("foot").textContent = `${D.title} · ${inside.length} services · ${D.tables.length} tables · ${D.links.length} links`;
+})();
+</script>

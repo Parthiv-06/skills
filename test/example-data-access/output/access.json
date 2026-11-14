@@ -1,0 +1,410 @@
+{
+ "root": "test/example-data-access/shopco",
+ "services": [
+  {
+   "name": "checkout-api",
+   "root": "test/example-data-access/shopco",
+   "kind": "service",
+   "found_by": "docker-compose.yml",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "app"
+   },
+   "bigquery": []
+  },
+  {
+   "name": "admin-api",
+   "root": "test/example-data-access/shopco",
+   "kind": "service",
+   "found_by": "docker-compose.yml",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "admin"
+   },
+   "bigquery": []
+  },
+  {
+   "name": "fulfilment-worker",
+   "root": "test/example-data-access/shopco",
+   "kind": "service",
+   "found_by": "docker-compose.yml",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "worker"
+   },
+   "bigquery": []
+  },
+  {
+   "name": "nightly-reports",
+   "root": "test/example-data-access/shopco",
+   "kind": "service",
+   "found_by": "docker-compose.yml",
+   "db": {
+    "engine": "postgres",
+    "db": "shopdb",
+    "role": "reports"
+   },
+   "bigquery": [
+    "acme.shop"
+   ]
+  },
+  {
+   "name": "migrations",
+   "root": "test/example-data-access/shopco",
+   "kind": "migrations",
+   "found_by": "alembic.ini",
+   "db": {
+    "engine": "same as the other services",
+    "db": "shopdb",
+    "role": null
+   },
+   "bigquery": []
+  }
+ ],
+ "accesses": [
+  {
+   "service": "admin-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "libs/shopdb/orders_repo.py",
+   "line": 16,
+   "how": "session.get()",
+   "via": "called from services/admin_api/app.py:10"
+  },
+  {
+   "service": "admin-api",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "write",
+   "op": "UPDATE",
+   "file": "services/admin_api/app.py",
+   "line": 14,
+   "how": "sqlalchemy update()",
+   "via": null
+  },
+  {
+   "service": "admin-api",
+   "database": "shopdb",
+   "table": "v_customer_ltv",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/admin_api/app.py",
+   "line": 19,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "addresses",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/checkout_api/checkout.py",
+   "line": 16,
+   "how": "session.get()",
+   "via": null
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/checkout_api/checkout.py",
+   "line": 15,
+   "how": "session.get()",
+   "via": null
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "write",
+   "op": "INSERT",
+   "file": "libs/shopdb/orders_repo.py",
+   "line": 11,
+   "how": "session.add(new object)",
+   "via": "called from services/checkout_api/checkout.py:17"
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "libs/shopdb/orders_repo.py",
+   "line": 20,
+   "how": "session.get()",
+   "via": "called from services/checkout_api/checkout.py:23"
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "op": "INSERT",
+   "file": "libs/shopdb/orders_repo.py",
+   "line": 8,
+   "how": "session.add(order)",
+   "via": "called from services/checkout_api/checkout.py:17"
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "op": "UPDATE",
+   "file": "libs/shopdb/orders_repo.py",
+   "line": 21,
+   "how": "changes a loaded order",
+   "via": "called from services/checkout_api/checkout.py:23"
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "payments",
+   "kind": "write",
+   "op": "INSERT",
+   "file": "libs/shopdb/orders_repo.py",
+   "line": 22,
+   "how": "session.add(new object)",
+   "via": "called from services/checkout_api/checkout.py:23"
+  },
+  {
+   "service": "checkout-api",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/checkout_api/checkout.py",
+   "line": 10,
+   "how": "select(Product)",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "addresses",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 8,
+   "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "audit_log",
+   "kind": "write",
+   "op": "INSERT",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 24,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "audit_log",
+   "kind": "write",
+   "op": "DELETE",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 31,
+   "how": "f-string; table='audit_log' passed at services/fulfilment_worker/worker.py:37",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 8,
+   "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 24,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "write",
+   "op": "UPDATE",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 22,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "shipments",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 8,
+   "how": "SQL file services/fulfilment_worker/sql/pending_orders.sql",
+   "via": null
+  },
+  {
+   "service": "fulfilment-worker",
+   "database": "shopdb",
+   "table": "shipments",
+   "kind": "write",
+   "op": "INSERT",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 21,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "migrations",
+   "database": "shopdb",
+   "table": "customers",
+   "kind": "ddl",
+   "op": "CREATE TABLE",
+   "file": "migrations/versions/001_init.py",
+   "line": 11,
+   "how": "alembic op.create_table()",
+   "via": null
+  },
+  {
+   "service": "migrations",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "ddl",
+   "op": "CREATE TABLE",
+   "file": "migrations/versions/001_init.py",
+   "line": 14,
+   "how": "alembic op.create_table()",
+   "via": null
+  },
+  {
+   "service": "migrations",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "ddl",
+   "op": "ADD COLUMN",
+   "file": "migrations/versions/002_order_status.py",
+   "line": 11,
+   "how": "alembic op.add_column()",
+   "via": null
+  },
+  {
+   "service": "migrations",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "ddl",
+   "op": "CREATE INDEX",
+   "file": "migrations/versions/002_order_status.py",
+   "line": 12,
+   "how": "alembic op.create_index()",
+   "via": null
+  },
+  {
+   "service": "migrations",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "ddl",
+   "op": "CREATE TABLE",
+   "file": "migrations/versions/001_init.py",
+   "line": 13,
+   "how": "alembic op.create_table()",
+   "via": null
+  },
+  {
+   "service": "nightly-reports",
+   "database": "acme.shop",
+   "table": "daily_sales",
+   "kind": "write",
+   "op": "CREATE AS",
+   "file": "jobs/nightly_reports/report.py",
+   "line": 24,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "nightly-reports",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "jobs/nightly_reports/report.py",
+   "line": 24,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "nightly-reports",
+   "database": "acme.shop",
+   "table": "sales_lines",
+   "kind": "write",
+   "op": "LOAD",
+   "file": "jobs/nightly_reports/report.py",
+   "line": 23,
+   "how": "bigquery load_table_from_dataframe()",
+   "via": null
+  },
+  {
+   "service": "nightly-reports",
+   "database": "shopdb",
+   "table": "order_items",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "jobs/nightly_reports/report.py",
+   "line": 9,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "nightly-reports",
+   "database": "shopdb",
+   "table": "orders",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "jobs/nightly_reports/report.py",
+   "line": 9,
+   "how": "SQL string",
+   "via": null
+  },
+  {
+   "service": "nightly-reports",
+   "database": "shopdb",
+   "table": "products",
+   "kind": "read",
+   "op": "SELECT",
+   "file": "jobs/nightly_reports/report.py",
+   "line": 18,
+   "how": "pandas read_sql()",
+   "via": null
+  }
+ ],
+ "unresolved": [
+  {
+   "service": "fulfilment-worker",
+   "file": "services/fulfilment_worker/worker.py",
+   "line": 31,
+   "op": "DELETE",
+   "sql": "DELETE FROM {} WHERE at < now() - interval '{} days'",
+   "resolved_by": "services/fulfilment_worker/worker.py:37"
+  }
+ ],
+ "unused_library": []
+}

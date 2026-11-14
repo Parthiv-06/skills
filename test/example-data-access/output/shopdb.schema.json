@@ -1,0 +1,635 @@
+{
+ "source": {
+  "engine": "ddl",
+  "name": "schema.sql"
+ },
+ "tables": [
+  {
+   "name": "customers",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "email",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "created_at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "customer_id"
+   ],
+   "unique": [
+    [
+     "email"
+    ]
+   ],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "customer_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "addresses",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "address_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "line1",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "city",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "country",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "address_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "customer_id"
+     ],
+     "ref_table": "customers",
+     "ref_columns": [
+      "customer_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "address_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "categories",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "category_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "parent_category_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "category_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "parent_category_id"
+     ],
+     "ref_table": "categories",
+     "ref_columns": [
+      "category_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "category_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "products",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "sku",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "category_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "price_cents",
+     "type": "INTEGER",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "product_id"
+   ],
+   "unique": [
+    [
+     "sku"
+    ]
+   ],
+   "foreign_keys": [
+    {
+     "columns": [
+      "category_id"
+     ],
+     "ref_table": "categories",
+     "ref_columns": [
+      "category_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "product_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "tags",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "tag_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "label",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "tag_id"
+   ],
+   "unique": [
+    [
+     "label"
+    ]
+   ],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "tag_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "product_tags",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "tag_id",
+     "type": "INTEGER",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "product_id",
+    "tag_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "product_id"
+     ],
+     "ref_table": "products",
+     "ref_columns": [
+      "product_id"
+     ]
+    },
+    {
+     "columns": [
+      "tag_id"
+     ],
+     "ref_table": "tags",
+     "ref_columns": [
+      "tag_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "product_id",
+     "tag_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "orders",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "customer_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "billing_address_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "shipping_address_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "status",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "placed_at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "order_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "customer_id"
+     ],
+     "ref_table": "customers",
+     "ref_columns": [
+      "customer_id"
+     ]
+    },
+    {
+     "columns": [
+      "billing_address_id"
+     ],
+     "ref_table": "addresses",
+     "ref_columns": [
+      "address_id"
+     ]
+    },
+    {
+     "columns": [
+      "shipping_address_id"
+     ],
+     "ref_table": "addresses",
+     "ref_columns": [
+      "address_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "customer_id"
+    ],
+    [
+     "order_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "order_items",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "line_no",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "product_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "quantity",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "unit_price_cents",
+     "type": "INTEGER",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "order_id",
+    "line_no"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "order_id"
+     ],
+     "ref_table": "orders",
+     "ref_columns": [
+      "order_id"
+     ]
+    },
+    {
+     "columns": [
+      "product_id"
+     ],
+     "ref_table": "products",
+     "ref_columns": [
+      "product_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "product_id"
+    ],
+    [
+     "order_id",
+     "line_no"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "payments",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "amount_cents",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "method",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "paid_at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "order_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "order_id"
+     ],
+     "ref_table": "orders",
+     "ref_columns": [
+      "order_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "order_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "employees",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "employee_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "manager_id",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "name",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "employee_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "manager_id"
+     ],
+     "ref_table": "employees",
+     "ref_columns": [
+      "employee_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "employee_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "shipments",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "shipment_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "order_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "handled_by",
+     "type": "INTEGER",
+     "nullable": true
+    },
+    {
+     "name": "carrier",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "shipped_at",
+     "type": "TEXT",
+     "nullable": true
+    }
+   ],
+   "primary_key": [
+    "shipment_id"
+   ],
+   "unique": [],
+   "foreign_keys": [
+    {
+     "columns": [
+      "order_id"
+     ],
+     "ref_table": "orders",
+     "ref_columns": [
+      "order_id"
+     ]
+    },
+    {
+     "columns": [
+      "handled_by"
+     ],
+     "ref_table": "employees",
+     "ref_columns": [
+      "employee_id"
+     ]
+    }
+   ],
+   "indexes": [
+    [
+     "shipment_id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "audit_log",
+   "kind": "table",
+   "columns": [
+    {
+     "name": "id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "entity",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "entity_id",
+     "type": "INTEGER",
+     "nullable": false
+    },
+    {
+     "name": "action",
+     "type": "TEXT",
+     "nullable": false
+    },
+    {
+     "name": "at",
+     "type": "TEXT",
+     "nullable": false
+    }
+   ],
+   "primary_key": [
+    "id"
+   ],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [
+    [
+     "id"
+    ]
+   ],
+   "sql": null
+  },
+  {
+   "name": "v_order_totals",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT o.order_id, o.customer_id, SUM(oi.quantity * oi.unit_price_cents) AS total_cents\nFROM orders o\nJOIN order_items oi ON oi.order_id = o.order_id\nGROUP BY o.order_id, o.customer_id"
+  },
+  {
+   "name": "v_customer_ltv",
+   "kind": "view",
+   "columns": [],
+   "primary_key": [],
+   "unique": [],
+   "foreign_keys": [],
+   "indexes": [],
+   "sql": "SELECT c.customer_id, c.email, COALESCE(SUM(t.total_cents), 0) AS lifetime_cents\nFROM customers c\nLEFT JOIN v_order_totals t ON t.customer_id = c.customer_id\nGROUP BY c.customer_id, c.email"
+  }
+ ],
+ "indexes_known": true
+}

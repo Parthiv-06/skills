@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-58 -32 1186 622" role="img" aria-label="Context: who and what the token audit talks to" font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1e1e1e"/></marker><marker id="ao" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10" fill="none" stroke="#1e1e1e" stroke-width="1.4"/></marker></defs>
+<rect x="-58" y="-32" width="1186" height="622" fill="#ffffff"/>
+<text x="0.0" y="24.0" font-size="24" font-weight="700" fill="#1e1e1e">Context: who and what the token audit talks to</text>
+<text x="0.0" y="46.0" font-size="12" font-weight="600" letter-spacing="0.06em" fill="#868e96">LEVEL 1 · SYSTEM CONTEXT</text>
+<rect x="-26.0" y="105.5" width="702.0" height="360.5" fill="none" stroke="#868e96" stroke-width="1" stroke-dasharray="6 5"/>
+<text x="-14.0" y="128.5" font-size="11" font-weight="700" letter-spacing="0.06em" fill="#868e96">YOUR MACHINE  ·  TRUST BOUNDARY</text>
+<rect x="814.0" y="292.5" width="282.0" height="164.0" fill="none" stroke="#868e96" stroke-width="1" stroke-dasharray="6 5"/>
+<text x="826.0" y="315.5" font-size="11" font-weight="700" letter-spacing="0.06em" fill="#868e96">ANTHROPIC</text>
+<rect x="0.0" y="145.5" width="230.0" height="98.0" rx="12" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6"/>
+<text x="115.0" y="170.5" font-size="11.5" font-weight="400" text-anchor="middle" fill="#868e96">«person»</text><text x="115.0" y="189.5" font-size="15" font-weight="700" text-anchor="middle" fill="#1e1e1e">Developer</text><text x="115.0" y="208.5" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">Wants to know why the agent is</text><text x="115.0" y="227.5" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">expensive</text>
+<rect x="420.0" y="145.5" width="230.0" height="98.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6"/>
+<text x="535.0" y="170.5" font-size="15" font-weight="700" text-anchor="middle" fill="#1e1e1e">Claude Code</text><text x="535.0" y="189.5" font-size="12.5" font-weight="400" text-anchor="middle" fill="#868e96">[with the audit skill]</text><text x="535.0" y="208.5" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">Runs the audit, confirms</text><text x="535.0" y="227.5" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">findings</text>
+<rect x="420.0" y="323.0" width="230.0" height="117.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="2.4"/>
+<text x="535.0" y="348.0" font-size="11.5" font-weight="400" text-anchor="middle" fill="#868e96">«system»</text><text x="535.0" y="367.0" font-size="15" font-weight="700" text-anchor="middle" fill="#1e1e1e">Token audit toolkit</text><text x="535.0" y="386.0" font-size="12.5" font-weight="400" text-anchor="middle" fill="#868e96">[4 Python scripts]</text><text x="535.0" y="405.0" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">Records, analyzes, reports</text><text x="535.0" y="424.0" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">token use</text>
+<rect x="0.0" y="342.0" width="230.0" height="79.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6"/>
+<text x="115.0" y="367.0" font-size="15" font-weight="700" text-anchor="middle" fill="#1e1e1e">Your agent</text><text x="115.0" y="386.0" font-size="12.5" font-weight="400" text-anchor="middle" fill="#868e96">[any language]</text><text x="115.0" y="405.0" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">The program being audited</text>
+<rect x="840.0" y="332.5" width="230.0" height="98.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6" stroke-dasharray="6 5"/>
+<text x="955.0" y="357.5" font-size="11.5" font-weight="400" text-anchor="middle" fill="#868e96">«external»</text><text x="955.0" y="376.5" font-size="15" font-weight="700" text-anchor="middle" fill="#1e1e1e">Messages API</text><text x="955.0" y="395.5" font-size="12.5" font-weight="400" text-anchor="middle" fill="#868e96">[Anthropic · HTTPS]</text><text x="955.0" y="414.5" font-size="13" font-weight="400" text-anchor="middle" fill="#1e1e1e">Runs the model, reports usage</text>
+<polyline points="230.0,194.5 420.0,194.5" fill="none" stroke="#1e1e1e" stroke-width="1.5" marker-end="url(#ah)"/>
+<polyline points="535.0,243.5 535.0,323.0" fill="none" stroke="#1e1e1e" stroke-width="1.5" marker-end="url(#ah)"/>
+<polyline points="230.0,381.5 420.0,381.5" fill="none" stroke="#1e1e1e" stroke-width="1.5" marker-end="url(#ah)"/>
+<polyline points="650.0,381.5 840.0,381.5" fill="none" stroke="#1e1e1e" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="0.0" y="527.0" font-size="11" font-weight="700" letter-spacing="0.06em" fill="#868e96">LEGEND</text>
+<rect x="0.0" y="538.0" width="34.0" height="20.0" rx="12" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6"/>
+<text x="42.0" y="553.0" font-size="12" fill="#1e1e1e">Person</text>
+<rect x="108.3" y="538.0" width="34.0" height="20.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6"/>
+<text x="150.3" y="553.0" font-size="12" fill="#1e1e1e">Service / app</text>
+<rect x="263.7" y="538.0" width="34.0" height="20.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="2.4"/>
+<text x="305.7" y="553.0" font-size="12" fill="#1e1e1e">Software system</text>
+<rect x="432.5" y="538.0" width="34.0" height="20.0" fill="#ffffff" stroke="#1e1e1e" stroke-width="1.6" stroke-dasharray="6 5"/>
+<text x="474.5" y="553.0" font-size="12" fill="#1e1e1e">External system</text>
+<polyline points="601.3,548.0 635.3,548.0" fill="none" stroke="#1e1e1e" stroke-width="1.5" marker-end="url(#ah)"/>
+<text x="643.3" y="553.0" font-size="12" fill="#1e1e1e">Synchronous</text>
+<rect x="743.2" y="538.0" width="34.0" height="20.0" fill="none" stroke="#868e96" stroke-width="1.6" stroke-dasharray="6 5"/>
+<text x="785.2" y="553.0" font-size="12" fill="#1e1e1e">Boundary</text>
+<rect x="269.5" y="171.5" width="131.0" height="20" fill="#ffffff"/><text x="335.0" y="186.0" font-size="12.5" text-anchor="middle" fill="#1e1e1e">asks for an audit</text>
+<rect x="487.0" y="273.2" width="96.0" height="20" fill="#ffffff"/><text x="535.0" y="287.8" font-size="12.5" text-anchor="middle" fill="#1e1e1e">runs scripts</text>
+<rect x="266.0" y="358.5" width="138.0" height="20" fill="#ffffff"/><text x="335.0" y="373.0" font-size="12.5" text-anchor="middle" fill="#1e1e1e">model calls · HTTP</text>
+<rect x="672.0" y="358.5" width="166.0" height="20" fill="#ffffff"/><text x="755.0" y="373.0" font-size="12.5" text-anchor="middle" fill="#1e1e1e">forwards calls · HTTPS</text>
+</svg>

@@ -1,0 +1,21 @@
+[
+ {"rolname": "app", "calls": 51200, "query": "SELECT products.product_id, products.price_cents FROM products WHERE products.product_id IN ($1, $2)"},
+ {"rolname": "app", "calls": 8100, "query": "SELECT customers.customer_id, customers.email FROM customers WHERE customers.customer_id = $1"},
+ {"rolname": "app", "calls": 8100, "query": "SELECT addresses.address_id, addresses.customer_id, addresses.city FROM addresses WHERE addresses.address_id = $1"},
+ {"rolname": "app", "calls": 8100, "query": "INSERT INTO orders (customer_id, shipping_address_id, status) VALUES ($1, $2, $3) RETURNING orders.order_id"},
+ {"rolname": "app", "calls": 19400, "query": "INSERT INTO order_items (order_id, line_no, product_id, quantity) VALUES ($1, $2, $3, $4)"},
+ {"rolname": "app", "calls": 7900, "query": "SELECT orders.order_id, orders.status FROM orders WHERE orders.order_id = $1"},
+ {"rolname": "app", "calls": 7900, "query": "UPDATE orders SET status=$1 WHERE orders.order_id = $2"},
+ {"rolname": "app", "calls": 7900, "query": "INSERT INTO payments (order_id, amount_cents) VALUES ($1, $2)"},
+ {"rolname": "admin", "calls": 640, "query": "SELECT orders.order_id, orders.status FROM orders WHERE orders.order_id = $1"},
+ {"rolname": "admin", "calls": 35, "query": "UPDATE products SET price_cents=$1 WHERE products.product_id = $2"},
+ {"rolname": "worker", "calls": 1440, "query": "SELECT o.order_id, a.city FROM orders o JOIN addresses a ON a.address_id = o.shipping_address_id LEFT JOIN shipments s ON s.order_id = o.order_id WHERE o.status = $1 AND s.shipment_id IS NULL"},
+ {"rolname": "worker", "calls": 7600, "query": "INSERT INTO shipments (order_id, carrier, shipped_at) VALUES ($1, $2, now())"},
+ {"rolname": "worker", "calls": 7600, "query": "UPDATE orders SET status = $1 WHERE order_id = $2"},
+ {"rolname": "worker", "calls": 7600, "query": "INSERT INTO audit_log (entity, entity_id, action, at) SELECT $1, order_id, $2, now() FROM orders WHERE order_id = $3"},
+ {"rolname": "worker", "calls": 1, "query": "DELETE FROM audit_log WHERE at < now() - interval '90 days'"},
+ {"rolname": "reports", "calls": 30, "query": "SELECT oi.order_id, oi.product_id, oi.quantity, oi.unit_price_cents, o.placed_at FROM order_items oi JOIN orders o ON o.order_id = oi.order_id WHERE o.placed_at >= now() - interval '1 day'"},
+ {"rolname": "reports", "calls": 30, "query": "SELECT * FROM products"},
+ {"rolname": "crm_sync", "calls": 2210, "query": "UPDATE customers SET email = $1 WHERE customer_id = $2"},
+ {"rolname": "crm_sync", "calls": 120, "query": "INSERT INTO customers (customer_id, email, name, created_at) VALUES ($1, $2, $3, $4) ON CONFLICT (customer_id) DO UPDATE SET email = EXCLUDED.email"}
+]
